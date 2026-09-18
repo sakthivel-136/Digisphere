@@ -403,23 +403,46 @@ export default function DashboardPage() {
 
     const isToday = selectedDate === today
 
-    /* ── time-boundary ── */
+    /* ── time-boundary (6:00 AM to 5:30 AM cycle) ── */
     const ROUND_TIMES = [
-      "00:00","00:30","01:00","01:30","02:00","02:30","03:00","03:30",
-      "04:00","04:30","05:00","05:30","06:00","07:00","08:00","09:00",
-      "10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00",
-      "18:00","19:00","20:00","21:00","21:30","22:00","22:30","23:00","23:30"
+      { h: 6, m: 0 }, { h: 7, m: 0 }, { h: 8, m: 0 }, { h: 9, m: 0 },
+      { h: 10, m: 0 }, { h: 11, m: 0 }, { h: 12, m: 0 }, { h: 13, m: 0 },
+      { h: 14, m: 0 }, { h: 15, m: 0 }, { h: 16, m: 0 }, { h: 17, m: 0 },
+      { h: 18, m: 0 }, { h: 19, m: 0 }, { h: 20, m: 0 }, { h: 21, m: 0 },
+      { h: 22, m: 0 }, { h: 22, m: 30 }, { h: 23, m: 0 }, { h: 23, m: 30 },
+      { h: 0, m: 0, nextDay: true }, { h: 0, m: 30, nextDay: true },
+      { h: 1, m: 0, nextDay: true }, { h: 1, m: 30, nextDay: true },
+      { h: 2, m: 0, nextDay: true }, { h: 2, m: 30, nextDay: true },
+      { h: 3, m: 0, nextDay: true }, { h: 3, m: 30, nextDay: true },
+      { h: 4, m: 0, nextDay: true }, { h: 4, m: 30, nextDay: true },
+      { h: 5, m: 0, nextDay: true }, { h: 5, m: 30, nextDay: true }
     ];
 
     let dueRoundsCount = ROUND_TIMES.length;
     if (isToday) {
       const now = new Date();
-      const currentHour = now.getHours();
-      const currentMinute = now.getMinutes();
       dueRoundsCount = 0;
+      
       for (let i = 0; i < ROUND_TIMES.length; i++) {
-        const [h, m] = ROUND_TIMES[i].split(':').map(Number);
-        if (currentHour > h || (currentHour === h && currentMinute >= m)) {
+        const slot = ROUND_TIMES[i];
+        const slotTime = new Date();
+        slotTime.setHours(slot.h, slot.m, 0, 0);
+        
+        // If it's a nextDay slot (like 2 AM) but 'now' is still before midnight,
+        // it means we haven't reached it yet.
+        if (slot.nextDay && now.getHours() >= 6) {
+            break; // We are still in the previous day's evening
+        }
+        
+        // If we are past midnight but before 6 AM, 'now' is technically nextDay.
+        // We need to adjust slotTime for comparison.
+        if (now.getHours() < 6 && !slot.nextDay) {
+           slotTime.setDate(slotTime.getDate() - 1);
+        } else if (now.getHours() >= 6 && slot.nextDay) {
+           slotTime.setDate(slotTime.getDate() + 1);
+        }
+        
+        if (now >= slotTime) {
           dueRoundsCount = i + 1;
         } else {
           break;
