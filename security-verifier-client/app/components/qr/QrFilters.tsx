@@ -11,12 +11,12 @@ interface QrFiltersProps {
 
 export default function QrFilters({ value, onChange, factories }: QrFiltersProps) {
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 hover:shadow-md transition-shadow duration-300 flex items-center gap-4">
+    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full max-w-md">
       
       {/* Label with Icon */}
       <div className="flex items-center gap-2">
-        <Building2 className="w-5 h-5 text-blue-600" />
-        <label className="text-sm font-bold text-slate-700 uppercase tracking-wider whitespace-nowrap">
+        <Building2 className="w-5 h-5 text-[var(--primary)]" />
+        <label className="text-sm font-bold text-[var(--foreground-muted)] uppercase tracking-wider whitespace-nowrap">
           Factory
         </label>
       </div>
@@ -30,7 +30,7 @@ export default function QrFilters({ value, onChange, factories }: QrFiltersProps
         <select
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full appearance-none bg-slate-50 border border-slate-200 text-slate-800 font-medium rounded-xl py-3 pl-4 pr-10 outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 hover:bg-white hover:border-blue-300 transition-all cursor-pointer"
+          className="input-modern"
         >
           <option value="" disabled className="text-slate-400">Select a factory location...</option>
           {factories.map((f) => (

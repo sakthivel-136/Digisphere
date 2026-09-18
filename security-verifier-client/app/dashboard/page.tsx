@@ -1,8 +1,13 @@
 'use client'
 
 import { useState, useEffect, useMemo, useCallback, useRef } from "react"
-import { SpotlightCard } from "../components/ui/SpotlightCard"
-import { ShimmerSkeleton, StaggeredList, StaggeredItem } from "../components/ui/LayoutOrchestration"
+import { PageTransition } from '@/app/components/layout/PageTransition'
+import { PageContainer } from '@/app/components/layout/PageContainer'
+import { GlassCard } from '@/app/components/ui/GlassCard'
+import { PageLoadingSpinner } from '@/app/components/ui/LoadingSpinner'
+import { motion } from 'framer-motion'
+import { containerVariants, itemVariants } from '@/lib/animations'
+import { LayoutDashboard } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import {
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend,
@@ -279,15 +284,15 @@ function StatCard({ label, value, sub, color, bg, icon }: {
   color: string; bg: string; icon?: string
 }) {
   return (
-    <SpotlightCard className="p-5 flex flex-col justify-center min-h-[100px]">
-      <div className={`absolute left-0 top-0 h-full w-1 rounded-l-2xl ${bg}`} />
+    <GlassCard className="p-5 flex flex-col justify-center min-h-[100px] relative overflow-hidden">
+      <div className={`absolute left-0 top-0 h-full w-1 ${bg}`} />
       <div className="pl-3 relative z-10">
-        <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">{label}</p>
+        <p className="text-xs font-semibold uppercase tracking-widest text-[var(--foreground-muted)]">{label}</p>
         <p className={`mt-1.5 text-2xl font-bold ${color}`}>{value}</p>
-        {sub && <p className="mt-0.5 text-xs text-slate-400">{sub}</p>}
+        {sub && <p className="mt-0.5 text-xs text-[var(--foreground-subtle)]">{sub}</p>}
       </div>
-      {icon && <div className="absolute right-4 bottom-4 text-3xl opacity-20 pointer-events-none">{icon}</div>}
-    </SpotlightCard>
+      {icon && <div className="absolute right-4 bottom-4 text-3xl opacity-10 pointer-events-none">{icon}</div>}
+    </GlassCard>
   )
 }
 
@@ -320,11 +325,11 @@ function LeaderRow({ rank, name, scanned, missed, total }: {
   const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`
   const color = pct >= 90 ? 'text-emerald-600 bg-emerald-50' : pct >= 70 ? 'text-amber-600 bg-amber-50' : 'text-rose-600 bg-rose-50'
   return (
-    <div className="flex items-center gap-3 py-2.5 border-b border-slate-50 last:border-0">
+    <div className="flex items-center gap-3 py-2.5 border-b border-[var(--border)] last:border-0">
       <div className="w-8 text-center text-lg">{medal}</div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between mb-1">
-          <span className="text-sm font-semibold text-slate-700 truncate">{name}</span>
+          <span className="text-sm font-semibold text-[var(--foreground)] truncate">{name}</span>
           <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${color}`}>{pct}%</span>
         </div>
         <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
@@ -333,7 +338,7 @@ function LeaderRow({ rank, name, scanned, missed, total }: {
             style={{ width: `${pct}%` }}
           />
         </div>
-        <p className="text-xs text-slate-400 mt-0.5">{scanned} scanned · {missed} missed</p>
+        <p className="text-xs text-[var(--foreground-subtle)] mt-0.5">{scanned} scanned · {missed} missed</p>
       </div>
     </div>
   )
@@ -573,40 +578,45 @@ export default function DashboardPage() {
   const selectedFactoryName = factories.find(f => f.factory_code === selectedFactory)?.factory_name || selectedFactory
 
   if (!authorized) {
-    return <div className="p-6 text-white min-h-screen bg-[#07071f] flex items-center justify-center">Checking access...</div>
+    return <PageTransition><PageLoadingSpinner label="Checking access..." /></PageTransition>
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <PageTransition>
+      <PageContainer>
 
         {/* ── HEADER ── */}
-        <div className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900">Analytics Dashboard</h1>
-            <p className="mt-1 text-slate-500 text-sm">
-              {selectedFactoryName && <span className="font-medium text-indigo-600">{selectedFactoryName}</span>}
-              {selectedFactoryName && ' · '}
-              Patrol performance overview
-              {lastUpdated && <span className="ml-2 text-emerald-600 font-medium">· Updated {lastUpdated}</span>}
-            </p>
+        <motion.div variants={itemVariants} initial="initial" animate="animate" className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-[var(--primary-muted)] flex items-center justify-center flex-shrink-0">
+              <LayoutDashboard className="h-5 w-5 text-[var(--primary)]" />
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-[var(--foreground)] tracking-tight">Analytics Dashboard</h1>
+              <p className="mt-1 text-[var(--foreground-muted)] text-sm">
+                {selectedFactoryName && <span className="font-medium text-[var(--primary)]">{selectedFactoryName}</span>}
+                {selectedFactoryName && ' · '}
+                Patrol performance overview
+                {lastUpdated && <span className="ml-2 text-emerald-600 font-medium">· Updated {lastUpdated}</span>}
+              </p>
+            </div>
           </div>
-          <div className="flex items-center gap-2 text-sm text-slate-500">
-            <div className="w-2 h-2 rounded-full bg-emerald-500" />
+          <div className="flex items-center gap-2 text-sm text-[var(--foreground-muted)]">
+            <div className="w-2 h-2 rounded-full bg-[var(--success)] shadow-[0_0_8px_var(--success)]" />
             {adminName}
           </div>
-        </div>
+        </motion.div>
 
         {/* ── CONTROLS BAR ── */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 mb-6">
+        <div className="glass-surface rounded-2xl p-5 mb-6">
           <div className="flex flex-wrap items-end gap-4">
 
             <div className="flex-1 min-w-[160px]">
-              <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Factory</label>
+              <label className="text-xs font-semibold text-[var(--foreground-muted)] uppercase tracking-wider">Factory</label>
               <select
                 value={selectedFactory}
                 onChange={e => setSelectedFactory(e.target.value)}
-                className="w-full mt-2 pl-3 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full mt-2 pl-3 pr-4 py-2.5 bg-[var(--surface-muted)] border border-slate-200 rounded-lg text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 {factories.map(f => (
                   <option key={f.factory_code} value={f.factory_code}>{f.factory_name}</option>
@@ -615,11 +625,11 @@ export default function DashboardPage() {
             </div>
 
             <div className="flex-1 min-w-[140px]">
-              <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Date</label>
+              <label className="text-xs font-semibold text-[var(--foreground-muted)] uppercase tracking-wider">Date</label>
               <input
                 type="date" value={selectedDate}
                 onChange={e => setSelectedDate(e.target.value)}
-                className="w-full mt-2 pl-3 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full mt-2 pl-3 pr-4 py-2.5 bg-[var(--surface-muted)] border border-slate-200 rounded-lg text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
 
@@ -639,7 +649,7 @@ export default function DashboardPage() {
               <button
                 id="pdf-export-btn"
                 onClick={() => exportDashboardPDF(stats, selectedFactory, selectedFactoryName, selectedDate, adminName)}
-                className="border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 font-semibold px-4 py-2.5 rounded-lg flex items-center gap-2 text-sm transition-colors"
+                className="border border-slate-200 bg-white hover:bg-[var(--surface-muted)] text-slate-600 font-semibold px-4 py-2.5 rounded-lg flex items-center gap-2 text-sm transition-colors"
               >
                 📊 Export PDF
               </button>
@@ -661,28 +671,28 @@ export default function DashboardPage() {
         <div ref={dashboardContentRef}>
 
         {/* ── STAT CARDS ── */}
-        <StaggeredList className="grid grid-cols-2 xl:grid-cols-5 gap-4 mb-6">
-          <StaggeredItem><StatCard label="Effective Scans"  value={stats.total}           sub="Rounds due so far"  color="text-indigo-600"  bg="bg-indigo-500"  icon="📋" /></StaggeredItem>
-          <StaggeredItem><StatCard label="Completed"        value={stats.completed}       sub={`${stats.rate}% rate`} color="text-emerald-600" bg="bg-emerald-500" icon="✅" /></StaggeredItem>
-          <StaggeredItem><StatCard label="Missed"           value={stats.missed}          sub="Truly skipped"      color="text-rose-600"    bg="bg-rose-500"    icon="⚠️" /></StaggeredItem>
-          <StaggeredItem><StatCard label="Not Due Yet"      value={stats.pending ?? 0}    sub="Future rounds"      color="text-slate-500"   bg="bg-slate-400"   icon="🕐" /></StaggeredItem>
-          <StaggeredItem>
+        <motion.div variants={containerVariants} initial="initial" animate="animate" className="grid grid-cols-2 xl:grid-cols-5 gap-4 mb-6">
+          <motion.div variants={itemVariants}><StatCard label="Effective Scans"  value={stats.total}           sub="Rounds due so far"  color="text-indigo-600"  bg="bg-indigo-500"  icon="📋" /></motion.div>
+          <motion.div variants={itemVariants}><StatCard label="Completed"        value={stats.completed}       sub={`${stats.rate}% rate`} color="text-emerald-600" bg="bg-emerald-500" icon="✅" /></motion.div>
+          <motion.div variants={itemVariants}><StatCard label="Missed"           value={stats.missed}          sub="Truly skipped"      color="text-rose-600"    bg="bg-rose-500"    icon="⚠️" /></motion.div>
+          <motion.div variants={itemVariants}><StatCard label="Not Due Yet"      value={stats.pending ?? 0}    sub="Future rounds"      color="text-[var(--foreground-muted)]"   bg="bg-slate-400"   icon="🕐" /></motion.div>
+          <motion.div variants={itemVariants}>
             <StatCard
               label="Last Scan"
               value={stats.lastScan ? fmtTime(stats.lastScan) : '—'}
               sub="Most recent activity"
               color="text-violet-600" bg="bg-violet-500" icon="🔍"
             />
-          </StaggeredItem>
-        </StaggeredList>
+          </motion.div>
+        </motion.div>
 
         {/* ── DAY PROGRESS BAR ── */}
         {report.length > 0 && (
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 mb-6">
+          <div className="glass-surface rounded-2xl p-5 mb-6">
             <div className="flex items-center justify-between mb-3">
               <div>
-                <h2 className="text-sm font-semibold text-slate-700">Day Completion Progress</h2>
-                <p className="text-xs text-slate-400">
+                <h2 className="text-sm font-semibold text-[var(--foreground)]">Day Completion Progress</h2>
+                <p className="text-xs text-[var(--foreground-subtle)]">
                   {stats.completed} of {stats.total + (stats.pending ?? 0)} total expected scans completed
                 </p>
               </div>
@@ -707,7 +717,7 @@ export default function DashboardPage() {
                 style={{ width: `${((stats.pending ?? 0) / (report.length || 1)) * 100}%` }}
               />
             </div>
-            <div className="flex items-center gap-5 mt-2 text-xs text-slate-400">
+            <div className="flex items-center gap-5 mt-2 text-xs text-[var(--foreground-subtle)]">
               <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-indigo-500 inline-block" />Completed</span>
               <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-rose-400 inline-block" />Missed</span>
               <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-slate-200 inline-block" />Not due yet</span>
@@ -744,9 +754,9 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
 
               {/* Pie */}
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-widest mb-1">Completion Overview</h2>
-                <p className="text-xs text-slate-400 mb-4">Completed · Missed · Not Due</p>
+              <div className="glass-surface rounded-2xl p-6">
+                <h2 className="text-sm font-semibold text-[var(--foreground-muted)] uppercase tracking-widest mb-1">Completion Overview</h2>
+                <p className="text-xs text-[var(--foreground-subtle)] mb-4">Completed · Missed · Not Due</p>
                 <ResponsiveContainer width="100%" height={240}>
                   <PieChart>
                     <Pie data={stats.pie} cx="50%" cy="50%" innerRadius={65} outerRadius={105} paddingAngle={4} dataKey="value">
@@ -759,16 +769,16 @@ export default function DashboardPage() {
               </div>
 
               {/* Guard Leaderboard */}
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-widest mb-1">🏆 Guard Leaderboard</h2>
-                <p className="text-xs text-slate-400 mb-4">Ranked by completion rate</p>
+              <div className="glass-surface rounded-2xl p-6">
+                <h2 className="text-sm font-semibold text-[var(--foreground-muted)] uppercase tracking-widest mb-1">🏆 Guard Leaderboard</h2>
+                <p className="text-xs text-[var(--foreground-subtle)] mb-4">Ranked by completion rate</p>
                 <div className="overflow-y-auto max-h-64 pr-1">
                   {stats.guardLeaderboard.length > 0
                     ? stats.guardLeaderboard.map((g, i) => (
                       <LeaderRow key={g.name} rank={i + 1} name={g.name}
                         scanned={g.scanned} missed={g.missed} total={g.total} />
                     ))
-                    : <p className="text-sm text-slate-400 text-center mt-10">No guard data</p>
+                    : <p className="text-sm text-[var(--foreground-subtle)] text-center mt-10">No guard data</p>
                   }
                 </div>
               </div>
@@ -778,9 +788,9 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
 
               {/* Round bar */}
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-widest mb-1">Round-by-Round</h2>
-                <p className="text-xs text-slate-400 mb-4">Completed vs Missed per patrol round</p>
+              <div className="glass-surface rounded-2xl p-6">
+                <h2 className="text-sm font-semibold text-[var(--foreground-muted)] uppercase tracking-widest mb-1">Round-by-Round</h2>
+                <p className="text-xs text-[var(--foreground-subtle)] mb-4">Completed vs Missed per patrol round</p>
                 <ResponsiveContainer width="100%" height={240}>
                   <BarChart data={stats.roundSummary} barSize={10}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
@@ -795,9 +805,9 @@ export default function DashboardPage() {
               </div>
 
               {/* Hourly Activity */}
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-widest mb-1">📈 Hourly Activity</h2>
-                <p className="text-xs text-slate-400 mb-4">Successful scans by hour of day</p>
+              <div className="glass-surface rounded-2xl p-6">
+                <h2 className="text-sm font-semibold text-[var(--foreground-muted)] uppercase tracking-widest mb-1">📈 Hourly Activity</h2>
+                <p className="text-xs text-[var(--foreground-subtle)] mb-4">Successful scans by hour of day</p>
                 {stats.hourlyActivity.some(h => h.scans > 0) ? (
                   <ResponsiveContainer width="100%" height={240}>
                     <AreaChart data={stats.hourlyActivity}>
@@ -815,7 +825,7 @@ export default function DashboardPage() {
                     </AreaChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="h-60 flex items-center justify-center text-slate-400 text-sm">No scan activity recorded</div>
+                  <div className="h-60 flex items-center justify-center text-[var(--foreground-subtle)] text-sm">No scan activity recorded</div>
                 )}
               </div>
             </div>
@@ -824,9 +834,9 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
 
               {/* Guard Performance Bar */}
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-widest mb-1">Guard Scans vs Missed</h2>
-                <p className="text-xs text-slate-400 mb-4">Side-by-side comparison</p>
+              <div className="glass-surface rounded-2xl p-6">
+                <h2 className="text-sm font-semibold text-[var(--foreground-muted)] uppercase tracking-widest mb-1">Guard Scans vs Missed</h2>
+                <p className="text-xs text-[var(--foreground-subtle)] mb-4">Side-by-side comparison</p>
                 {stats.guardLeaderboard.length > 0 ? (
                   <ResponsiveContainer width="100%" height={240}>
                     <BarChart
@@ -844,13 +854,13 @@ export default function DashboardPage() {
                       <Bar dataKey="missed"  fill="#f43f5e" radius={[6, 6, 0, 0]} name="Missed" />
                     </BarChart>
                   </ResponsiveContainer>
-                ) : <div className="h-60 flex items-center justify-center text-slate-400 text-sm">No guard data</div>}
+                ) : <div className="h-60 flex items-center justify-center text-[var(--foreground-subtle)] text-sm">No guard data</div>}
               </div>
 
               {/* Scan Point Coverage */}
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-widest mb-1">📍 Scan Point Coverage</h2>
-                <p className="text-xs text-slate-400 mb-4">% of rounds scanned per checkpoint</p>
+              <div className="glass-surface rounded-2xl p-6">
+                <h2 className="text-sm font-semibold text-[var(--foreground-muted)] uppercase tracking-widest mb-1">📍 Scan Point Coverage</h2>
+                <p className="text-xs text-[var(--foreground-subtle)] mb-4">% of rounds scanned per checkpoint</p>
                 <div className="overflow-y-auto max-h-64 pr-1">
                   {stats.coverageByPoint.map((p, i) => (
                     <CoverageBar key={i} name={p.name} done={p.done} total={p.total} />
@@ -863,20 +873,20 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
 
               {/* Recent Activity Feed */}
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-widest mb-1">🕐 Recent Activity</h2>
-                <p className="text-xs text-slate-400 mb-4">Last 10 successful scans</p>
+              <div className="glass-surface rounded-2xl p-6">
+                <h2 className="text-sm font-semibold text-[var(--foreground-muted)] uppercase tracking-widest mb-1">🕐 Recent Activity</h2>
+                <p className="text-xs text-[var(--foreground-subtle)] mb-4">Last 10 successful scans</p>
                 {stats.recentActivity.length > 0 ? (
                   <div className="space-y-2">
                     {stats.recentActivity.map((r, i) => (
-                      <div key={i} className="flex items-center gap-3 py-2 border-b border-slate-50 last:border-0">
+                      <div key={i} className="flex items-center gap-3 py-2 border-b border-[var(--border)] last:border-0">
                         <div className="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0" />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium text-slate-700 truncate">{r.qr_name}</span>
-                            <span className="text-xs text-slate-400 ml-2 flex-shrink-0">{fmtTime(r.scan_time)}</span>
+                            <span className="text-sm font-medium text-[var(--foreground)] truncate">{r.qr_name}</span>
+                            <span className="text-xs text-[var(--foreground-subtle)] ml-2 flex-shrink-0">{fmtTime(r.scan_time)}</span>
                           </div>
-                          <p className="text-xs text-slate-400">
+                          <p className="text-xs text-[var(--foreground-subtle)]">
                             {r.guard_name || 'Unknown'} · Round {r.round}
                           </p>
                         </div>
@@ -884,23 +894,23 @@ export default function DashboardPage() {
                     ))}
                   </div>
                 ) : (
-                  <div className="h-48 flex items-center justify-center text-slate-400 text-sm">No recent activity</div>
+                  <div className="h-48 flex items-center justify-center text-[var(--foreground-subtle)] text-sm">No recent activity</div>
                 )}
               </div>
 
               {/* Missed Points Table */}
               {stats.coverageByPoint.filter(p => p.done < p.total).length > 0 ? (
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                  <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-widest mb-1">⚠️ Problem Checkpoints</h2>
-                  <p className="text-xs text-slate-400 mb-4">Scan points with incomplete coverage</p>
+                <div className="glass-surface rounded-2xl p-6">
+                  <h2 className="text-sm font-semibold text-[var(--foreground-muted)] uppercase tracking-widest mb-1">⚠️ Problem Checkpoints</h2>
+                  <p className="text-xs text-[var(--foreground-subtle)] mb-4">Scan points with incomplete coverage</p>
                   <div className="overflow-x-auto">
                     <table className="min-w-full text-sm">
                       <thead>
-                        <tr className="border-b border-slate-100">
-                          <th className="text-left py-2 px-2 text-xs font-semibold text-slate-500 uppercase">Point</th>
+                        <tr className="border-b border-[var(--border)]">
+                          <th className="text-left py-2 px-2 text-xs font-semibold text-[var(--foreground-muted)] uppercase">Point</th>
                           <th className="text-center py-2 px-2 text-xs font-semibold text-emerald-600 uppercase">Done</th>
                           <th className="text-center py-2 px-2 text-xs font-semibold text-rose-600 uppercase">Missed</th>
-                          <th className="text-center py-2 px-2 text-xs font-semibold text-slate-400 uppercase">Rate</th>
+                          <th className="text-center py-2 px-2 text-xs font-semibold text-[var(--foreground-subtle)] uppercase">Rate</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -909,8 +919,8 @@ export default function DashboardPage() {
                           .map((p, i) => {
                             const pct = Math.round((p.done / p.total) * 100)
                             return (
-                              <tr key={i} className="border-b border-slate-50 hover:bg-slate-50 transition-colors">
-                                <td className="py-2 px-2 font-medium text-slate-700 text-xs">{p.name}</td>
+                              <tr key={i} className="border-b border-[var(--border)] hover:bg-[var(--surface-muted)] transition-colors">
+                                <td className="py-2 px-2 font-medium text-[var(--foreground)] text-xs">{p.name}</td>
                                 <td className="py-2 px-2 text-center">
                                   <span className="text-xs font-bold text-emerald-600">✓ {p.done}</span>
                                 </td>
@@ -930,32 +940,30 @@ export default function DashboardPage() {
                   </div>
                 </div>
               ) : stats.completed > 0 ? (
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col items-center justify-center gap-3 text-emerald-600">
+                <div className="glass-surface rounded-2xl p-6 flex flex-col items-center justify-center gap-3 text-emerald-600">
                   <span className="text-5xl">🎉</span>
                   <p className="font-bold text-lg">All checkpoints covered!</p>
-                  <p className="text-sm text-slate-400">Every scan point has 100% coverage</p>
+                  <p className="text-sm text-[var(--foreground-subtle)]">Every scan point has 100% coverage</p>
                 </div>
               ) : null}
             </div>
           </>
         ) : report.length === 0 && !loading ? (
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 min-h-[300px] flex flex-col items-center justify-center gap-3 text-slate-400">
-            <span className="text-5xl">📊</span>
-            <p className="text-lg font-semibold text-slate-500">No data found</p>
+          <GlassCard className="min-h-[300px] flex flex-col items-center justify-center gap-3 text-[var(--foreground-subtle)]">
+            <span className="text-5xl opacity-50">📊</span>
+            <p className="text-lg font-semibold text-[var(--foreground-muted)]">No data found</p>
             <p className="text-sm">Select a factory and date, then click Load</p>
-          </div>
+          </GlassCard>
         ) : loading ? (
-          <StaggeredList className="grid grid-cols-1 md:grid-cols-2 gap-6 min-h-[300px]">
-            <StaggeredItem><ShimmerSkeleton className="h-[300px] w-full" /></StaggeredItem>
-            <StaggeredItem><ShimmerSkeleton className="h-[300px] w-full" /></StaggeredItem>
-            <StaggeredItem><ShimmerSkeleton className="h-[300px] w-full md:col-span-2" /></StaggeredItem>
-          </StaggeredList>
+          <GlassCard className="min-h-[300px] flex items-center justify-center">
+            <PageLoadingSpinner label="Loading dashboard data..." />
+          </GlassCard>
         ) : null}
 
         </div>{/* end dashboardContentRef */}
 
-        <p className="mt-8 text-center text-xs text-slate-400">© {new Date().getFullYear()} Pentagon Security Verifier · Dashboard</p>
-      </div>
-    </div>
+        <p className="mt-8 text-center text-xs text-[var(--foreground-subtle)]">© {new Date().getFullYear()} Pentagon Security Verifier · Dashboard</p>
+      </PageContainer>
+    </PageTransition>
   )
 }

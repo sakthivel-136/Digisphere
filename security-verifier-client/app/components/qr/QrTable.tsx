@@ -2,7 +2,7 @@
 
 import { QRData } from "@/app/api/qr.api";
 import { Eye, Pencil, Trash2 } from "lucide-react";
-import { SpotlightCard } from "../ui/SpotlightCard";
+
 
 export type QRCode = QRData;
 
@@ -38,51 +38,51 @@ export default function QrTable({
   onToggleStatus, // ✅ properly destructured (even if not used directly)
 }: QrTableProps) {
   return (
-    <SpotlightCard className="shadow-sm overflow-hidden p-0">
+    <div className="w-full">
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-slate-100">
-          <thead className="bg-slate-50">
+        <table className="min-w-full divide-y divide-[var(--border)]">
+          <thead className="bg-[var(--surface-muted)]">
             <tr>
-              <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-[11px] font-bold text-[var(--foreground-muted)] uppercase tracking-wider">
                 QR Name
               </th>
-              <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-[11px] font-bold text-[var(--foreground-muted)] uppercase tracking-wider">
                 ID
               </th>
-              <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-[11px] font-bold text-[var(--foreground-muted)] uppercase tracking-wider">
                 Factory
               </th>
-              <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-[11px] font-bold text-[var(--foreground-muted)] uppercase tracking-wider">
                 Coordinates
               </th>
-              <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-[11px] font-bold text-[var(--foreground-muted)] uppercase tracking-wider">
                 Waiting Time (s)
               </th>
-              <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+              <th className="px-6 py-4 text-left text-[11px] font-bold text-[var(--foreground-muted)] uppercase tracking-wider">
                 Status
               </th>
-              <th className="px-6 py-4 text-right text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+              <th className="px-6 py-4 text-right text-[11px] font-bold text-[var(--foreground-muted)] uppercase tracking-wider">
                 Actions
               </th>
             </tr>
           </thead>
 
-          <tbody className="bg-white divide-y divide-slate-100">
+          <tbody className="bg-transparent divide-y divide-[var(--border)]">
             {qrCodes.map((qrData) => {
               const qr = normalizeQR(qrData);
 
               return (
                 <tr
                   key={qr.qr_id}
-                  className="hover:bg-slate-50 transition-colors duration-150 group"
+                  className="hover:bg-[var(--surface-muted)] transition-colors duration-150 group"
                 >
                   {/* Name */}
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex flex-col">
-                      <span className="text-sm font-bold text-slate-800">
+                      <span className="text-sm font-bold text-[var(--foreground)]">
                         {qr.qr_name}
                       </span>
-                      <span className="text-xs text-slate-400">
+                      <span className="text-xs text-[var(--foreground-muted)]">
                         Check Point
                       </span>
                     </div>
@@ -90,19 +90,19 @@ export default function QrTable({
 
                   {/* ID */}
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-sm text-slate-600 bg-slate-50 px-2 py-1 rounded border border-slate-100 font-mono">
+                    <span className="text-sm text-[var(--foreground-subtle)] bg-[var(--surface-muted)] px-2 py-1 rounded border border-[var(--border)] font-mono">
                       {qr.qr_id}
                     </span>
                   </td>
 
                   {/* Factory */}
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-[var(--foreground-subtle)]">
                     {qr.factory_code}
                   </td>
 
                   {/* Coordinates */}
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-1 text-sm text-slate-600">
+                    <div className="flex items-center gap-1 text-sm text-[var(--foreground-subtle)]">
                       <span className="font-mono">{qr.lat}</span>
                       <span className="text-slate-300">/</span>
                       <span className="font-mono">{qr.lon}</span>
@@ -110,7 +110,7 @@ export default function QrTable({
                   </td>
 
                   {/* Waiting Time */}
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-[var(--foreground-subtle)]">
                     {qr.waiting_time} s
                   </td>
 
@@ -120,7 +120,7 @@ export default function QrTable({
                       className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide border transition-all duration-300 ${
                         qr.status === "active"
                           ? "bg-blue-50 text-blue-700 border-blue-200"
-                          : "bg-slate-50 text-slate-500 border-slate-200"
+                          : "bg-[var(--surface-muted)] text-slate-500 border-slate-200"
                       }`}
                     >
                       <span
@@ -172,9 +172,9 @@ export default function QrTable({
       {/* Empty State */}
       {qrCodes.length === 0 && (
         <div className="flex flex-col items-center justify-center py-16 text-center">
-          <div className="bg-slate-50 p-4 rounded-full mb-4">
+          <div className="bg-[var(--surface-muted)] p-4 rounded-full mb-4">
             <svg
-              className="w-8 h-8 text-slate-400"
+              className="w-8 h-8 text-[var(--foreground-muted)]"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -187,14 +187,14 @@ export default function QrTable({
               />
             </svg>
           </div>
-          <p className="text-sm font-medium text-slate-600">
+          <p className="text-sm font-medium text-[var(--foreground-subtle)]">
             No QR codes found.
           </p>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-[var(--foreground-muted)] mt-1">
             Create a new one to get started.
           </p>
         </div>
       )}
-    </SpotlightCard>
+    </div>
   );
 }
