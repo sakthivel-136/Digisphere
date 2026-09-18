@@ -88,7 +88,7 @@ export default function Hero() {
       
 
       {/* ── LANDING PAGE HEADER ── */}
-      <header className="fixed top-0 left-0 right-0 z-50 px-6 py-4 flex items-center justify-between border-b border-white/20 bg-white/60 backdrop-blur-md">
+      <header className="absolute top-0 left-0 right-0 z-50 px-6 py-4 flex items-center justify-between border-b border-black/5 bg-transparent">
         <div className="flex items-center gap-3">
           <Image src="/logocomm.png" alt="Logo" width={140} height={40} className="object-contain" />
         </div>
@@ -321,6 +321,36 @@ export default function Hero() {
           </div>
         </div>
       </section>
+      {/* ── FOOTER ── */}
+      <footer className="bg-white border-t border-[var(--border)] py-12">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 max-w-7xl">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+            <div className="flex flex-col items-center md:items-start gap-2">
+              <Image src="/logocomm.png" alt="Logo" width={180} height={50} className="object-contain" />
+              <p className="text-sm text-slate-500 mt-2">
+                Enterprise Security Patrol & Verification System
+              </p>
+            </div>
+            
+            <div className="flex gap-6 text-sm font-medium text-slate-600">
+              <button onClick={() => router.push('/login')} className="hover:text-[var(--primary)] transition-colors">Admin Login</button>
+              <button onClick={() => setShowAppModal(true)} className="hover:text-[var(--primary)] transition-colors">Download App</button>
+              <span className="text-slate-300">|</span>
+              <a href="#" className="hover:text-[var(--primary)] transition-colors">Support</a>
+            </div>
+          </div>
+          
+          <div className="mt-8 pt-8 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-xs text-slate-400">
+              &copy; {new Date().getFullYear()} Pentagon Garments. All rights reserved.
+            </p>
+            <p className="text-xs text-slate-400 flex items-center gap-1">
+              Powered by <Shield className="w-3 h-3 text-[var(--primary)]" /> Digisphere
+            </p>
+          </div>
+        </div>
+      </footer>
+
 
     </>
   )
