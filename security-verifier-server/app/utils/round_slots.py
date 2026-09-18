@@ -1,45 +1,47 @@
-# app/utils/round_slots.py
-
 from datetime import datetime, timedelta
 import pytz
 
 IST = pytz.timezone("Asia/Kolkata")
 
-# Base round start times
-ROUND_TIMES = [
-    "00:00","00:30","01:00","01:30","02:00","02:30","03:00","03:30",
-    "04:00","04:30","05:00","05:30","06:00","07:00","08:00","09:00",
-    "10:00","11:00","12:00","13:00","14:00","15:00","16:00","17:00",
-    "18:00","19:00","20:00","21:00","21:30","22:00","22:30","23:00","23:30"
-]
-
-
 def generate_round_slots(report_date: str):
     """
-    Returns:
+    Returns exactly 32 slots matching the Flutter mobile app's 6:00 AM cycle logic.
     [
       (round_no, start_dt, end_dt),
       ...
     ]
     """
-
     base = datetime.strptime(report_date, "%Y-%m-%d")
     base = IST.localize(base)
 
     slots = []
+    
+    # 1. Day Slots: 6:00 AM to 9:00 PM (21:00) - Hourly
+    for i in range(16):
+        slots.append(base.replace(hour=6 + i, minute=0, second=0))
 
-    for i, t in enumerate(ROUND_TIMES):
+    # 2. Night Slots: 10:00 PM (22:00) to 11:30 PM (23:30) - Half-hourly
+    slots.append(base.replace(hour=22, minute=0, second=0))
+    slots.append(base.replace(hour=22, minute=30, second=0))
+    slots.append(base.replace(hour=23, minute=0, second=0))
+    slots.append(base.replace(hour=23, minute=30, second=0))
 
-        h, m = map(int, t.split(":"))
+    # 3. Early Morning Slots: 12:00 AM (00:00) to 5:30 AM - Half-hourly
+    next_day = base + timedelta(days=1)
+    for i in range(12):
+        h = i // 2
+        m = (i % 2) * 30
+        slots.append(next_day.replace(hour=h, minute=m, second=0))
 
-        start = base.replace(hour=h, minute=m, second=0)
-
-        if i < len(ROUND_TIMES) - 1:
-            nh, nm = map(int, ROUND_TIMES[i+1].split(":"))
-            end = base.replace(hour=nh, minute=nm, second=0)
+    # Build the final list with start_dt and end_dt
+    round_slots = []
+    for i, start_dt in enumerate(slots):
+        if i < len(slots) - 1:
+            end_dt = slots[i+1]
         else:
-            end = start + timedelta(minutes=30)
+            # Last slot ends 30 mins later (05:30 to 06:00)
+            end_dt = start_dt + timedelta(minutes=30)
+        
+        round_slots.append((i + 1, start_dt, end_dt))
 
-        slots.append((i + 1, start, end))
-
-    return slots
+    return round_slots

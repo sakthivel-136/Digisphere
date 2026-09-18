@@ -44,9 +44,13 @@ def download_report(
         page_size = 1000
         offset = 0
         fetch_start_dt = datetime.strptime(start_date, "%Y-%m-%d")
-        fetch_start_dt = IST.localize(fetch_start_dt) - timedelta(minutes=30)
+        fetch_start_dt = IST.localize(fetch_start_dt).replace(hour=5, minute=30)
         fetch_start = fetch_start_dt.strftime("%Y-%m-%dT%H:%M:%S+05:30")
-        fetch_end = f"{end_date}T23:59:59+05:30"
+        
+        fetch_end_dt = datetime.strptime(end_date, "%Y-%m-%d")
+        fetch_end_dt = IST.localize(fetch_end_dt) + timedelta(days=1)
+        fetch_end_dt = fetch_end_dt.replace(hour=6, minute=30)
+        fetch_end = fetch_end_dt.strftime("%Y-%m-%dT%H:%M:%S+05:30")
 
         while True:
             batch = execute_d1_query(
@@ -132,13 +136,16 @@ def download_report(
                     scan = scans_by_round_qr.get((start_slot_dt, qr_id))
 
                     if not scan:
-                        grace = timedelta(minutes=10)
+                        # STRICT 20-MINUTE WINDOW (-5 mins to +15 mins from start)
+                        window_start = start_slot_dt - timedelta(minutes=5)
+                        window_end = start_slot_dt + timedelta(minutes=15)
+
                         qr_scans = scans_by_qr.get(qr_id, [])
                         scan = next(
                             (
                                 s for s in qr_scans
                                 if s.get("scan_dt_ist")
-                                and (start_slot_dt - grace) <= s.get("scan_dt_ist") < end_slot_dt
+                                and window_start <= s.get("scan_dt_ist") < window_end
                             ),
                             None
                         )
