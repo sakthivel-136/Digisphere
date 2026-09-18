@@ -37,11 +37,15 @@ const Navbar = () => {
   const isActive = (href: string) => pathname === href
 
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
       if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) setIsUserMenuOpen(false)
     }
     document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+    document.addEventListener('touchstart', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('touchstart', handleClickOutside)
+    }
   }, [])
 
   return (
@@ -93,14 +97,16 @@ const Navbar = () => {
           
           {/* USER AVATAR (Visible on all screens) */}
           <div className="relative z-50" ref={userMenuRef}>
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsUserMenuOpen(!isUserMenuOpen);
+              }}
               className="p-2 touch-target rounded-full bg-[var(--primary-muted)] text-[var(--primary)] border border-[var(--ring)] hover:bg-[var(--primary)] hover:text-white transition-spring"
             >
               <User className="h-5 w-5" />
-            </motion.button>
+            </button>
             {isUserMenuOpen && (
               <div
                 className="absolute right-0 mt-3 w-56 rounded-xl bg-white shadow-xl ring-1 ring-black/5 overflow-hidden z-[9999]"
