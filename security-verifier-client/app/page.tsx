@@ -88,9 +88,9 @@ export default function Hero() {
       
 
       {/* ── LANDING PAGE HEADER ── */}
-      <header className="absolute top-0 left-0 right-0 z-50 px-6 py-4 flex items-center justify-between border-b border-black/5 bg-transparent">
+      <header className="absolute top-0 left-0 right-0 z-50 px-4 md:px-6 py-4 flex items-center justify-between border-b border-black/5 bg-transparent">
         <div className="flex items-center gap-3">
-          <Image src="/logocomm.png" alt="Logo" width={140} height={40} className="object-contain" />
+          <Image src="/logocomm.png" alt="Logo" width={140} height={40} className="object-contain w-[110px] md:w-[140px] h-auto" />
         </div>
         <button 
           onClick={() => router.push('/login')}
@@ -101,7 +101,7 @@ export default function Hero() {
       </header>
 
       {/* ── HERO SECTION ── */}
-      <section className="relative w-full min-h-screen flex items-center justify-center overflow-hidden bg-slate-50 pt-24 pb-12 border-b border-[var(--border)]">
+      <section className="relative w-full min-h-[100dvh] flex items-center justify-center overflow-hidden bg-slate-50 pt-32 pb-16 border-b border-[var(--border)]">
         {/* Ambient Splashes */}
         <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] bg-[var(--primary)] rounded-full mix-blend-multiply filter blur-[140px] opacity-10 animate-pulse-subtle pointer-events-none" />
         <div className="absolute bottom-[-20%] left-[-10%] w-[700px] h-[700px] bg-[var(--success)] rounded-full mix-blend-multiply filter blur-[140px] opacity-[0.05] animate-pulse-subtle delay-700 pointer-events-none" />
@@ -114,27 +114,27 @@ export default function Hero() {
               <span>Enterprise Security Infrastructure</span>
             </motion.div>
             
-            <motion.h1 variants={itemVariants} className="text-5xl lg:text-6xl font-extrabold tracking-tight text-[var(--foreground)] leading-[1.1]">
+            <motion.h1 variants={itemVariants} className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-[var(--foreground)] leading-[1.1]">
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--primary)] to-indigo-400">
                 PENTAGON SECURITY
               </span> <br />
-              <span className="text-4xl lg:text-5xl mt-2 block">Patrol & Verification System</span>
+              <span className="text-3xl md:text-4xl lg:text-5xl mt-2 block">Patrol & Verification System</span>
             </motion.h1>
             
             <motion.p variants={itemVariants} className="text-lg text-[var(--foreground-muted)] max-w-xl leading-relaxed">
               We replace outdated paper logs with a cryptographically secure, QR-based digital workflow. Ensure your guards are exactly where they need to be, exactly when they need to be there.
             </motion.p>
 
-            <motion.div variants={itemVariants} className="flex flex-wrap gap-4 pt-4">
+            <motion.div variants={itemVariants} className="flex flex-col sm:flex-row flex-wrap gap-4 pt-4">
               <button
                 onClick={() => router.push('/login')}
-                className="btn-primary flex items-center gap-2 text-base px-8 py-4 shadow-lg shadow-indigo-500/20"
+                className="btn-primary flex items-center justify-center gap-2 text-base px-8 py-4 shadow-lg shadow-indigo-500/20 w-full sm:w-auto"
               >
                 Access Admin Portal <ChevronRight className="w-5 h-5" />
               </button>
               <button
                 onClick={() => setShowAppModal(true)}
-                className="btn-secondary flex items-center gap-2 text-base px-8 py-4 bg-white border border-slate-200"
+                className="btn-secondary flex items-center justify-center gap-2 text-base px-8 py-4 bg-white border border-slate-200 w-full sm:w-auto"
               >
                 Download Guard App
               </button>
@@ -187,7 +187,7 @@ export default function Hero() {
             <motion.div 
               animate={{ y: [0, -10, 0] }}
               transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-              className="absolute -top-6 -right-6 bg-white p-4 rounded-2xl shadow-xl border border-slate-100 z-20 flex items-center gap-3"
+              className="absolute -top-4 -right-2 md:-top-6 md:-right-6 bg-white p-3 md:p-4 rounded-2xl shadow-xl border border-slate-100 z-20 flex items-center gap-3 scale-90 md:scale-100 origin-top-right"
             >
               <div className="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center relative">
                 <div className="absolute inset-0 rounded-full border-2 border-emerald-500 animate-ping opacity-20"></div>
