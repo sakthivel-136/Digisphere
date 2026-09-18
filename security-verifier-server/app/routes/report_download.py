@@ -98,8 +98,15 @@ def download_report(
         # ==============================
         scans_by_round_qr = {}
         scans_by_qr = {}
+
+        def normalize_qr(q):
+            try:
+                return str(int(float(q)))
+            except:
+                return str(q)
+
         for s in scans:
-            qr_id_str = str(s.get("qr_id"))
+            qr_id_str = normalize_qr(s.get("qr_id"))
             round_dt = s.get("round_dt")
             if round_dt:
                 scans_by_round_qr[(round_dt, qr_id_str)] = s
@@ -119,7 +126,7 @@ def download_report(
             round_slots = generate_round_slots(date_str)
 
             for qr in qr_codes:
-                qr_id = str(qr["qr_id"])
+                qr_id = normalize_qr(qr["qr_id"])
 
                 for round_no, start_slot_dt, end_slot_dt in round_slots:
                     scan = scans_by_round_qr.get((start_slot_dt, qr_id))
