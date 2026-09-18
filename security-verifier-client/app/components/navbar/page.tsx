@@ -175,17 +175,15 @@ const Navbar = () => {
             >
               <button
                 type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
+                onClick={() => {
                   setIsUserMenuOpen((prev) => !prev)
                 }}
                 className="flex items-center gap-1 justify-center px-3 py-2 touch-target rounded-full bg-[var(--primary-muted)] text-[var(--primary)] border border-[var(--ring)] hover:bg-[var(--primary)] hover:text-white transition-all duration-200"
                 aria-label="User menu"
                 aria-expanded={isUserMenuOpen}
               >
-                <User className="h-5 w-5" />
-                <ChevronDown className="h-4 w-4" />
+                <User className="h-5 w-5 pointer-events-none" />
+                <ChevronDown className="h-4 w-4 pointer-events-none" />
               </button>
 
               {isUserMenuOpen && (
