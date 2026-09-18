@@ -207,7 +207,7 @@ const Navbar = () => {
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: -6 }}
                     transition={{ duration: 0.18, ease: "easeOut" }}
-                    className="absolute right-0 top-[120%] w-56 rounded-2xl glass-panel p-2 shadow-2xl shadow-indigo-900/10 border border-[var(--border)] origin-top-right z-[9999]"
+                    className="absolute right-0 top-full mt-2 w-56 rounded-2xl bg-[var(--surface)] p-2 shadow-2xl shadow-indigo-900/10 border border-[var(--border)] origin-top-right z-[9999]"
                   >
                     
                     <div className="px-3 py-3 mb-1 bg-[var(--surface-muted)] rounded-xl border border-[var(--border)]">
