@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Download, Search, AlertTriangle, FileText, Calendar, Building2, User, Loader2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -31,7 +31,8 @@ export default function ReportDownloadPage() {
   const [pdfLoading, setPdfLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const pollReport = async () => {
+
+  const pollReport = useCallback(async () => {
     // Only poll if we have already fetched once (report has items or we explicitly loaded)
     // Actually, just calling fetch without setting loading to true
     if (!tokenService.get()) return;
@@ -55,7 +56,7 @@ export default function ReportDownloadPage() {
     } catch (e) {
       // silent fail on poll
     }
-  }
+  }, [factoryCode, reportType, reportDate, endDate, selectedMonth])
 
   // Poll every 5 seconds automatically (silent background refresh)
   useEffect(() => {
@@ -63,13 +64,13 @@ export default function ReportDownloadPage() {
       pollReport()
     }, 5000)
     return () => clearInterval(interval)
-  }, [factoryCode, reportType, reportDate, endDate, selectedMonth])
+  }, [pollReport])
 
   // Get Admin Name (JWT payload)
   const [adminName, setAdminName] = useState("")
   const [pdfTrigger, setPdfTrigger] = useState(0)
   
-  // Purge State
+  // Delete State
   const [showPurgeModal, setShowPurgeModal] = useState(false)
   const [purgeConfirmText, setPurgeConfirmText] = useState("")
 
@@ -103,7 +104,7 @@ export default function ReportDownloadPage() {
     }
   }
 
-  const fetchReport = async () => {
+  const fetchReport = useCallback(async () => {
     setLoading(true)
     setError(null)
     setReport([])
@@ -136,7 +137,13 @@ export default function ReportDownloadPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [factoryCode, reportType, reportDate, endDate, selectedMonth])
+
+  useEffect(() => {
+    if (factoryCode) {
+      fetchReport()
+    }
+  }, [fetchReport, factoryCode])
 
   const handleDownloadPdf = () => {
     setPdfLoading(true)
@@ -310,7 +317,7 @@ export default function ReportDownloadPage() {
                 className="btn-danger flex items-center gap-2 text-sm py-2 px-4 shadow-sm"
               >
                 <AlertTriangle className="w-4 h-4" />
-                Purge Old Data
+                Delete Old Data
              </button>
           </div>
 
@@ -382,7 +389,7 @@ export default function ReportDownloadPage() {
                   <div className="w-12 h-12 rounded-full bg-[var(--danger-muted)] flex items-center justify-center mb-4">
                     <AlertTriangle className="w-6 h-6 text-[var(--danger)]" />
                   </div>
-                  <h3 className="text-xl font-bold text-[var(--foreground)] mb-2">Purge Old Data?</h3>
+                  <h3 className="text-xl font-bold text-[var(--foreground)] mb-2">Delete Old Data?</h3>
                   <p className="text-sm text-[var(--foreground-muted)] mb-6">
                     This action is permanent and cannot be undone. To confirm, please type the factory code <strong className="text-[var(--foreground)]">{factoryCode}</strong> below.
                   </p>
@@ -407,7 +414,7 @@ export default function ReportDownloadPage() {
                       disabled={purgeConfirmText !== factoryCode}
                       className="btn-danger disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Purge Data
+                      Delete Data
                     </button>
                   </div>
                 </div>
