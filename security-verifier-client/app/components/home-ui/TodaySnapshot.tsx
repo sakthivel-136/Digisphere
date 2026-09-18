@@ -1,6 +1,5 @@
-// app/components/home-ui/TodaySnapshot.tsx
 import Link from "next/link";
-import { Button } from "@/app/components/ui/button";
+import { Button } from "@/app/components/ui/PremiumButton";
 
 interface SnapshotData {
   patrolsCompleted: number;
@@ -139,10 +138,8 @@ export function TodaySnapshot({ data }: TodaySnapshotProps) {
 
       {/* ✅ UPDATED ROUTING BUTTON ONLY */}
       <div className="mt-6 flex justify-center">
-        <Button asChild size="sm" variant="outline">
-          <Link href="/report-download">
+        <Button size="sm" variant="secondary" onClick={() => { window.location.href = '/report-download' }}>
             View Detailed Report
-          </Link>
         </Button>
       </div>
     </div>

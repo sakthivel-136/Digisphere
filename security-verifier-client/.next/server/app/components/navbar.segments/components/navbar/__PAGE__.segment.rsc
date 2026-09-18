@@ -1,9 +1,9 @@
 1:"$Sreact.fragment"
 2:I[33448,["/_next/static/chunks/73185db6b79d3e78.js","/_next/static/chunks/71710699033cba80.js"],"ClientPageRoot"]
-3:I[56802,["/_next/static/chunks/fd6927377815cd67.js","/_next/static/chunks/3adc73d8179edd8b.js","/_next/static/chunks/273a541e3724bf72.js","/_next/static/chunks/a5a74b7037b16c9f.js"],"default"]
+3:I[56802,["/_next/static/chunks/3bcb7e011dd7fb87.js","/_next/static/chunks/c1e39ba9b1841e47.js","/_next/static/chunks/a5a74b7037b16c9f.js","/_next/static/chunks/273a541e3724bf72.js","/_next/static/chunks/9901054608a0efac.js"],"default"]
 6:I[17924,["/_next/static/chunks/73185db6b79d3e78.js","/_next/static/chunks/71710699033cba80.js"],"OutletBoundary"]
 7:"$Sreact.suspense"
-0:{"buildId":"QFVIegDPT7IGxoaUB-6Y3","rsc":["$","$1","c",{"children":[["$","$L2",null,{"Component":"$3","serverProvidedParams":{"searchParams":{},"params":{},"promises":["$@4","$@5"]}}],[["$","script","script-0",{"src":"/_next/static/chunks/3adc73d8179edd8b.js","async":true}],["$","script","script-1",{"src":"/_next/static/chunks/273a541e3724bf72.js","async":true}],["$","script","script-2",{"src":"/_next/static/chunks/a5a74b7037b16c9f.js","async":true}]],["$","$L6",null,{"children":["$","$7",null,{"name":"Next.MetadataOutlet","children":"$@8"}]}]]}],"loading":null,"isPartial":false}
+0:{"buildId":"oxVU-uHprn966tXwORr6w","rsc":["$","$1","c",{"children":[["$","$L2",null,{"Component":"$3","serverProvidedParams":{"searchParams":{},"params":{},"promises":["$@4","$@5"]}}],[["$","script","script-0",{"src":"/_next/static/chunks/c1e39ba9b1841e47.js","async":true}],["$","script","script-1",{"src":"/_next/static/chunks/a5a74b7037b16c9f.js","async":true}],["$","script","script-2",{"src":"/_next/static/chunks/273a541e3724bf72.js","async":true}],["$","script","script-3",{"src":"/_next/static/chunks/9901054608a0efac.js","async":true}]],["$","$L6",null,{"children":["$","$7",null,{"name":"Next.MetadataOutlet","children":"$@8"}]}]]}],"loading":null,"isPartial":false}
 4:{}
 5:"$0:rsc:props:children:0:props:serverProvidedParams:params"
 8:null

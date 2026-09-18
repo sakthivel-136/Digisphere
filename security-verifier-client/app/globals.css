@@ -1,51 +1,100 @@
 @import "tailwindcss";
 
-/* ---------------------------------------- */
-/* ROOT DESIGN TOKENS                        */
-/* ---------------------------------------- */
+/* ================================================================ */
+/*  DESIGN TOKENS — Single source of truth for all visual values    */
+/* ================================================================ */
+
 :root {
-  /* Slate/Charcoal Neutrals */
-  --background:       #f8fafc; /* slate-50 */
-  --surface:          #ffffff;
-  --surface-muted:    #f1f5f9; /* slate-100 */
-  --surface-hover:    #e2e8f0; /* slate-200 */
-  
-  --foreground:       #0f172a; /* slate-900 */
-  --foreground-muted: #475569; /* slate-600 */
-  --foreground-subtle:#64748b; /* slate-500 */
-  
-  --border:           #e2e8f0; /* slate-200 */
-  --border-light:     rgba(255, 255, 255, 0.6);
-  --ring:             rgba(79, 70, 229, 0.3); /* indigo-600/30 */
-  
-  /* Electric Indigo Primary (Pentagon Branding) */
-  --primary:          #4f46e5; /* indigo-600 */
-  --primary-hover:    #4338ca; /* indigo-700 */
-  --primary-muted:    #e0e7ff; /* indigo-100 */
-  
-  /* Semantic Tokens */
-  --success:          #10b981; /* emerald-500 */
-  --success-muted:    #d1fae5; /* emerald-100 */
-  
-  --warning:          #f59e0b; /* amber-500 */
-  --warning-muted:    #fef3c7; /* amber-100 */
-  
-  --danger:           #e11d48; /* rose-600 */
-  --danger-muted:     #ffe4e6; /* rose-100 */
+  /* ── Neutrals ── */
+  --background:        #f8fafc;   /* slate-50  */
+  --surface:           #ffffff;
+  --surface-muted:     #f1f5f9;   /* slate-100 */
+  --surface-hover:     #e2e8f0;   /* slate-200 */
+
+  /* ── Text ── */
+  --foreground:        #0f172a;   /* slate-900 */
+  --foreground-muted:  #475569;   /* slate-600 */
+  --foreground-subtle: #94a3b8;   /* slate-400 */
+
+  /* ── Borders & Rings ── */
+  --border:            #e2e8f0;   /* slate-200 */
+  --border-light:      rgba(255, 255, 255, 0.6);
+  --ring:              rgba(79, 70, 229, 0.25);  /* indigo/30 */
+
+  /* ── Brand: Indigo ── */
+  --primary:           #4f46e5;   /* indigo-600 */
+  --primary-hover:     #4338ca;   /* indigo-700 */
+  --primary-muted:     #e0e7ff;   /* indigo-100 */
+  --primary-foreground:#ffffff;
+
+  /* ── Semantic ── */
+  --success:           #10b981;   /* emerald-500 */
+  --success-muted:     #d1fae5;   /* emerald-100 */
+
+  --warning:           #f59e0b;   /* amber-500  */
+  --warning-muted:     #fef3c7;   /* amber-100  */
+
+  --danger:            #e11d48;   /* rose-600   */
+  --danger-muted:      #ffe4e6;   /* rose-100   */
+
+  /* ── Z-Index Scale ── */
+  --z-base:      0;
+  --z-sticky:    40;
+  --z-dropdown:  50;
+  --z-modal:     60;
+  --z-toast:     70;
+
+  /* ── Radius ── */
+  --radius-sm:   0.5rem;     /*  8px */
+  --radius:      0.75rem;    /* 12px */
+  --radius-md:   1rem;       /* 16px */
+  --radius-lg:   1.25rem;    /* 20px */
+  --radius-xl:   1.5rem;     /* 24px */
+
+  /* ── Transitions ── */
+  --transition-fast:   150ms cubic-bezier(0.16, 1, 0.3, 1);
+  --transition:        250ms cubic-bezier(0.16, 1, 0.3, 1);
+  --transition-slow:   400ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* ── Tailwind theme bridge ── */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-primary: var(--primary);
-  --color-primary-hover: var(--primary-hover);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background:   var(--background);
+  --color-foreground:   var(--foreground);
+  --color-primary:      var(--primary);
+  --color-primary-hover:var(--primary-hover);
+  --font-sans:          var(--font-geist-sans);
+  --font-mono:          var(--font-geist-mono);
 }
 
-/* ---------------------------------------- */
-/* GLOBAL BASE                               */
-/* ---------------------------------------- */
+/* ================================================================ */
+/*  DARK MODE TOKENS                                                */
+/* ================================================================ */
+
+.dark {
+  --background:        #0b0f1a;
+  --surface:           #111827;
+  --surface-muted:     #1e293b;
+  --surface-hover:     #334155;
+
+  --foreground:        #f1f5f9;
+  --foreground-muted:  #94a3b8;
+  --foreground-subtle: #64748b;
+
+  --border:            #1e293b;
+  --border-light:      rgba(255, 255, 255, 0.08);
+  --ring:              rgba(99, 102, 241, 0.3);
+
+  --primary-muted:     rgba(99, 102, 241, 0.15);
+  --success-muted:     rgba(16, 185, 129, 0.12);
+  --warning-muted:     rgba(245, 158, 11, 0.12);
+  --danger-muted:      rgba(225, 29, 72, 0.12);
+}
+
+/* ================================================================ */
+/*  GLOBAL BASE                                                     */
+/* ================================================================ */
+
 *, *::before, *::after {
   box-sizing: border-box;
 }
@@ -61,92 +110,183 @@ body {
   background-color: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
-  font-weight: 400;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-image: 
-    radial-gradient(at 10% 10%, rgba(79, 70, 229, 0.05) 0, transparent 50%),
-    radial-gradient(at 90% 90%, rgba(16, 185, 129, 0.05) 0, transparent 50%);
+  /* Subtle ambient gradient — fixed so it doesn't scroll */
+  background-image:
+    radial-gradient(at 10% 10%, rgba(79, 70, 229, 0.06) 0, transparent 55%),
+    radial-gradient(at 90% 90%, rgba(16, 185, 129, 0.04) 0, transparent 55%);
   background-attachment: fixed;
 }
 
-/* ---------------------------------------- */
-/* UTILITY CLASSES                           */
-/* ---------------------------------------- */
+/* ================================================================ */
+/*  STANDARD GLASS SURFACE — ONE definition, used everywhere       */
+/* ================================================================ */
 
-/* Glassmorphism 2.0 */
+.glass-surface {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow:
+    0 4px 24px -4px rgba(15, 23, 42, 0.06),
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.dark .glass-surface {
+  background: rgba(17, 24, 39, 0.82);
+  border-color: rgba(255, 255, 255, 0.07);
+  box-shadow:
+    0 4px 24px -4px rgba(0, 0, 0, 0.4),
+    0 1px 2px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+/* Legacy alias — keeps old code using .glass-panel working */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.65);
-  backdrop-filter: blur(24px) saturate(150%);
-  -webkit-backdrop-filter: blur(24px) saturate(150%);
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
-  position: relative;
-  overflow: hidden;
-}
-
-/* Add noise texture to glass panels for realism */
-.glass-panel::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  opacity: 0.15;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-  pointer-events: none;
-  z-index: -1;
-}
-
-/* Spotlight Effect */
-.spotlight {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow:
+    0 4px 24px -4px rgba(15, 23, 42, 0.06),
+    0 1px 2px rgba(15, 23, 42, 0.04);
   position: relative;
 }
-.spotlight::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(
-    600px circle at var(--x, 50%) var(--y, 50%),
-    rgba(255,255,255, 0.4),
-    transparent 40%
-  );
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 300ms cubic-bezier(0.16, 1, 0.3, 1);
-  z-index: 10;
-  mix-blend-mode: soft-light;
-}
-.spotlight:hover::after {
-  opacity: 1;
+
+.dark .glass-panel {
+  background: rgba(17, 24, 39, 0.82);
+  border-color: rgba(255, 255, 255, 0.07);
 }
 
-/* Card base */
-.card-modern {
-  background-color: var(--surface);
-  border-radius: 1rem;
-  border: 1px solid var(--border);
-  box-shadow: 0 4px 6px -1px rgba(15, 23, 42, 0.05);
-  transition: box-shadow 300ms cubic-bezier(0.16, 1, 0.3, 1), transform 300ms cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: transform, opacity;
+/* ================================================================ */
+/*  INTERACTION UTILITIES                                           */
+/* ================================================================ */
+
+/* Spring-like transition for interactive elements */
+.transition-spring {
+  transition: all 250ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Inputs & Forms */
+/* Lift on hover — for cards */
+.hover-lift {
+  transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.1);
+}
+
+/* ================================================================ */
+/*  FORM ELEMENTS                                                   */
+/* ================================================================ */
+
 .input-modern {
   width: 100%;
-  padding: 0.75rem 1rem;
-  border-radius: 0.75rem;
+  padding: 0.625rem 0.875rem;
+  border-radius: var(--radius);
   border: 1px solid var(--border);
   background-color: var(--surface);
   color: var(--foreground);
-  transition: all 250ms cubic-bezier(0.16, 1, 0.3, 1);
+  font-size: 0.875rem;
+  transition: all var(--transition-fast);
   outline: none;
   appearance: none;
+}
+.input-modern::placeholder {
+  color: var(--foreground-subtle);
 }
 .input-modern:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 3px var(--ring);
 }
+.input-modern:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: var(--surface-muted);
+}
 
-/* Touch targets */
+/* ================================================================ */
+/*  BUTTON UTILITIES (for pages not yet migrated to Button.tsx)    */
+/* ================================================================ */
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: var(--primary);
+  color: white;
+  font-weight: 500;
+  font-size: 0.875rem;
+  padding: 0.5rem 1.25rem;
+  min-height: 40px;
+  border-radius: var(--radius);
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.2);
+  transition: all var(--transition-fast);
+}
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px -2px rgba(79, 70, 229, 0.3);
+}
+.btn-primary:active:not(:disabled) { transform: translateY(0); }
+.btn-primary:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: var(--surface);
+  color: var(--foreground);
+  font-weight: 500;
+  font-size: 0.875rem;
+  padding: 0.5rem 1.25rem;
+  min-height: 40px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+.btn-secondary:hover:not(:disabled) {
+  background-color: var(--surface-hover);
+  transform: translateY(-1px);
+}
+.btn-secondary:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.btn-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: var(--danger-muted);
+  color: var(--danger);
+  font-weight: 500;
+  font-size: 0.875rem;
+  padding: 0.5rem 1.25rem;
+  min-height: 40px;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+.btn-danger:hover:not(:disabled) {
+  background-color: var(--danger);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px -2px rgba(225, 29, 72, 0.3);
+}
+.btn-danger:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ================================================================ */
+/*  TOUCH TARGET                                                    */
+/* ================================================================ */
+
 .touch-target {
   min-width: 44px;
   min-height: 44px;
@@ -155,109 +295,87 @@ body {
   justify-content: center;
 }
 
-/* Buttons */
-.btn-primary {
-  background-color: var(--primary);
-  color: white;
-  font-weight: 500;
-  padding: 0.5rem 1.25rem;
-  border-radius: 9999px;
-  border: none;
-  cursor: pointer;
-  box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
-  min-height: 44px;
-  transition: all 300ms cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: transform;
-}
-.btn-primary:hover {
-  background-color: var(--primary-hover);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px -2px rgba(79, 70, 229, 0.3);
-}
+/* ================================================================ */
+/*  SKELETON / SHIMMER                                              */
+/* ================================================================ */
 
-.btn-secondary {
-  background-color: var(--surface);
-  color: var(--foreground);
-  font-weight: 500;
-  padding: 0.5rem 1.25rem;
-  border-radius: 9999px;
-  border: 1px solid var(--border);
-  cursor: pointer;
-  min-height: 44px;
-  transition: all 300ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-.btn-secondary:hover {
-  background-color: var(--surface-hover);
-  transform: translateY(-2px);
-}
-
-.btn-danger {
-  background-color: var(--danger-muted);
-  color: var(--danger);
-  font-weight: 500;
-  padding: 0.5rem 1.25rem;
-  border-radius: 9999px;
-  border: 1px solid transparent;
-  cursor: pointer;
-  min-height: 44px;
-  transition: all 300ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-.btn-danger:hover {
-  background-color: var(--danger);
-  color: white;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px -2px rgba(225, 29, 72, 0.3);
-}
-
-/* Custom Scrollbar */
-::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { 
-  background: var(--border); 
-  border-radius: 9999px; 
-  border: 2px solid transparent;
-  background-clip: content-box;
-}
-::-webkit-scrollbar-thumb:hover { background: var(--foreground-subtle); border-width: 1px; }
-
-/* Shimmer Sweep Animation */
 @keyframes shimmer-sweep {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
 }
 
 .skeleton {
   position: relative;
   background-color: var(--surface-hover);
-  border-radius: 0.5rem;
+  border-radius: var(--radius-sm);
   overflow: hidden;
 }
 .skeleton::after {
   content: "";
   position: absolute;
-  top: 0; right: 0; bottom: 0; left: 0;
+  inset: 0;
   background: linear-gradient(
     90deg,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.4) 50%,
-    rgba(255, 255, 255, 0) 100%
+    transparent 0%,
+    rgba(255, 255, 255, 0.35) 50%,
+    transparent 100%
   );
-  animation: shimmer-sweep 2s infinite cubic-bezier(0.16, 1, 0.3, 1);
+  animation: shimmer-sweep 1.8s infinite;
 }
 
-/* ---------------------------------------- */
-/* DARK MODE TOKENS                         */
-/* ---------------------------------------- */
-.dark {
-  --background: #0f172a;
-  --foreground: #f8fafc;
-  --foreground-muted: #94a3b8;
-  --foreground-subtle: #64748b;
+/* ================================================================ */
+/*  SCROLLBAR                                                       */
+/* ================================================================ */
 
-  --surface: #111827;
-  --surface-muted: #1e293b;
-  --surface-hover: #334155;
-
-  --border: #334155;
-  --border-light: #1e293b;
+::-webkit-scrollbar               { width: 6px; height: 6px; }
+::-webkit-scrollbar-track         { background: transparent; }
+::-webkit-scrollbar-thumb         {
+  background: var(--border);
+  border-radius: 9999px;
 }
+::-webkit-scrollbar-thumb:hover   { background: var(--foreground-subtle); }
+
+/* ================================================================ */
+/*  SELECTION                                                       */
+/* ================================================================ */
+
+::selection {
+  background: rgba(79, 70, 229, 0.2);
+  color: var(--foreground);
+}
+
+/* ================================================================ */
+/*  REDUCED MOTION                                                  */
+/* ================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ================================================================ */
+/*  SPOTLIGHT CARD EFFECT                                           */
+/* ================================================================ */
+
+.spotlight {
+  position: relative;
+}
+.spotlight::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    500px circle at var(--x, 50%) var(--y, 50%),
+    rgba(255, 255, 255, 0.35),
+    transparent 40%
+  );
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 300ms ease;
+  z-index: 10;
+  border-radius: inherit;
+}
+.spotlight:hover::after { opacity: 1; }
