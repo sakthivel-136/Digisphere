@@ -2,14 +2,16 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { Download, Search, AlertTriangle, FileText, Calendar, Building2, User, Loader2 } from 'lucide-react'
+import { Download, Search, AlertTriangle, FileText, Calendar, Building2, Loader2 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
-// Placeholder imports for your existing components
 import ReportTable from '@/app/components/reports/ReportTable'
 import { getApiUrl } from "@/app/utils/apiUrl"
 import PatrolReportPDF from '@/app/components/reports/PatrolReportPDF'
 import { tokenService } from '@/app/services/token.service'
+import { PageTransition } from '@/app/components/layout/PageTransition'
+import { PageContainer } from '@/app/components/layout/PageContainer'
+import { GlassCard } from '@/app/components/ui/GlassCard'
 
 const IconSpinner = () => <Loader2 className="w-5 h-5 animate-spin" />
 
@@ -167,9 +169,8 @@ export default function ReportDownloadPage() {
   const cleanLogs = report
 
   return (
-    <div className="w-full flex-1">
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
-        
+    <PageTransition>
+      <PageContainer>
         {/* HEADER */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-8">
           <div className="space-y-1">
@@ -198,7 +199,7 @@ export default function ReportDownloadPage() {
         </AnimatePresence>
 
         {/* CONTROLS CARD */}
-        <div className="card-modern p-6 mb-8 relative z-10">
+        <GlassCard className="mb-8 relative z-10">
           
           {/* Tabs */}
           <div className="flex gap-2 mb-6 bg-[var(--surface-muted)] p-1 rounded-xl inline-flex">
@@ -305,7 +306,7 @@ export default function ReportDownloadPage() {
               </button>
             </div>
           </div>
-        </div>
+        </GlassCard>
 
         {/* RESULTS AREA */}
         <div className="grid grid-cols-1 gap-6">
@@ -321,7 +322,7 @@ export default function ReportDownloadPage() {
              </button>
           </div>
 
-          <div className="card-modern overflow-hidden min-h-[400px] flex flex-col">
+          <GlassCard noPadding className="overflow-hidden min-h-[400px] flex flex-col">
             {loading ? (
               <div className="flex-1 flex flex-col items-center justify-center text-[var(--foreground-subtle)] space-y-4">
                 <IconSpinner />
@@ -345,7 +346,7 @@ export default function ReportDownloadPage() {
                 <p className="text-sm">Select a factory and date range to view logs.</p>
               </div>
             )}
-          </div>
+          </GlassCard>
         </div>
 
         {/* PDF HIDDEN RENDER */}
@@ -423,7 +424,7 @@ export default function ReportDownloadPage() {
           )}
         </AnimatePresence>
 
-      </div>
-    </div>
+      </PageContainer>
+    </PageTransition>
   )
 }

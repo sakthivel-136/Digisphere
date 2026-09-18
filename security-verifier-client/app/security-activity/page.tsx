@@ -6,7 +6,14 @@ import { ActivityTable } from '@/app/components/security-activity/ActivityTable'
 import { ActivitySummaryCards } from '@/app/components/security-activity/ActivitySummaryCards'
 import { ActivityDetails } from '@/app/components/security-activity/ActivityDetails'
 import type { Activity, ActivityFilterValues } from '@/app/components/security-activity/types'
+import { PageTransition } from '@/app/components/layout/PageTransition'
+import { PageContainer } from '@/app/components/layout/PageContainer'
+import { GlassCard } from '@/app/components/ui/GlassCard'
+import { motion } from 'framer-motion'
+import { containerVariants, itemVariants } from '@/lib/animations'
+import { Activity as ActivityIcon } from 'lucide-react'
 
+// ── Mock data preserved exactly ──
 const mockActivities: Activity[] = [
   {
     id: 'ACT001',
@@ -24,69 +31,87 @@ const mockActivities: Activity[] = [
 ]
 
 export default function SecurityActivityPage() {
+  // ── State preserved exactly ──
   const [activities] = useState<Activity[]>(mockActivities)
-  const [filteredActivities, setFilteredActivities] =
-    useState<Activity[]>(mockActivities)
-  const [selectedActivity, setSelectedActivity] =
-    useState<Activity | null>(null)
+  const [filteredActivities, setFilteredActivities] = useState<Activity[]>(mockActivities)
+  const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null)
   const [isDetailsOpen, setIsDetailsOpen] = useState(false)
 
+  // ── Handler preserved exactly ──
   const handleFilter = (filters: ActivityFilterValues) => {
     let filtered = [...activities]
-
     if (filters.activityType !== 'All') {
       filtered = filtered.filter(a => a.type === filters.activityType)
     }
-
     if (filters.guard !== 'All') {
       filtered = filtered.filter(a => a.guardName === filters.guard)
     }
-
     if (filters.route !== 'All') {
       filtered = filtered.filter(a => a.routeName === filters.route)
     }
-
     setFilteredActivities(filtered)
   }
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <h1 className="text-2xl font-bold mb-6">Security Activity Log</h1>
+    <PageTransition>
+      <PageContainer>
+        <motion.div variants={containerVariants} initial="initial" animate="animate">
 
-      <div className="bg-white p-4 rounded mb-6">
-        <ActivityFilters activities={activities} onFilter={handleFilter} />
-      </div>
+          {/* Header */}
+          <motion.div variants={itemVariants} className="flex items-center gap-3 mb-6">
+            <div className="h-10 w-10 rounded-xl bg-[var(--primary-muted)] flex items-center justify-center flex-shrink-0">
+              <ActivityIcon className="h-5 w-5 text-[var(--primary)]" />
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-[var(--foreground)] tracking-tight">
+                Security Activity Log
+              </h1>
+              <p className="text-sm text-[var(--foreground-muted)] mt-0.5">
+                Real-time patrol and guard activity tracking
+              </p>
+            </div>
+          </motion.div>
 
-      <ActivitySummaryCards
-        totalActivities={filteredActivities.length}
-        missedScans={
-          filteredActivities.filter(a => a.type === 'Missed Scan').length
-        }
-        emergencyAlerts={
-          filteredActivities.filter(a => a.type === 'Emergency Alert').length
-        }
-        issuesReported={
-          filteredActivities.filter(a => a.status !== 'Success').length
-        }
-      />
+          {/* Filters */}
+          <motion.div variants={itemVariants}>
+            <GlassCard className="mb-6">
+              <ActivityFilters activities={activities} onFilter={handleFilter} />
+            </GlassCard>
+          </motion.div>
 
-      <div className="bg-white mt-6 rounded">
-        <ActivityTable
-          activities={filteredActivities}
-          onViewDetails={(activity) => {
-            setSelectedActivity(activity)
-            setIsDetailsOpen(true)
-          }}
-        />
-      </div>
+          {/* Summary Cards */}
+          <motion.div variants={itemVariants}>
+            <ActivitySummaryCards
+              totalActivities={filteredActivities.length}
+              missedScans={filteredActivities.filter(a => a.type === 'Missed Scan').length}
+              emergencyAlerts={filteredActivities.filter(a => a.type === 'Emergency Alert').length}
+              issuesReported={filteredActivities.filter(a => a.status !== 'Success').length}
+            />
+          </motion.div>
 
-      {selectedActivity && (
-        <ActivityDetails
-          activity={selectedActivity}
-          isOpen={isDetailsOpen}
-          onClose={() => setIsDetailsOpen(false)}
-        />
-      )}
-    </div>
+          {/* Activity Table */}
+          <motion.div variants={itemVariants}>
+            <GlassCard noPadding className="mt-6 overflow-hidden">
+              <ActivityTable
+                activities={filteredActivities}
+                onViewDetails={(activity) => {
+                  setSelectedActivity(activity)
+                  setIsDetailsOpen(true)
+                }}
+              />
+            </GlassCard>
+          </motion.div>
+        </motion.div>
+
+        {/* Details Panel */}
+        {selectedActivity && (
+          <ActivityDetails
+            activity={selectedActivity}
+            isOpen={isDetailsOpen}
+            onClose={() => setIsDetailsOpen(false)}
+          />
+        )}
+      </PageContainer>
+    </PageTransition>
   )
 }

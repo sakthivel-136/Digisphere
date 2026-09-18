@@ -7,7 +7,13 @@ import UsersTable from '@/app/components/users/UsersTable'
 import UserForm from '@/app/components/users/UserForm'
 import { SecurityUser } from '@/app/types/securityUser'
 import { useAuthGuard } from '@/app/services/auth.guard'
-import { StaggeredList, StaggeredItem } from '@/app/components/ui/LayoutOrchestration'
+import { PageTransition } from '@/app/components/layout/PageTransition'
+import { PageContainer } from '@/app/components/layout/PageContainer'
+import { GlassCard } from '@/app/components/ui/GlassCard'
+import { PageLoadingSpinner } from '@/app/components/ui/LoadingSpinner'
+import { motion } from 'framer-motion'
+import { containerVariants, itemVariants } from '@/lib/animations'
+import { Plus, Users } from 'lucide-react'
 
 interface Factory {
   factory_code: string
@@ -20,11 +26,10 @@ export default function UserCrudPage() {
   const [users, setUsers] = useState<SecurityUser[]>([])
   const [factories, setFactories] = useState<Factory[]>([])
   const [loading, setLoading] = useState(true)
-  
-  // Modal states
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [editingUser, setEditingUser] = useState<SecurityUser | null>(null)
 
+  // ── All handlers preserved exactly ──
   const loadData = async () => {
     if (!authorized) return
     try {
@@ -41,6 +46,7 @@ export default function UserCrudPage() {
 
   useEffect(() => {
     loadData()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authorized])
 
   const handleAddUser = () => {
@@ -55,57 +61,75 @@ export default function UserCrudPage() {
 
   if (!authorized) {
     return (
-      <div className="p-6 text-slate-400 min-h-screen bg-slate-50 flex items-center justify-center">
-        Checking access...
-      </div>
+      <PageTransition>
+        <PageLoadingSpinner label="Checking access…" />
+      </PageTransition>
     )
   }
 
   return (
-    <StaggeredList className="min-h-screen bg-slate-50 p-8 font-sans">
-      {/* HEADER SECTION */}
-      <StaggeredItem className="max-w-7xl mx-auto mb-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight">System Users</h1>
-          <p className="text-slate-500 mt-1 font-medium">Manage and register factory operators and portal admins</p>
-        </div>
-        
-        <button
-          onClick={handleAddUser}
-          className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold shadow-[0_4px_14px_0_rgba(37,99,235,0.39)] transition-all duration-300 hover:bg-blue-700 hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(37,99,235,0.23)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600"
-        >
-          <span>Add Security User</span>
-          <svg className="w-4 h-4 transition-transform group-hover:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-          </svg>
-        </button>
-      </StaggeredItem>
+    <PageTransition>
+      <PageContainer>
+        <motion.div variants={containerVariants} initial="initial" animate="animate">
 
-      <StaggeredItem className="max-w-7xl mx-auto">
-        {loading && users.length === 0 ? (
-          <div className="flex items-center justify-center p-12 bg-white rounded-2xl border border-slate-200 shadow-sm">
-            <p className="text-slate-500 font-medium">Loading user management...</p>
-          </div>
-        ) : (
-          <UsersTable
-            users={users}
-            onAddUser={handleAddUser}
-            onEditUser={handleEditUser}
-            onRefresh={loadData}
+          {/* Page Header */}
+          <motion.div
+            variants={itemVariants}
+            className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6"
+          >
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-[var(--primary-muted)] flex items-center justify-center flex-shrink-0">
+                <Users className="h-5 w-5 text-[var(--primary)]" />
+              </div>
+              <div>
+                <h1 className="text-2xl sm:text-3xl font-bold text-[var(--foreground)] tracking-tight">
+                  System Users
+                </h1>
+                <p className="text-sm text-[var(--foreground-muted)] mt-0.5">
+                  Manage and register factory operators and portal admins
+                </p>
+              </div>
+            </div>
+
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.97 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+              onClick={handleAddUser}
+              className="btn-primary flex-shrink-0"
+            >
+              <Plus className="h-4 w-4" />
+              Add Security User
+            </motion.button>
+          </motion.div>
+
+          {/* Table Content */}
+          <motion.div variants={itemVariants}>
+            {loading && users.length === 0 ? (
+              <GlassCard className="flex items-center justify-center py-16">
+                <PageLoadingSpinner label="Loading users…" />
+              </GlassCard>
+            ) : (
+              <UsersTable
+                users={users}
+                onAddUser={handleAddUser}
+                onEditUser={handleEditUser}
+                onRefresh={loadData}
+              />
+            )}
+          </motion.div>
+        </motion.div>
+
+        {/* Modal (outside motion.div to avoid stacking context issues) */}
+        {isFormOpen && (
+          <UserForm
+            user={editingUser}
+            factories={factories}
+            onClose={() => setIsFormOpen(false)}
+            onSave={loadData}
           />
         )}
-      </StaggeredItem>
-
-      {isFormOpen && (
-        <UserForm
-          user={editingUser}
-          factories={factories}
-          onClose={() => setIsFormOpen(false)}
-          onSave={loadData}
-        />
-      )}
-    </StaggeredList>
+      </PageContainer>
+    </PageTransition>
   )
 }
-
-
