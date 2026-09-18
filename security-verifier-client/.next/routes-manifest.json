@@ -106,6 +106,12 @@
       "namedRegex": "^/security\\-info(?:/)?$"
     },
     {
+      "page": "/test",
+      "regex": "^/test(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/test(?:/)?$"
+    },
+    {
       "page": "/user-crud",
       "regex": "^/user\\-crud(?:/)?$",
       "routeKeys": {},

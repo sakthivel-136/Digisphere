@@ -13,5 +13,6 @@
   "/scan-points/page": "/scan-points",
   "/security-activity/page": "/security-activity",
   "/security-info/page": "/security-info",
+  "/test/page": "/test",
   "/user-crud/page": "/user-crud"
 }

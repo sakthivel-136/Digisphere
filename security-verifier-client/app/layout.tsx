@@ -6,6 +6,7 @@ import "./globals.css";
 
 import NavbarClient from "@/app/components/navbar/NavbarClient";
 import NavbarWrapper from "@/app/components/navbar/NavbarWrapper";
+import NextTopLoader from 'nextjs-toploader';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -46,6 +47,7 @@ export default function RootLayout({
           text-foreground
         `}
       >
+        <NextTopLoader color="var(--primary)" showSpinner={false} shadow="0 0 10px var(--primary),0 0 5px var(--primary)" />
         {/* Navbar (hidden on home page via NavbarWrapper logic) */}
         <NavbarWrapper>
           <NavbarClient />

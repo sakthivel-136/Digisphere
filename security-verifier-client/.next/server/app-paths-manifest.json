@@ -13,5 +13,6 @@
   "/scan-points/page": "app/scan-points/page.js",
   "/security-activity/page": "app/security-activity/page.js",
   "/security-info/page": "app/security-info/page.js",
+  "/test/page": "app/test/page.js",
   "/user-crud/page": "app/user-crud/page.js"
 }

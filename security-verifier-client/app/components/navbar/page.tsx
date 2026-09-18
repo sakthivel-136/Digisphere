@@ -9,13 +9,15 @@ import {
   Menu,
   User,
   X,
-  ChevronDown,
   Download,
   RefreshCw,
   Moon,
   Sun,
+  ChevronDown,
+  BookOpen,
+  Smartphone
 } from 'lucide-react'
-import { clearAuth } from '@/app/services/token.service'
+import { clearAuth, getUser, AuthUser } from '@/app/services/token.service'
 import AppDownloadModal from '../ui/AppDownloadModal'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -27,6 +29,8 @@ const Navbar = () => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const [showAppModal, setShowAppModal] = useState(false)
   const [isDarkMode, setIsDarkMode] = useState(false)
+  
+  const [user, setUser] = useState<AuthUser | null>(null)
 
   const userMenuRef = useRef<HTMLDivElement>(null)
 
@@ -37,10 +41,15 @@ const Navbar = () => {
     router.replace('/login')
   }
 
+  const startTour = () => {
+    console.log('Starting App Tour...')
+    // Implement tour logic here
+  }
+
   const navItems = [
     { name: 'Dashboard', href: '/dashboard' },
     { name: 'Reports', href: '/report-download' },
-    { name: 'Users Management', href: '/user-crud' },
+    { name: 'Users', href: '/user-crud' },
     { name: 'QR', href: '/dashboard/qr-crud' },
     { name: 'Factories', href: '/factory' },
   ]
@@ -48,6 +57,7 @@ const Navbar = () => {
   const isActive = (href: string) => pathname === href
 
   useEffect(() => {
+    setUser(getUser())
     const savedTheme = localStorage.getItem('theme')
 
     if (savedTheme === 'dark') {
@@ -59,9 +69,12 @@ const Navbar = () => {
     }
   }, [])
 
+  const initials = user?.username?.substring(0, 2).toUpperCase() || 'AD'
+  const userName = user?.username || 'Admin'
+  const userRole = user?.role || 'Admin'
+
   const toggleTheme = () => {
     const newTheme = !isDarkMode
-
     setIsDarkMode(newTheme)
 
     if (newTheme) {
@@ -95,7 +108,6 @@ const Navbar = () => {
 
   return (
     <>
-      {/* APP DOWNLOAD MODAL */}
       <AppDownloadModal
         isOpen={showAppModal}
         onClose={() => setShowAppModal(false)}
@@ -108,14 +120,14 @@ const Navbar = () => {
           {/* LOGO */}
           <Link
             href="/"
-            className="flex items-center gap-2 hover:opacity-80 transition-spring"
+            className="flex items-center gap-2 hover:opacity-80 transition-all duration-300 active:scale-95"
           >
             <div className="flex h-10 w-auto items-center">
               <Image
                 src="/logocomm.png"
                 alt="Logo"
-                width={170}
-                height={40}
+                width={150}
+                height={35}
                 priority
                 className="object-contain"
               />
@@ -124,23 +136,18 @@ const Navbar = () => {
 
           {/* DESKTOP NAV */}
           <nav className="hidden min-[1051px]:flex items-center justify-center flex-1 mx-4">
-            <div className="flex items-center rounded-full bg-[var(--surface-muted)] px-2 py-1 shadow-inner border border-[var(--border)]">
-
+            <div className="flex items-center rounded-full bg-[var(--surface-muted)] px-1.5 py-1.5 shadow-inner border border-[var(--border)]">
               {navItems.map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}
-                  className="relative z-10 mx-1"
+                  className="relative z-10 mx-0.5"
                 >
-                  <motion.div
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="flex items-center"
-                  >
+                  <div className="flex items-center group">
                     {isActive(item.href) && (
                       <motion.div
                         layoutId="nav-pill"
-                        className="absolute inset-0 bg-white rounded-full shadow-sm"
+                        className="absolute inset-0 bg-white dark:bg-slate-700 rounded-full shadow-sm"
                         transition={{
                           type: 'spring',
                           stiffness: 380,
@@ -148,9 +155,8 @@ const Navbar = () => {
                         }}
                       />
                     )}
-
                     <span
-                      className={`px-4 py-2 text-sm font-medium rounded-full z-10 transition-colors ${
+                      className={`px-3.5 py-1.5 text-sm font-semibold rounded-full z-10 transition-all duration-200 hover:scale-105 active:scale-95 ${
                         isActive(item.href)
                           ? 'text-[var(--primary)]'
                           : 'text-[var(--foreground-muted)] hover:text-[var(--foreground)]'
@@ -158,175 +164,143 @@ const Navbar = () => {
                     >
                       {item.name}
                     </span>
-                  </motion.div>
+                  </div>
                 </Link>
               ))}
-
             </div>
           </nav>
 
-          {/* RIGHT SIDE */}
-          <div className="flex items-center gap-3">
+          {/* RIGHT SIDE: PROFILE & MOBILE TOGGLE */}
+          <div className="flex items-center gap-2 sm:gap-4">
 
-            {/* PROFILE DROPDOWN */}
-            <div
-              className="relative z-[100]"
-              ref={userMenuRef}
-            >
+            {/* USER AVATAR + DROPDOWN */}
+            <div className="relative z-[100] flex items-center" ref={userMenuRef}>
               <button
                 type="button"
-                onClick={() => {
-                  setIsUserMenuOpen((prev) => !prev)
-                }}
-                className="flex items-center gap-1 justify-center px-3 py-2 touch-target rounded-full bg-[var(--primary-muted)] text-[var(--primary)] border border-[var(--ring)] hover:bg-[var(--primary)] hover:text-white transition-all duration-200"
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                className="flex items-center gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl bg-[var(--surface)] border border-[var(--border)] hover:border-[var(--primary-muted)] hover:shadow-md hover:shadow-[var(--primary-muted)] transition-all duration-200 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-[var(--primary)] focus:ring-offset-2"
                 aria-label="User menu"
                 aria-expanded={isUserMenuOpen}
               >
-                <User className="h-5 w-5 pointer-events-none" />
-                <ChevronDown className="h-4 w-4 pointer-events-none" />
+                {/* Initials Avatar Box */}
+                <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-indigo-600 to-violet-500 text-white text-xs font-bold flex items-center justify-center shadow-sm pointer-events-none">
+                  {initials}
+                </div>
+                
+                {/* Name & Role (Hidden on ultra-small mobile to save space, visible on tablet+) */}
+                <span className="hidden sm:block text-sm font-semibold text-[var(--foreground)] max-w-[90px] truncate pointer-events-none">
+                  {userName}
+                </span>
+                
+                {/* Rotating Arrow Icon */}
+                <ChevronDown
+                  size={16}
+                  className={`text-[var(--foreground-subtle)] transition-transform duration-300 pointer-events-none ${isUserMenuOpen ? 'rotate-180' : ''}`}
+                />
               </button>
 
-              {isUserMenuOpen && (
-                <div
-                  className="absolute right-0 top-full mt-3 w-60 overflow-hidden rounded-2xl bg-[var(--surface)] shadow-2xl ring-1 ring-black/5 z-[9999]"
-                >
-
-                    {/* USER HEADER */}
-                    <div className="px-4 py-4 bg-[var(--surface-muted)] border-b border-[var(--border)]">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--primary-muted)] text-[var(--primary)]">
-                          <User className="h-5 w-5" />
-                        </div>
-
-                        <div>
-                          <p className="text-sm font-semibold text-[var(--foreground)]">
-                            User Account
-                          </p>
-                          <p className="text-xs text-[var(--foreground-muted)]">
-                            Account Menu
-                          </p>
-                        </div>
-                      </div>
+              {/* Dropdown Menu List with Smooth Animation */}
+              <AnimatePresence>
+                {isUserMenuOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: -6 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: -6 }}
+                    transition={{ duration: 0.18, ease: "easeOut" }}
+                    className="absolute right-0 top-[120%] w-56 rounded-2xl glass-panel p-2 shadow-2xl shadow-indigo-900/10 border border-[var(--border)] origin-top-right z-[9999]"
+                  >
+                    
+                    <div className="px-3 py-3 mb-1 bg-[var(--surface-muted)] rounded-xl border border-[var(--border)]">
+                        <p className="text-sm font-bold text-[var(--foreground)] truncate">
+                          {userName}
+                        </p>
+                        <p className="text-xs text-[var(--foreground-muted)] font-medium">
+                          {userRole}
+                        </p>
                     </div>
 
-                    {/* MENU ITEMS */}
-                    <div className="p-2">
-
-                      {/* SWITCH USER */}
+                    {[
+                      { label: 'App Guide',    icon: <BookOpen size={16}/>,    onClick: () => { startTour(); setIsUserMenuOpen(false) } },
+                      { label: 'Switch User',  icon: <RefreshCw size={16}/>,   onClick: () => { setIsUserMenuOpen(false); router.push('/login') } },
+                      { label: 'Download App', icon: <Smartphone size={16}/>,  onClick: () => { setShowAppModal(true); setIsUserMenuOpen(false) }, gold: true },
+                    ].map(({ label, icon, onClick, gold }) => (
                       <button
-                        type="button"
-                        onClick={() => {
-                          setIsUserMenuOpen(false)
-                          router.push('/login')
-                        }}
-                        className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm text-[var(--foreground)] hover:bg-[var(--surface-muted)] transition-colors"
+                        key={label}
+                        onClick={onClick}
+                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 active:scale-95
+                          ${gold ? 'text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20'
+                            : 'text-[var(--foreground)] hover:text-[var(--primary)] hover:bg-[var(--primary-muted)]'}`}
                       >
-                        <RefreshCw className="h-5 w-5 text-[var(--foreground-subtle)]" />
-
-                        <span>Switch User</span>
+                        {icon}
+                        {label}
                       </button>
-
-                      {/* DOWNLOAD APP */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsUserMenuOpen(false)
-                          setShowAppModal(true)
-                        }}
-                        className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm text-[var(--foreground)] hover:bg-[var(--surface-muted)] transition-colors"
-                      >
-                        <Download className="h-5 w-5 text-[var(--foreground-subtle)]" />
-
-                        <span>Download App</span>
-                      </button>
-
-                      {/* THEME SWITCH */}
-                      <button
+                    ))}
+                    
+                    {/* THEME SWITCH */}
+                    <button
                         type="button"
                         onClick={toggleTheme}
-                        className="flex w-full items-center justify-between rounded-xl px-3 py-3 text-sm text-[var(--foreground)] hover:bg-[var(--surface-muted)] transition-colors"
-                      >
+                        className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold text-[var(--foreground)] hover:text-[var(--primary)] hover:bg-[var(--primary-muted)] transition-all duration-200 active:scale-95 mt-1"
+                    >
                         <div className="flex items-center gap-3">
-                          {isDarkMode ? (
-                            <Sun className="h-5 w-5 text-[var(--foreground-subtle)]" />
-                          ) : (
-                            <Moon className="h-5 w-5 text-[var(--foreground-subtle)]" />
-                          )}
-
-                          <span>
-                            {isDarkMode ? 'Light Mode' : 'Dark Mode'}
-                          </span>
+                          {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
+                          <span>{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
                         </div>
-
-                        {/* Toggle */}
-                        <div
-                          className={`relative h-6 w-11 rounded-full transition-colors ${
-                            isDarkMode
-                              ? 'bg-[var(--primary)]'
-                              : 'bg-gray-300'
-                          }`}
-                        >
-                          <div
-                            className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
-                              isDarkMode
-                                ? 'translate-x-6'
-                                : 'translate-x-1'
-                            }`}
-                          />
+                        <div className={`relative h-5 w-9 rounded-full transition-colors ${isDarkMode ? 'bg-[var(--primary)]' : 'bg-[var(--border)]'}`}>
+                          <div className={`absolute top-1 h-3 w-3 rounded-full bg-white shadow-sm transition-transform ${isDarkMode ? 'translate-x-5' : 'translate-x-1'}`} />
                         </div>
-                      </button>
+                    </button>
 
-                    </div>
+                    <div className="h-px bg-[var(--border)] my-1" />
 
-                    {/* LOGOUT */}
-                    <div className="border-t border-[var(--border)] p-2">
-                      <button
-                        type="button"
-                        onClick={handleLogout}
-                        className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-[var(--danger)] hover:bg-[var(--danger-muted)] transition-colors"
-                      >
-                        <LogOut className="h-5 w-5" />
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-[var(--danger)] hover:bg-[var(--danger-muted)] transition-all duration-200 active:scale-95"
+                    >
+                      <LogOut size={16} />
+                      Log out
+                    </button>
 
-                        <span>Log out</span>
-                      </button>
-                    </div>
-
-                  </div>
+                  </motion.div>
                 )}
+              </AnimatePresence>
             </div>
 
             {/* MOBILE MENU BUTTON */}
             <button
               type="button"
-              className="max-[1050px]:flex hidden p-2 text-[var(--foreground)] touch-target rounded-full hover:bg-[var(--surface-hover)] transition-spring items-center justify-center"
-              onClick={() =>
-                setIsMobileMenuOpen((prev) => !prev)
-              }
+              className="min-[1051px]:hidden flex p-2 text-[var(--foreground)] touch-target rounded-xl border border-[var(--border)] hover:bg-[var(--surface-hover)] transition-all duration-200 active:scale-95 items-center justify-center bg-[var(--surface)]"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               {isMobileMenuOpen ? (
-                <X className="h-6 w-6" />
+                <X className="h-5 w-5 pointer-events-none" />
               ) : (
-                <Menu className="h-6 w-6" />
+                <Menu className="h-5 w-5 pointer-events-none" />
               )}
             </button>
 
           </div>
         </div>
 
-        {isMobileMenuOpen && (
-            <div
-              className="max-[1050px]:block hidden border-t border-[var(--border)] bg-[var(--surface)] backdrop-blur-xl overflow-hidden"
+        {/* MOBILE MENU OVERLAY */}
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+              className="min-[1051px]:hidden border-t border-[var(--border)] bg-[var(--surface)]/95 backdrop-blur-xl overflow-hidden shadow-2xl"
             >
-              <div className="px-4 py-6 space-y-2">
-
+              <div className="px-4 py-4 space-y-1">
                 {navItems.map((item) => (
                   <Link
                     key={item.name}
                     href={item.href}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className={`block rounded-xl px-4 py-3 font-medium transition-spring ${
+                    className={`block rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-200 active:scale-95 ${
                       isActive(item.href)
-                        ? 'bg-[var(--primary-muted)] text-[var(--primary)]'
+                        ? 'bg-[var(--primary-muted)] text-[var(--primary)] shadow-sm'
                         : 'text-[var(--foreground)] hover:bg-[var(--surface-muted)]'
                     }`}
                   >
@@ -334,81 +308,58 @@ const Navbar = () => {
                   </Link>
                 ))}
 
-                <div className="border-t border-[var(--border)] pt-4 mt-4 space-y-2">
-
-                  {/* SWITCH USER */}
+                <div className="border-t border-[var(--border)] pt-3 mt-3 space-y-1">
                   <button
                     type="button"
                     onClick={() => {
                         setIsMobileMenuOpen(false)
                         router.push('/login')
                     }}
-                    className="flex items-center w-full text-left px-4 py-3 hover:bg-[var(--surface-muted)] rounded-xl text-[var(--foreground)] transition-spring"
+                    className="flex items-center w-full text-left px-4 py-3 hover:bg-[var(--surface-muted)] rounded-xl text-[var(--foreground)] font-semibold text-sm transition-all duration-200 active:scale-95"
                   >
-                    <RefreshCw className="h-5 w-5 mr-3 text-[var(--foreground-subtle)]" />
-                    Login / Switch
+                    <RefreshCw className="h-4 w-4 mr-3 text-[var(--foreground-subtle)]" />
+                    Switch User
                   </button>
 
-                  {/* DOWNLOAD APP */}
                   <button
                     type="button"
                     onClick={() => {
                         setIsMobileMenuOpen(false)
                         setShowAppModal(true)
                     }}
-                    className="flex items-center w-full text-left px-4 py-3 hover:bg-[var(--surface-muted)] rounded-xl text-[var(--foreground)] transition-spring"
+                    className="flex items-center w-full text-left px-4 py-3 hover:bg-[var(--surface-muted)] rounded-xl text-[var(--foreground)] font-semibold text-sm transition-all duration-200 active:scale-95"
                   >
-                    <Download className="h-5 w-5 mr-3 text-[var(--foreground-subtle)]" />
+                    <Download className="h-4 w-4 mr-3 text-[var(--foreground-subtle)]" />
                     Download App
                   </button>
                   
-                  {/* THEME SWITCH MOBILE */}
                   <button
                     type="button"
                     onClick={toggleTheme}
-                    className="flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm text-[var(--foreground)] hover:bg-[var(--surface-muted)] transition-colors"
+                    className="flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold text-[var(--foreground)] hover:bg-[var(--surface-muted)] transition-all duration-200 active:scale-95"
                   >
                     <div className="flex items-center">
-                      {isDarkMode ? (
-                        <Sun className="h-5 w-5 mr-3 text-[var(--foreground-subtle)]" />
-                      ) : (
-                        <Moon className="h-5 w-5 mr-3 text-[var(--foreground-subtle)]" />
-                      )}
-                      <span className="text-base font-medium">
-                        {isDarkMode ? 'Light Mode' : 'Dark Mode'}
-                      </span>
+                      {isDarkMode ? <Sun size={16} className="mr-3 text-[var(--foreground-subtle)]" /> : <Moon size={16} className="mr-3 text-[var(--foreground-subtle)]" />}
+                      <span>{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
                     </div>
-                    <div
-                      className={`relative h-6 w-11 rounded-full transition-colors ${
-                        isDarkMode
-                          ? 'bg-[var(--primary)]'
-                          : 'bg-gray-300'
-                      }`}
-                    >
-                      <div
-                        className={`absolute top-1 h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
-                          isDarkMode
-                            ? 'translate-x-6'
-                            : 'translate-x-1'
-                        }`}
-                      />
+                    <div className={`relative h-5 w-9 rounded-full transition-colors ${isDarkMode ? 'bg-[var(--primary)]' : 'bg-gray-300'}`}>
+                      <div className={`absolute top-1 h-3 w-3 rounded-full bg-white shadow-sm transition-transform ${isDarkMode ? 'translate-x-5' : 'translate-x-1'}`} />
                     </div>
                   </button>
 
-                  {/* LOGOUT */}
                   <button
                     type="button"
                     onClick={handleLogout}
-                    className="flex items-center w-full text-left px-4 py-3 text-[var(--danger)] hover:bg-[var(--danger-muted)] rounded-xl transition-spring"
+                    className="flex items-center w-full text-left px-4 py-3 text-[var(--danger)] hover:bg-[var(--danger-muted)] rounded-xl font-semibold text-sm transition-all duration-200 active:scale-95 mt-1"
                   >
-                    <LogOut className="h-5 w-5 mr-3" />
+                    <LogOut className="h-4 w-4 mr-3" />
                     Log out
                   </button>
-
                 </div>
               </div>
-            </div>
+            </motion.div>
           )}
+        </AnimatePresence>
 
       </header>
     </>
