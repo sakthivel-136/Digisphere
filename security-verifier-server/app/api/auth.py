@@ -39,7 +39,11 @@ async def login(payload: LoginRequest):
 
     # Token expires in 60 minutes
     access_token = create_access_token(
-        {"user_id": payload.user_id, "role": user["role"]},
+        {
+            "user_id": payload.user_id, 
+            "role": user["role"],
+            "name": user["name"]
+        },
         expires_delta=timedelta(minutes=60)
     )
 

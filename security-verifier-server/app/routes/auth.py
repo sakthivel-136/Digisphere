@@ -1,13 +1,12 @@
 # app/routes/auth.py
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-
 from datetime import timedelta
 
 from app.core.security import create_access_token
-from app.database import get_db
+from app.database import execute_d1_query
 
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
@@ -25,25 +24,15 @@ class LoginRequest(BaseModel):
 # Login Route (DB BASED)
 # ----------------------
 @router.post("/login")
-async def login(
-    payload: LoginRequest,
-    db=Depends(get_db)
-):
-
+async def login(payload: LoginRequest):
     try:
-
         # ==============================
         # 1. Fetch user from DB
         # ==============================
-        res = (
-            db.table("login_info")   # 👈 CHANGE if your table name is different
-            .select("user_id, user_pin, name, role")
-            .eq("user_id", payload.user_id)
-            .limit(1)
-            .execute()
+        users = execute_d1_query(
+            "SELECT user_id, user_pin, name, role FROM login_info WHERE user_id = ?",
+            [payload.user_id]
         )
-
-        users = res.data or []
 
         if not users:
             raise HTTPException(
@@ -52,7 +41,6 @@ async def login(
             )
 
         user = users[0]
-
 
         # ==============================
         # 2. Verify PIN
@@ -63,7 +51,6 @@ async def login(
                 detail="Invalid User ID or Password"
             )
 
-
         # ==============================
         # 3. Create Token
         # ==============================
@@ -71,10 +58,10 @@ async def login(
             {
                 "user_id": user["user_id"],
                 "role": user["role"],
+                "name": user.get("name", ""),
             },
             expires_delta=timedelta(minutes=60)
         )
-
 
         # ==============================
         # 4. Return Response
@@ -84,19 +71,14 @@ async def login(
                 "access_token": access_token,
                 "token_type": "bearer",
                 "role": user["role"],
-                "name": user["name"],   # ✅ REAL NAME
+                "name": user["name"],
             }
         )
 
-
     except HTTPException:
         raise
-
-
     except Exception as e:
-
         print("❌ LOGIN ERROR:", e)
-
         raise HTTPException(
             status_code=500,
             detail="Login failed"

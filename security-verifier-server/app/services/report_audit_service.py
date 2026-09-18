@@ -1,20 +1,15 @@
 # app/services/report_audit_service.py
-
 from datetime import datetime, timezone, timedelta
+from app.database import insert_row
 
 IST = timezone(timedelta(hours=5, minutes=30))
 
-
 def save_report_audit(
-    db,
     report_type: str,
     factory_code: str,
     report_date: str,
     current_user: dict
 ):
-    if not db:
-        raise RuntimeError("Supabase client not initialized")
-
     audit_payload = {
         "report_type": report_type,
         "factory_code": factory_code,
@@ -25,4 +20,4 @@ def save_report_audit(
         "generated_at": datetime.now(IST).isoformat(),
     }
 
-    db.table("report_audit").insert(audit_payload).execute()
+    insert_row("report_audit", audit_payload)

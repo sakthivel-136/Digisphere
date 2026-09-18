@@ -3,7 +3,7 @@ from reportlab.platypus import SimpleDocTemplate, Table, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.pagesizes import A4
 
-from app.database import supabase
+from app.database import execute_d1_query
 
 
 # ---------------- ROUND SPLIT LOGIC ---------------- #
@@ -13,12 +13,17 @@ def split_into_rounds(scans, gap_minutes=30):
     current_round = []
 
     for scan in scans:
-        scan_time = datetime.fromisoformat(scan["scan_time"])
+        scan_time_str = scan.get("scan_time")
+        if not scan_time_str:
+            continue
+            
+        scan_time = datetime.fromisoformat(scan_time_str.replace("Z", "+00:00")).replace(tzinfo=None)
 
         if not current_round:
             current_round.append(scan)
         else:
-            last_time = datetime.fromisoformat(current_round[-1]["scan_time"])
+            last_time_str = current_round[-1].get("scan_time")
+            last_time = datetime.fromisoformat(last_time_str.replace("Z", "+00:00")).replace(tzinfo=None)
             diff = (scan_time - last_time).total_seconds() / 60
 
             if diff > gap_minutes:
@@ -43,47 +48,47 @@ def update_all_scan_statuses():
 # ---------------- REPORT DOWNLOAD SERVICE ---------------- #
 
 def generate_report_download(payload):
-    if not supabase:
-        raise RuntimeError("Supabase not initialized")
-
     # 🔹 Factory
-    factory_res = supabase.table("factories") \
-        .select("factory_name, factory_address") \
-        .eq("factory_code", payload.factory_code) \
-        .single() \
-        .execute()
+    factories = execute_d1_query(
+        "SELECT factory_name, factory_address FROM factories WHERE factory_code = ?",
+        [payload.factory_code]
+    )
 
-    if not factory_res.data:
+    if not factories:
         raise ValueError("Factory not found")
 
-    factory = factory_res.data
+    factory = factories[0]
 
-    # 🔹 Admin
-    admin_res = supabase.table("users") \
-        .select("full_name") \
-        .eq("user_id", payload.downloaded_by) \
-        .single() \
-        .execute()
+    # 🔹 Admin (Using login_info based on standard setup)
+    admins = execute_d1_query(
+        "SELECT name FROM login_info WHERE user_id = ?",
+        [payload.downloaded_by]
+    )
 
-    admin_name = admin_res.data["full_name"] if admin_res.data else "Admin"
+    admin_name = admins[0]["name"] if admins else "Admin"
 
     # 🔹 Scan logs
-    scans_res = supabase.table("scanning_details") \
-        .select("""
-            employee_name,
-            employee_id,
+    # Note: Using guard_name, security_id, qr_name, lat, log based on updated schema
+    scans = execute_d1_query(
+        """
+        SELECT 
+            guard_name as employee_name,
             qr_name,
-            latitude,
-            longitude,
+            lat as latitude,
+            log as longitude,
             scan_time
-        """) \
-        .eq("factory_code", payload.factory_code) \
-        .gte("scan_time", f"{payload.report_date}T00:00:00") \
-        .lte("scan_time", f"{payload.report_date}T23:59:59") \
-        .order("scan_time") \
-        .execute()
-
-    scans = scans_res.data or []
+        FROM scanning_details
+        WHERE factory_code = ?
+          AND scan_time >= ?
+          AND scan_time <= ?
+        ORDER BY scan_time
+        """,
+        [
+            payload.factory_code,
+            f"{payload.report_date}T00:00:00",
+            f"{payload.report_date}T23:59:59"
+        ]
+    )
 
     if not scans:
         raise ValueError("No scan data found")
@@ -110,8 +115,11 @@ def generate_report_download(payload):
 
     # 🔹 Rounds
     for idx, round_scans in enumerate(rounds, start=1):
-        start_time = datetime.fromisoformat(round_scans[0]["scan_time"]).strftime("%I:%M %p")
-        end_time = datetime.fromisoformat(round_scans[-1]["scan_time"]).strftime("%I:%M %p")
+        start_time_str = round_scans[0]["scan_time"]
+        end_time_str = round_scans[-1]["scan_time"]
+        
+        start_time = datetime.fromisoformat(start_time_str.replace("Z", "+00:00")).strftime("%I:%M %p")
+        end_time = datetime.fromisoformat(end_time_str.replace("Z", "+00:00")).strftime("%I:%M %p")
 
         elements.append(Paragraph(
             f"S.No : {idx} | Date : {payload.report_date} "
@@ -122,7 +130,6 @@ def generate_report_download(payload):
 
         table_data = [[
             "Employee Name",
-            "Employee ID",
             "Patrol Time",
             "Location",
             "Latitude",
@@ -130,13 +137,13 @@ def generate_report_download(payload):
         ]]
 
         for s in round_scans:
+            s_time = datetime.fromisoformat(s["scan_time"].replace("Z", "+00:00")).strftime("%I:%M %p")
             table_data.append([
-                s["employee_name"],
-                s["employee_id"],
-                datetime.fromisoformat(s["scan_time"]).strftime("%I:%M %p"),
-                s["qr_name"],
-                s["latitude"],
-                s["longitude"]
+                s.get("employee_name", "N/A"),
+                s_time,
+                s.get("qr_name", "N/A"),
+                s.get("latitude", "N/A"),
+                s.get("longitude", "N/A")
             ])
 
         elements.append(Table(table_data, repeatRows=1))

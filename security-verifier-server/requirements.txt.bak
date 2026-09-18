@@ -6,6 +6,14 @@ uvicorn[standard]==0.32.1
 starlette==0.41.3
 
 # ================================
+# Supabase
+# ================================
+supabase==2.10.0
+gotrue==2.12.4
+postgrest==0.18.0
+storage3==0.9.0
+realtime==2.5.3
+supafunc==0.7.0
 
 # ================================
 # Auth / JWT

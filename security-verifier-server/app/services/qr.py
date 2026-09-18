@@ -9,7 +9,6 @@ def create_qr(data: dict):
     Create a new QR.
     Ensures waiting_time is valid and never null.
     """
-
     # ✅ Default waiting_time if missing
     if "waiting_time" not in data or data["waiting_time"] is None:
         data["waiting_time"] = 15
@@ -20,7 +19,7 @@ def create_qr(data: dict):
 
     inserted = insert_row(TABLE, data)
 
-    return inserted[0] if inserted else None
+    return inserted
 
 
 # ---------------- READ BY FACTORY ----------------
@@ -39,10 +38,8 @@ def update_qr(qr_id: int, data: dict):
     """
     Update QR details.
     """
-
     # ✅ Handle waiting_time validation if provided
     if "waiting_time" in data:
-
         # If explicitly set to None → default
         if data["waiting_time"] is None:
             data["waiting_time"] = 15
@@ -53,20 +50,17 @@ def update_qr(qr_id: int, data: dict):
 
     updated = update_row(
         TABLE,
-        row_id=qr_id,
-        data=data,
-        id_column="qr_id"
+        filters={"qr_id": qr_id},
+        data=data
     )
 
-    return updated[0] if updated else None
+    return updated
 
 
 # ---------------- DELETE ----------------
 def delete_qr(qr_id: int):
     deleted = delete_row(
         TABLE,
-        row_id=qr_id,
-        id_column="qr_id"
+        filters={"qr_id": qr_id}
     )
-
     return bool(deleted)

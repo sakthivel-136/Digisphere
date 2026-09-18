@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, status, Depends
-from app.database import supabase
+from app.database import execute_d1_query, insert_row, select_rows, update_row, delete_row
 from app.schemas.factory import FactoryCreate, FactoryResponse
 from app.dependencies import get_current_user, admin_only
 
@@ -8,32 +8,22 @@ router = APIRouter(
     tags=["Factories"]
 )
 
-
 # ---------------------------
 # CREATE Factory
 # ---------------------------
 @router.post("", status_code=status.HTTP_201_CREATED, response_model=FactoryResponse)
 def create_factory(payload: FactoryCreate, _: dict = Depends(admin_only)):
-
-    result = supabase.table("factories").insert({
-
-        "factory_code": payload.factory_code,
-        "factory_name": payload.factory_name,
-
-        # ✅ SAVE LOCATION
-        "location": payload.location,
-
-        # ✅ SAVE REAL ADDRESS (IMPORTANT)
-        "factory_address": payload.factory_address,
-
-        "is_active": True
-
-    }).execute()
-
-    if not result.data:
-        raise HTTPException(500, "Failed to create factory")
-
-    return result.data[0]
+    try:
+        inserted = insert_row("factories", {
+            "factory_code": payload.factory_code,
+            "factory_name": payload.factory_name,
+            "location": payload.location,
+            "factory_address": payload.factory_address,
+            "is_active": 1
+        })
+        return inserted
+    except Exception as e:
+        raise HTTPException(500, f"Failed to create factory: {str(e)}")
 
 
 # ---------------------------
@@ -41,15 +31,7 @@ def create_factory(payload: FactoryCreate, _: dict = Depends(admin_only)):
 # ---------------------------
 @router.get("", response_model=list[FactoryResponse])
 def get_factories(_: dict = Depends(get_current_user)):
-
-    result = (
-        supabase
-        .table("factories")
-        .select("*")
-        .execute()
-    )
-
-    return result.data or []
+    return select_rows("factories")
 
 
 # ---------------------------
@@ -57,15 +39,7 @@ def get_factories(_: dict = Depends(get_current_user)):
 # ---------------------------
 @router.get("/minimal")
 def get_factories_minimal(_: dict = Depends(get_current_user)):
-
-    result = (
-        supabase
-        .table("factories")
-        .select("factory_code, factory_name, factory_address")
-        .execute()
-    )
-
-    return result.data or []
+    return execute_d1_query("SELECT factory_code, factory_name, factory_address FROM factories")
 
 
 # ---------------------------
@@ -73,19 +47,10 @@ def get_factories_minimal(_: dict = Depends(get_current_user)):
 # ---------------------------
 @router.get("/{factory_code}", response_model=FactoryResponse)
 def get_factory(factory_code: str, _: dict = Depends(get_current_user)):
-
-    result = (
-        supabase
-        .table("factories")
-        .select("*")
-        .eq("factory_code", factory_code)
-        .execute()
-    )
-
-    if not result.data:
+    rows = select_rows("factories", {"factory_code": factory_code})
+    if not rows:
         raise HTTPException(404, "Factory not found")
-
-    return result.data[0]
+    return rows[0]
 
 
 # ---------------------------
@@ -93,31 +58,22 @@ def get_factory(factory_code: str, _: dict = Depends(get_current_user)):
 # ---------------------------
 @router.put("/{factory_code}", response_model=FactoryResponse)
 def update_factory(factory_code: str, payload: FactoryCreate, _: dict = Depends(admin_only)):
-
-    existing = supabase.table("factories") \
-        .select("*") \
-        .eq("factory_code", factory_code) \
-        .execute()
-
-    if not existing.data:
+    existing = select_rows("factories", {"factory_code": factory_code})
+    if not existing:
         raise HTTPException(404, "Factory not found")
 
-    result = supabase.table("factories").update({
-
-        "factory_name": payload.factory_name,
-
-        # ✅ UPDATE LOCATION
-        "location": payload.location,
-
-        # ✅ UPDATE REAL ADDRESS
-        "factory_address": payload.factory_address,
-
-    }).eq("factory_code", factory_code).execute()
-
-    if not result.data:
-        raise HTTPException(500, "Failed to update factory")
-
-    return result.data[0]
+    try:
+        updated = update_row("factories", 
+            {"factory_code": factory_code},
+            {
+                "factory_name": payload.factory_name,
+                "location": payload.location,
+                "factory_address": payload.factory_address,
+            }
+        )
+        return updated
+    except Exception as e:
+        raise HTTPException(500, f"Failed to update factory: {str(e)}")
 
 
 # ---------------------------
@@ -125,31 +81,17 @@ def update_factory(factory_code: str, payload: FactoryCreate, _: dict = Depends(
 # ---------------------------
 @router.delete("/{factory_code}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_factory(factory_code: str, _: dict = Depends(admin_only)):
-
-    existing = supabase.table("factories") \
-        .select("*") \
-        .eq("factory_code", factory_code) \
-        .execute()
-
-    if not existing.data:
+    existing = select_rows("factories", {"factory_code": factory_code})
+    if not existing:
         raise HTTPException(404, "Factory not found")
 
-    # 1. Delete associated scan points (references factory_code in factory_id field)
-    supabase.table("scan_points") \
-        .delete() \
-        .eq("factory_id", factory_code) \
-        .execute()
+    # 1. Delete associated scan points
+    execute_d1_query("DELETE FROM scan_points WHERE factory_id = ?", [factory_code])
 
-    # 2. Delete associated QR codes (references factory_code in factory_code field)
-    supabase.table("qr") \
-        .delete() \
-        .eq("factory_code", factory_code) \
-        .execute()
+    # 2. Delete associated QR codes
+    execute_d1_query("DELETE FROM qr WHERE factory_code = ?", [factory_code])
 
     # 3. Delete the factory itself
-    supabase.table("factories") \
-        .delete() \
-        .eq("factory_code", factory_code) \
-        .execute()
+    delete_row("factories", {"factory_code": factory_code})
 
     return None
