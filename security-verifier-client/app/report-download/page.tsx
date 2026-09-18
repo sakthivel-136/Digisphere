@@ -51,7 +51,7 @@ export default function ReportDownloadPage() {
       const res = await fetch(url, { headers: { Authorization: `Bearer ${tokenService.get()}` } })
       if (res.ok) {
         const data = await res.json()
-        setReport(data.report || [])
+        setReport(Array.isArray(data) ? data : data.data || [])
       }
     } catch (e) {
       // silent fail on poll
