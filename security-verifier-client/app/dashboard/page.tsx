@@ -385,10 +385,23 @@ export default function DashboardPage() {
       .finally(() => setLoading(false))
   }, [selectedFactory, selectedDate, authorized])
 
+  const pollReport = useCallback(() => {
+    if (!authorized || !selectedFactory || !selectedDate) return
+    getPatrolReport(selectedFactory, selectedDate)
+      .then(data => { setReport(data); setLastUpdated(new Date().toLocaleTimeString()) })
+      .catch(() => {})
+  }, [selectedFactory, selectedDate, authorized])
+
   /* auto-fetch when factory/date changes */
   useEffect(() => {
     fetchReport()
   }, [fetchReport])
+
+  /* auto-poll every 15 seconds for live updates */
+  useEffect(() => {
+    const interval = setInterval(pollReport, 15000)
+    return () => clearInterval(interval)
+  }, [pollReport])
 
   /* ================================================================
      COMPUTED STATS (time-aware)

@@ -30,7 +30,42 @@ export default function ReportDownloadPage() {
   const [loading, setLoading] = useState(false)
   const [pdfLoading, setPdfLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  
+
+  const pollReport = async () => {
+    // Only poll if we have already fetched once (report has items or we explicitly loaded)
+    // Actually, just calling fetch without setting loading to true
+    if (!tokenService.get()) return;
+    try {
+      let url = `${getApiUrl()}/report/download?factory_code=${factoryCode}`
+      if (reportType === 'single') {
+        url += `&report_date=${reportDate}`
+      } else if (reportType === 'range') {
+        url += `&report_date=${reportDate}&end_date=${endDate}`
+      } else {
+        const y = selectedMonth.split('-')[0]
+        const m = selectedMonth.split('-')[1]
+        url += `&month=${m}&year=${y}`
+      }
+      
+      const res = await fetch(url, { headers: { Authorization: `Bearer ${tokenService.get()}` } })
+      if (res.ok) {
+        const data = await res.json()
+        setReport(data.report || [])
+      }
+    } catch (e) {
+      // silent fail on poll
+    }
+  }
+
+  // Poll every 15 seconds automatically
+  useEffect(() => {
+    const interval = setInterval(() => {
+      pollReport()
+    }, 15000)
+    return () => clearInterval(interval)
+  }, [factoryCode, reportType, reportDate, endDate, selectedMonth])
+
+  // Get Admin Name (JWT payload)
   const [adminName, setAdminName] = useState("")
   const [pdfTrigger, setPdfTrigger] = useState(0)
   
