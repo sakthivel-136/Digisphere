@@ -244,3 +244,20 @@ body {
   );
   animation: shimmer-sweep 2s infinite cubic-bezier(0.16, 1, 0.3, 1);
 }
+
+/* ---------------------------------------- */
+/* DARK MODE TOKENS                         */
+/* ---------------------------------------- */
+.dark {
+  --background: #0f172a;
+  --foreground: #f8fafc;
+  --foreground-muted: #94a3b8;
+  --foreground-subtle: #64748b;
+
+  --surface: #111827;
+  --surface-muted: #1e293b;
+  --surface-hover: #334155;
+
+  --border: #334155;
+  --border-light: #1e293b;
+}
