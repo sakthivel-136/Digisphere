@@ -532,7 +532,7 @@ export default function DashboardPage() {
         // Use the round's start hour instead of raw scan_time hour
         const roundIdx = r.round - 1
         if (roundIdx >= 0 && roundIdx < ROUND_TIMES.length) {
-          const h = parseInt(ROUND_TIMES[roundIdx].split(':')[0])
+          const h = ROUND_TIMES[roundIdx].h
           hourMap[h] = (hourMap[h] || 0) + 1
         } else {
           const h = new Date(r.scan_time!).getHours()

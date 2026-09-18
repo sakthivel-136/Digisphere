@@ -99,7 +99,7 @@
         "transform": "lodash/{{member}}"
       }
     },
-    "outputFileTracingRoot": "/Users/rekha/.gemini/antigravity/scratch/digisphere/security-verifier-client",
+    "outputFileTracingRoot": "/Users/rekha",
     "allowedDevOrigins": [
       "10.10.1.7",
       "localhost"
@@ -293,12 +293,12 @@
     "bundlePagesRouterDependencies": false,
     "configFileName": "next.config.ts",
     "turbopack": {
-      "root": "/Users/rekha/.gemini/antigravity/scratch/digisphere/security-verifier-client"
+      "root": "/Users/rekha"
     },
     "distDirRoot": ".next"
   },
   "appDir": "/Users/rekha/.gemini/antigravity/scratch/digisphere/security-verifier-client",
-  "relativeAppDir": "",
+  "relativeAppDir": ".gemini/antigravity/scratch/digisphere/security-verifier-client",
   "files": [
     ".next/routes-manifest.json",
     ".next/server/pages-manifest.json",
