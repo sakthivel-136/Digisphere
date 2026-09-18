@@ -57,11 +57,11 @@ export default function ReportDownloadPage() {
     }
   }
 
-  // Poll every 15 seconds automatically
+  // Poll every 5 seconds automatically (silent background refresh)
   useEffect(() => {
     const interval = setInterval(() => {
       pollReport()
-    }, 15000)
+    }, 5000)
     return () => clearInterval(interval)
   }, [factoryCode, reportType, reportDate, endDate, selectedMonth])
 

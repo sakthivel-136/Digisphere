@@ -397,9 +397,9 @@ export default function DashboardPage() {
     fetchReport()
   }, [fetchReport])
 
-  /* auto-poll every 15 seconds for live updates */
+  /* auto-poll every 5 seconds for live updates (silent background refresh) */
   useEffect(() => {
-    const interval = setInterval(pollReport, 15000)
+    const interval = setInterval(pollReport, 5000)
     return () => clearInterval(interval)
   }, [pollReport])
 
