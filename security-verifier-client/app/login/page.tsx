@@ -270,7 +270,7 @@ export default function LoginPage() {
 
 function Styles() {
   return (
-    <style jsx global>{`
+    <style>{`
       /* ambient background glows */
       .ambient-glow {
         position: absolute; border-radius: 50%;
