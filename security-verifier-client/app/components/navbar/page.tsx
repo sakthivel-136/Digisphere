@@ -101,15 +101,10 @@ const Navbar = () => {
             >
               <User className="h-5 w-5" />
             </motion.button>
-            <AnimatePresence>
-              {isUserMenuOpen && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95, y: -5 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, y: -5 }}
-                  transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                  className="absolute right-0 mt-3 w-56 rounded-xl bg-white shadow-xl ring-1 ring-black/5 overflow-hidden z-[9999]"
-                >
+            {isUserMenuOpen && (
+              <div
+                className="absolute right-0 mt-3 w-56 rounded-xl bg-white shadow-xl ring-1 ring-black/5 overflow-hidden z-[9999]"
+              >
                   <div className="p-2 space-y-1">
                     <button onClick={() => router.push('/login')} className="flex items-center w-full px-3 py-2 text-sm text-[var(--foreground)] hover:bg-[var(--surface-muted)] rounded-lg transition-spring">
                       <RefreshCw className="h-4 w-4 mr-2 text-[var(--foreground-subtle)]" />
@@ -129,9 +124,8 @@ const Navbar = () => {
                       Log out
                     </button>
                   </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
+              </div>
+            )}
           </div>
 
           {/* MOBILE TOGGLE */}
