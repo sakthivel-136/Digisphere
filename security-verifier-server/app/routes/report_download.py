@@ -45,12 +45,14 @@ def download_report(
         offset = 0
         fetch_start_dt = datetime.strptime(start_date, "%Y-%m-%d")
         fetch_start_dt = IST.localize(fetch_start_dt).replace(hour=5, minute=30)
-        fetch_start = fetch_start_dt.strftime("%Y-%m-%dT%H:%M:%S+05:30")
+        # Convert to UTC string for SQLite comparison
+        fetch_start = fetch_start_dt.astimezone(pytz.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")
         
         fetch_end_dt = datetime.strptime(end_date, "%Y-%m-%d")
         fetch_end_dt = IST.localize(fetch_end_dt) + timedelta(days=1)
         fetch_end_dt = fetch_end_dt.replace(hour=6, minute=30)
-        fetch_end = fetch_end_dt.strftime("%Y-%m-%dT%H:%M:%S+05:30")
+        # Convert to UTC string for SQLite comparison
+        fetch_end = fetch_end_dt.astimezone(pytz.utc).strftime("%Y-%m-%dT%H:%M:%S.000Z")
 
         while True:
             batch = execute_d1_query(
