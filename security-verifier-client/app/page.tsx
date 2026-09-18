@@ -61,19 +61,18 @@ export default function Hero() {
           >
             <motion.div variants={itemVariants} className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--primary-muted)] text-[var(--primary)] text-sm font-semibold border border-[var(--ring)]">
               <Shield className="w-4 h-4" />
-              <span>Next-Gen Factory Operations</span>
+              <span>Secure & Reliable Operations</span>
             </motion.div>
             
-            <motion.h1 variants={itemVariants} className="text-5xl lg:text-7xl font-bold tracking-tight text-[var(--foreground)] leading-[1.1]">
-              Elevating <br />
+            <motion.h1 variants={itemVariants} className="text-5xl lg:text-6xl font-bold tracking-tight text-[var(--foreground)] leading-[1.1]">
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--primary)] to-indigo-400">
-                Production & QA
+                PENTAGON SECURITY
               </span> <br />
-              Management
+              PATROL AND MANAGEMENT SYSTEM
             </motion.h1>
             
             <motion.p variants={itemVariants} className="text-lg lg:text-xl text-[var(--foreground-muted)] max-w-xl leading-relaxed">
-              Turn routine factory floor operations into measurable, reliable, and proactive manufacturing workflows with real-time analytics.
+              Turn routine factory security rounds into measurable, reliable, and proactive workflows with real-time analytics and QR-based monitoring.
             </motion.p>
 
             <motion.div variants={itemVariants} className="flex flex-wrap gap-4 pt-4">
