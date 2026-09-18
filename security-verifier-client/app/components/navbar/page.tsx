@@ -62,16 +62,8 @@ const Navbar = () => {
           </div>
         </Link>
 
-        {/* MOBILE TOGGLE */}
-        <button 
-          className="max-[1050px]:flex hidden text-[var(--foreground)] touch-target rounded-full hover:bg-[var(--surface-hover)] transition-spring" 
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        >
-          {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </button>
-
         {/* DESKTOP NAV */}
-        <nav className="hidden min-[1051px]:flex items-center gap-2 relative">
+        <nav className="hidden min-[1051px]:flex items-center justify-center flex-1 mx-4">
           <div className="flex items-center rounded-full bg-[var(--surface-muted)] px-2 py-1 shadow-inner border border-[var(--border)]">
             {navItems.map((item) => (
               <Link key={item.name} href={item.href} className="relative z-10 mx-1">
@@ -94,9 +86,13 @@ const Navbar = () => {
               </Link>
             ))}
           </div>
+        </nav>
 
-          {/* USER AVATAR */}
-          <div className="relative ml-2 z-50" ref={userMenuRef}>
+        {/* RIGHT ACTION ICONS */}
+        <div className="flex items-center gap-3">
+          
+          {/* USER AVATAR (Visible on all screens) */}
+          <div className="relative z-50" ref={userMenuRef}>
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -137,7 +133,15 @@ const Navbar = () => {
               )}
             </AnimatePresence>
           </div>
-        </nav>
+
+          {/* MOBILE TOGGLE */}
+          <button 
+            className="max-[1050px]:flex hidden text-[var(--foreground)] touch-target rounded-full hover:bg-[var(--surface-hover)] transition-spring items-center justify-center" 
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
+            {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
+        </div>
       </div>
 
       {/* MOBILE MENU */}
