@@ -40,7 +40,7 @@ function MagneticButton({ children, onClick, className }: { children: React.Reac
   }
 
   return (
-    <motion.button
+    <motion.button type="button"
       ref={ref}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
