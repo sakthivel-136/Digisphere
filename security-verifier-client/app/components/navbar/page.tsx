@@ -97,7 +97,7 @@ const Navbar = () => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-              className="touch-target rounded-full bg-[var(--primary-muted)] text-[var(--primary)] border border-[var(--ring)] hover:bg-[var(--primary)] hover:text-white transition-spring"
+              className="p-2 touch-target rounded-full bg-[var(--primary-muted)] text-[var(--primary)] border border-[var(--ring)] hover:bg-[var(--primary)] hover:text-white transition-spring"
             >
               <User className="h-5 w-5" />
             </motion.button>
@@ -108,7 +108,7 @@ const Navbar = () => {
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95, y: -5 }}
                   transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                  className="absolute right-0 mt-3 w-56 rounded-xl bg-white shadow-xl ring-1 ring-black/5 overflow-hidden"
+                  className="absolute right-0 mt-3 w-56 rounded-xl bg-white shadow-xl ring-1 ring-black/5 overflow-hidden z-[9999]"
                 >
                   <div className="p-2 space-y-1">
                     <button onClick={() => router.push('/login')} className="flex items-center w-full px-3 py-2 text-sm text-[var(--foreground)] hover:bg-[var(--surface-muted)] rounded-lg transition-spring">
@@ -136,7 +136,7 @@ const Navbar = () => {
 
           {/* MOBILE TOGGLE */}
           <button 
-            className="max-[1050px]:flex hidden text-[var(--foreground)] touch-target rounded-full hover:bg-[var(--surface-hover)] transition-spring items-center justify-center" 
+            className="max-[1050px]:flex hidden p-2 text-[var(--foreground)] touch-target rounded-full hover:bg-[var(--surface-hover)] transition-spring items-center justify-center" 
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
             {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
