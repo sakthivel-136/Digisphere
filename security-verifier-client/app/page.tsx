@@ -86,8 +86,22 @@ export default function Hero() {
         appLink="https://docs.google.com/uc?export=download&id=14R6VexC8HZ02_GyVLZO97AdmWgOmFAFv"
       />
       
+
+      {/* ── LANDING PAGE HEADER ── */}
+      <header className="fixed top-0 left-0 right-0 z-50 px-6 py-4 flex items-center justify-between border-b border-white/20 bg-white/60 backdrop-blur-md">
+        <div className="flex items-center gap-3">
+          <Image src="/logocomm.png" alt="Logo" width={140} height={40} className="object-contain" />
+        </div>
+        <button 
+          onClick={() => router.push('/login')}
+          className="btn-primary text-sm px-6 py-2 shadow-sm"
+        >
+          Login to Portal
+        </button>
+      </header>
+
       {/* ── HERO SECTION ── */}
-      <section className="relative w-full flex items-center justify-center overflow-hidden bg-slate-50 pt-16 pb-24 border-b border-[var(--border)]">
+      <section className="relative w-full min-h-screen flex items-center justify-center overflow-hidden bg-slate-50 pt-24 pb-12 border-b border-[var(--border)]">
         {/* Ambient Splashes */}
         <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] bg-[var(--primary)] rounded-full mix-blend-multiply filter blur-[140px] opacity-10 animate-pulse-subtle pointer-events-none" />
         <div className="absolute bottom-[-20%] left-[-10%] w-[700px] h-[700px] bg-[var(--success)] rounded-full mix-blend-multiply filter blur-[140px] opacity-[0.05] animate-pulse-subtle delay-700 pointer-events-none" />
