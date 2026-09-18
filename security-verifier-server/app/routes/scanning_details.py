@@ -37,7 +37,7 @@ def to_scan_response(data: dict) -> ScanResponse:
 def create_scan(scan: ScanCreate):
 
     try:
-        scan_data = scan.dict()
+        scan_data = scan.model_dump()
 
         # Add timestamp if DB doesn't auto-generate
         scan_data.setdefault(
@@ -101,6 +101,8 @@ def delete_scan(scan_id: int):
 
         return None
 
+    except HTTPException:
+        raise
     except Exception as e:
         print("Delete scan error:", e)
         raise HTTPException(status_code=500, detail="Failed to delete scan")

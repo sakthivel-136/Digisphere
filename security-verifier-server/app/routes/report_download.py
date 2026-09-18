@@ -169,7 +169,7 @@ def download_report(
                         "round": round_no,
                         "scan_time": scan.get("scan_time") if scan else None,
                         "lat": scan.get("lat") if scan else None,
-                        "lon": scan.get("log") if scan else None,
+                        "lon": scan.get("lon", scan.get("log")) if scan else None,
                         "guard_name": scan.get("guard_name") if scan else None,
                         "status": status,
                         "date": date_str,

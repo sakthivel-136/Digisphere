@@ -1,8 +1,8 @@
 # app/core/security.py
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any
-import jwt
+from jose import jwt
 from app.config import SECRET_KEY, ALGORITHM
 
 def create_access_token(
@@ -21,7 +21,7 @@ def create_access_token(
     """
     to_encode = data.copy()
     
-    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=60))
+    expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=60))
     to_encode.update({"exp": expire})
     
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)

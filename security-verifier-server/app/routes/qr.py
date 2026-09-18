@@ -94,7 +94,7 @@ def update_qr_endpoint(qr_id: int, data: dict, _: dict = Depends(admin_only)):
 # ---------------------------
 # DELETE QR
 # ---------------------------
-@router.delete("/{qr_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{qr_id}", status_code=status.HTTP_200_OK)
 def delete_qr_endpoint(qr_id: int, _: dict = Depends(admin_only)):
     success = delete_row(TABLE, {"qr_id": qr_id})
     if not success:

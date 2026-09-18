@@ -84,7 +84,7 @@ def update_security_user(security_id: str, payload: SecurityUserUpdate, _: dict 
     if not existing:
         raise HTTPException(404, "Security user not found")
 
-    update_data = payload.dict(
+    update_data = payload.model_dump(
         exclude_unset=True,
         exclude_none=True
     )
