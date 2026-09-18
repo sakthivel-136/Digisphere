@@ -1,6 +1,8 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState } from "react"
+import { SpotlightCard } from "../ui/SpotlightCard"
+import { ShimmerSkeleton } from "../ui/LayoutOrchestration"
 import { FactoryForm } from './FactoryForm'
 import {
   getFactories,
@@ -137,20 +139,18 @@ export const FactoriesTable = () => {
       )}
 
       {/* Add */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+      <SpotlightCard className="p-6">
         <FactoryForm onSubmit={addFactory} />
-      </div>
+      </SpotlightCard>
 
       {/* Loading */}
       {loading ? (
-        <div className="flex items-center justify-center p-12">
-          <p className="text-slate-500 font-medium">Loading factories...</p>
-        </div>
+        <ShimmerSkeleton className="h-64 w-full" />
       ) : (
         /* Table */
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden w-full transition-shadow duration-300 hover:shadow-md">
+        <SpotlightCard className="shadow-sm overflow-hidden w-full p-0">
           <table className="min-w-full divide-y divide-slate-100">
-            <thead className="bg-slate-50">
+            <thead className="bg-slate-50/50">
               <tr>
                 <th className="px-6 py-4 text-left text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                   Code
@@ -277,7 +277,7 @@ export const FactoriesTable = () => {
               )}
             </tbody>
           </table>
-        </div>
+        </SpotlightCard>
       )}
     </div>
   )

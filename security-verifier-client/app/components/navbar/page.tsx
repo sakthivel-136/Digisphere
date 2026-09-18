@@ -4,15 +4,19 @@ import React, { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
-import { Menu, X, User } from 'lucide-react'
+import { Menu, X, User, LogOut, RefreshCw, Download } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { clearAuth } from '@/app/services/token.service'
+import AppDownloadModal from '../ui/AppDownloadModal'
 
 const Navbar = () => {
-  const pathname = usePathname()
   const router = useRouter()
+  const pathname = usePathname()
+
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
+  const [showAppModal, setShowAppModal] = useState(false)
+  
   const userMenuRef = useRef<HTMLDivElement>(null)
 
   const handleLogout = () => {
@@ -22,7 +26,6 @@ const Navbar = () => {
     router.replace('/login')
   }
 
-  // Updated and reordered navigation items
   const navItems = [
     { name: 'Dashboard', href: '/dashboard' },
     { name: 'Reports', href: '/report-download' },
@@ -31,9 +34,7 @@ const Navbar = () => {
     { name: 'Factories', href: '/factory' },
   ]
 
-  const isActive = (href: string) => {
-    return pathname === href
-  }
+  const isActive = (href: string) => pathname === href
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -44,54 +45,65 @@ const Navbar = () => {
   }, [])
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-[#080883] shadow-md">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
+    <>
+      <AppDownloadModal 
+        isOpen={showAppModal} 
+        onClose={() => setShowAppModal(false)} 
+        appLink="https://docs.google.com/uc?export=download&id=14R6VexC8HZ02_GyVLZO97AdmWgOmFAFv"
+      />
+      <header className="sticky top-0 z-50 w-full glass-panel border-b border-[var(--border-light)]">
+        <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
 
         {/* LOGO */}
-        <Link href="/" className="flex items-center gap-2 text-white hover:opacity-90 transition-opacity">
+        <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-spring">
           <div className="flex h-10 w-auto items-center">
-            <Image src="/logocomm.png" alt="SRM Logo" width={190} height={4} priority />
+            {/* Keeping original logo but you can replace with a sleek text mark if preferred */}
+            <Image src="/logocomm.png" alt="Logo" width={170} height={4} priority className="object-contain" />
           </div>
         </Link>
 
         {/* MOBILE TOGGLE */}
-        <button className="max-[1050px]:flex hidden text-white bg-transparent border-0 p-2" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+        <button 
+          className="max-[1050px]:flex hidden text-[var(--foreground)] touch-target rounded-full hover:bg-[var(--surface-hover)] transition-spring" 
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        >
           {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
         </button>
 
         {/* DESKTOP NAV */}
-        <nav className="hidden min-[1051px]:flex items-center gap-1 rounded-full bg-white px-2 py-1 shadow-sm relative overflow-visible">
-          {navItems.map((item) => (
-            <Link key={item.name} href={item.href} className="relative z-10">
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="flex items-center"
-              >
-                {/* FLUID ACTIVE PILL */}
-                {isActive(item.href) && (
-                  <motion.div 
-                    layoutId="nav-pill" 
-                    className="absolute inset-0 bg-gray-100 rounded-full" 
-                    transition={{ type: "spring", stiffness: 380, damping: 30 }} 
-                  />
-                )}
-                <span className={`px-4 py-2 text-sm font-medium rounded-full z-10 transition-colors ${isActive(item.href) ? 'text-[#080883]' : 'text-gray-600 hover:text-[#080883]'}`}>
-                  {item.name}
-                </span>
-              </motion.div>
-            </Link>
-          ))}
+        <nav className="hidden min-[1051px]:flex items-center gap-2 relative">
+          <div className="flex items-center rounded-full bg-[var(--surface-muted)] px-2 py-1 shadow-inner border border-[var(--border)]">
+            {navItems.map((item) => (
+              <Link key={item.name} href={item.href} className="relative z-10 mx-1">
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="flex items-center"
+                >
+                  {isActive(item.href) && (
+                    <motion.div 
+                      layoutId="nav-pill" 
+                      className="absolute inset-0 bg-white rounded-full shadow-sm" 
+                      transition={{ type: "spring", stiffness: 380, damping: 30 }} 
+                    />
+                  )}
+                  <span className={`px-4 py-2 text-sm font-medium rounded-full z-10 transition-colors ${isActive(item.href) ? 'text-[var(--primary)]' : 'text-[var(--foreground-muted)] hover:text-[var(--foreground)]'}`}>
+                    {item.name}
+                  </span>
+                </motion.div>
+              </Link>
+            ))}
+          </div>
 
           {/* USER AVATAR */}
-          <div className="relative ml-1 z-50" ref={userMenuRef}>
+          <div className="relative ml-2 z-50" ref={userMenuRef}>
             <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-[#080883]/10 hover:shadow transition-shadow"
+              className="touch-target rounded-full bg-[var(--primary-muted)] text-[var(--primary)] border border-[var(--ring)] hover:bg-[var(--primary)] hover:text-white transition-spring"
             >
-              <User className="h-5 w-5 text-[#080883]" />
+              <User className="h-5 w-5" />
             </motion.button>
             <AnimatePresence>
               {isUserMenuOpen && (
@@ -99,18 +111,28 @@ const Navbar = () => {
                   initial={{ opacity: 0, scale: 0.95, y: -5 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95, y: -5 }}
-                  className="absolute right-0 mt-2 w-40 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5"
+                  transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                  className="absolute right-0 mt-3 w-56 rounded-xl bg-white shadow-xl ring-1 ring-black/5 overflow-hidden"
                 >
-                  <button onClick={handleLogout} className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">Log out</button>
-                  <button onClick={() => router.push('/login')} className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100">Switch User</button>
-                  <a 
-                    href="https://docs.google.com/uc?export=download&id=14R6VexC8HZ02_GyVLZO97AdmWgOmFAFv" 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
-                  >
-                    Download App
-                  </a>
+                  <div className="p-2 space-y-1">
+                    <button onClick={() => router.push('/login')} className="flex items-center w-full px-3 py-2 text-sm text-[var(--foreground)] hover:bg-[var(--surface-muted)] rounded-lg transition-spring">
+                      <RefreshCw className="h-4 w-4 mr-2 text-[var(--foreground-subtle)]" />
+                      Switch User
+                    </button>
+                    <button 
+                      onClick={() => setShowAppModal(true)} 
+                      className="flex items-center w-full px-3 py-2 text-sm text-[var(--foreground)] hover:bg-[var(--surface-muted)] rounded-lg transition-spring"
+                    >
+                      <Download className="h-4 w-4 mr-2 text-[var(--foreground-subtle)]" />
+                      Download App
+                    </button>
+                  </div>
+                  <div className="border-t border-[var(--border)] p-2">
+                    <button onClick={handleLogout} className="flex items-center w-full px-3 py-2 text-sm text-[var(--danger)] hover:bg-[var(--danger-muted)] rounded-lg transition-spring">
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Log out
+                    </button>
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -122,39 +144,46 @@ const Navbar = () => {
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div
-            initial={{ height: 0 }}
-            animate={{ height: "auto" }}
-            exit={{ height: 0 }}
-            className="max-[1050px]:block hidden border-t bg-white overflow-hidden"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            className="max-[1050px]:block hidden border-t border-[var(--border)] bg-white/95 backdrop-blur-xl overflow-hidden"
           >
-            <div className="px-4 py-4 space-y-3">
+            <div className="px-4 py-6 space-y-2">
               {navItems.map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className={`block rounded-md px-3 py-2 font-medium ${isActive(item.href) ? 'bg-blue-50 text-blue-600' : 'text-gray-700 hover:bg-gray-50'}`}
+                  className={`block rounded-xl px-4 py-3 font-medium transition-spring ${isActive(item.href) ? 'bg-[var(--primary-muted)] text-[var(--primary)]' : 'text-[var(--foreground)] hover:bg-[var(--surface-muted)]'}`}
                 >
                   {item.name}
                 </Link>
               ))}
-              <div className="border-t pt-3">
-                <button onClick={() => router.push('/login')} className="block w-full text-left px-3 py-2 hover:bg-gray-50 text-gray-700">Login</button>
-                <a 
-                  href="https://docs.google.com/uc?export=download&id=14R6VexC8HZ02_GyVLZO97AdmWgOmFAFv" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="block w-full text-left px-3 py-2 hover:bg-gray-50 text-gray-700"
+              <div className="border-t border-[var(--border)] pt-4 mt-4 space-y-2">
+                <button onClick={() => router.push('/login')} className="flex items-center w-full text-left px-4 py-3 hover:bg-[var(--surface-muted)] rounded-xl text-[var(--foreground)] transition-spring">
+                  <RefreshCw className="h-5 w-5 mr-3 text-[var(--foreground-subtle)]" />
+                  Login / Switch
+                </button>
+                <button 
+                  onClick={() => setShowAppModal(true)} 
+                  className="flex items-center w-full text-left px-4 py-3 hover:bg-[var(--surface-muted)] rounded-xl text-[var(--foreground)] transition-spring"
                 >
+                  <Download className="h-5 w-5 mr-3 text-[var(--foreground-subtle)]" />
                   Download App
-                </a>
-                <button onClick={handleLogout} className="block w-full text-left px-3 py-2 text-red-600 hover:bg-red-50">Log out</button>
+                </button>
+                <button onClick={handleLogout} className="flex items-center w-full text-left px-4 py-3 text-[var(--danger)] hover:bg-[var(--danger-muted)] rounded-xl transition-spring">
+                  <LogOut className="h-5 w-5 mr-3" />
+                  Log out
+                </button>
               </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-    </header>
+      </header>
+    </>
   )
 }
 

@@ -1,4 +1,823 @@
-[00:00:01.480] Server  LOG      ✓ Ready in 1063ms
-[00:00:26.652] Browser INFO    %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold
-[00:00:26.802] Browser WARN    Image with src "/logocom.jpg" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
-[00:00:43.641] Browser WARN    Image with src "/logocomm.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[00:00:00.461] Server  LOG      ✓ Ready in 375ms
+[00:00:16.619] Browser WARN    Image with src "/logocomm.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[00:00:31.563] Browser WARN    Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+[00:01:10.949] Browser WARN    Image with src "/logocomm.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[00:01:16.813] Browser WARN    Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+[00:04:38.021] Browser WARN    Image with src "/logocomm.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[00:04:43.281] Browser WARN    Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+[00:05:53.085] Browser WARN    Image with src "/logocomm.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[00:06:01.676] Server  LOG      ✓ Compiled in 85ms
+[00:06:12.195] Server  LOG      ✓ Compiled in 28ms
+[00:06:43.432] Browser WARN    Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+[00:07:33.204] Browser WARN    Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+[00:07:33.204] Browser WARN    Image with src "/logocomm.png" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio.
+[00:07:49.059] Server  ERROR    ⨯ ./app/report-download/page.tsx:11:1
+Module not found: Can't resolve './components/PatrolReportPDF'
+   9 | import ReportTable from './components/ReportTable'
+  10 | import { getApiUrl } from "@/app/utils/apiUrl"
+> 11 | import { PatrolReportPDF } from './components/PatrolReportPDF'
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  12 | import { getAuthToken } from '@/app/services/token.service'
+  13 |
+  14 | const IconSpinner = () => <Loader2 className="w-5 h-5 animate-spin" />
+
+
+
+Import traces:
+  Client Component Browser:
+    ./app/report-download/page.tsx [Client Component Browser]
+    ./app/report-download/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/report-download/page.tsx [Client Component SSR]
+    ./app/report-download/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./app/report-download/page.tsx:9:1
+Module not found: Can't resolve './components/ReportTable'
+   7 |
+   8 | // Placeholder imports for your existing components
+>  9 | import ReportTable from './components/ReportTable'
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  10 | import { getApiUrl } from "@/app/utils/apiUrl"
+  11 | import { PatrolReportPDF } from './components/PatrolReportPDF'
+  12 | import { getAuthToken } from '@/app/services/token.service'
+
+
+
+Import traces:
+  Client Component Browser:
+    ./app/report-download/page.tsx [Client Component Browser]
+    ./app/report-download/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/report-download/page.tsx [Client Component SSR]
+    ./app/report-download/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./app/report-download/page.tsx:12:1
+Export getAuthToken doesn't exist in target module
+  10 | import { getApiUrl } from "@/app/utils/apiUrl"
+  11 | import { PatrolReportPDF } from './components/PatrolReportPDF'
+> 12 | import { getAuthToken } from '@/app/services/token.service'
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  13 |
+  14 | const IconSpinner = () => <Loader2 className="w-5 h-5 animate-spin" />
+  15 |
+
+The export getAuthToken was not found in module [project]/app/services/token.service.ts [app-client] (ecmascript).
+Did you mean to import getTokenFromCookie?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  Client Component Browser:
+    ./app/report-download/page.tsx [Client Component Browser]
+    ./app/report-download/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/report-download/page.tsx [Client Component SSR]
+    ./app/report-download/page.tsx [Server Component]
+
+
+
+./app/report-download/page.tsx:12:1
+Export getAuthToken doesn't exist in target module
+  10 | import { getApiUrl } from "@/app/utils/apiUrl"
+  11 | import { PatrolReportPDF } from './components/PatrolReportPDF'
+> 12 | import { getAuthToken } from '@/app/services/token.service'
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  13 |
+  14 | const IconSpinner = () => <Loader2 className="w-5 h-5 animate-spin" />
+  15 |
+
+The export getAuthToken was not found in module [project]/app/services/token.service.ts [app-ssr] (ecmascript).
+Did you mean to import getTokenFromCookie?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  Client Component Browser:
+    ./app/report-download/page.tsx [Client Component Browser]
+    ./app/report-download/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/report-download/page.tsx [Client Component SSR]
+    ./app/report-download/page.tsx [Server Component]
+
+
+[00:07:49.180] Browser ERROR   ./app/report-download/page.tsx:11:1
+Module not found: Can't resolve './components/PatrolReportPDF'
+   9 | import ReportTable from './components/ReportTable'
+  10 | import { getApiUrl } from "@/app/utils/apiUrl"
+> 11 | import { PatrolReportPDF } from './components/PatrolReportPDF'
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  12 | import { getAuthToken } from '@/app/services/token.service'
+  13 |
+  14 | const IconSpinner = () => <Loader2 className="w-5 h-5 animate-spin" />
+
+Import traces:
+  Client Component Browser:
+    ./app/report-download/page.tsx [Client Component Browser]
+    ./app/report-download/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/report-download/page.tsx [Client Component SSR]
+    ./app/report-download/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:07:49.180] Browser ERROR   ./app/report-download/page.tsx:9:1
+Module not found: Can't resolve './components/ReportTable'
+   7 |
+   8 | // Placeholder imports for your existing components
+>  9 | import ReportTable from './components/ReportTable'
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  10 | import { getApiUrl } from "@/app/utils/apiUrl"
+  11 | import { PatrolReportPDF } from './components/PatrolReportPDF'
+  12 | import { getAuthToken } from '@/app/services/token.service'
+
+Import traces:
+  Client Component Browser:
+    ./app/report-download/page.tsx [Client Component Browser]
+    ./app/report-download/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/report-download/page.tsx [Client Component SSR]
+    ./app/report-download/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:07:49.180] Browser ERROR   ./app/report-download/page.tsx:12:1
+Export getAuthToken doesn't exist in target module
+  10 | import { getApiUrl } from "@/app/utils/apiUrl"
+  11 | import { PatrolReportPDF } from './components/PatrolReportPDF'
+> 12 | import { getAuthToken } from '@/app/services/token.service'
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  13 |
+  14 | const IconSpinner = () => <Loader2 className="w-5 h-5 animate-spin" />
+  15 |
+
+The export getAuthToken was not found in module [project]/app/services/token.service.ts [app-client] (ecmascript).
+Did you mean to import getTokenFromCookie?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  Client Component Browser:
+    ./app/report-download/page.tsx [Client Component Browser]
+    ./app/report-download/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/report-download/page.tsx [Client Component SSR]
+    ./app/report-download/page.tsx [Server Component]
+[00:07:49.180] Browser ERROR   ./app/report-download/page.tsx:12:1
+Export getAuthToken doesn't exist in target module
+  10 | import { getApiUrl } from "@/app/utils/apiUrl"
+  11 | import { PatrolReportPDF } from './components/PatrolReportPDF'
+> 12 | import { getAuthToken } from '@/app/services/token.service'
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  13 |
+  14 | const IconSpinner = () => <Loader2 className="w-5 h-5 animate-spin" />
+  15 |
+
+The export getAuthToken was not found in module [project]/app/services/token.service.ts [app-ssr] (ecmascript).
+Did you mean to import getTokenFromCookie?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  Client Component Browser:
+    ./app/report-download/page.tsx [Client Component Browser]
+    ./app/report-download/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/report-download/page.tsx [Client Component SSR]
+    ./app/report-download/page.tsx [Server Component]
+[00:07:49.460] Browser ERROR   ./app/report-download/page.tsx:11:1
+Module not found: Can't resolve './components/PatrolReportPDF'
+   9 | import ReportTable from './components/ReportTable'
+  10 | import { getApiUrl } from "@/app/utils/apiUrl"
+> 11 | import { PatrolReportPDF } from './components/PatrolReportPDF'
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  12 | import { getAuthToken } from '@/app/services/token.service'
+  13 |
+  14 | const IconSpinner = () => <Loader2 className="w-5 h-5 animate-spin" />
+
+Import traces:
+  Client Component Browser:
+    ./app/report-download/page.tsx [Client Component Browser]
+    ./app/report-download/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/report-download/page.tsx [Client Component SSR]
+    ./app/report-download/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:07:49.460] Browser ERROR   ./app/report-download/page.tsx:9:1
+Module not found: Can't resolve './components/ReportTable'
+   7 |
+   8 | // Placeholder imports for your existing components
+>  9 | import ReportTable from './components/ReportTable'
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  10 | import { getApiUrl } from "@/app/utils/apiUrl"
+  11 | import { PatrolReportPDF } from './components/PatrolReportPDF'
+  12 | import { getAuthToken } from '@/app/services/token.service'
+
+Import traces:
+  Client Component Browser:
+    ./app/report-download/page.tsx [Client Component Browser]
+    ./app/report-download/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/report-download/page.tsx [Client Component SSR]
+    ./app/report-download/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:07:49.460] Browser ERROR   ./app/report-download/page.tsx:12:1
+Export getAuthToken doesn't exist in target module
+  10 | import { getApiUrl } from "@/app/utils/apiUrl"
+  11 | import { PatrolReportPDF } from './components/PatrolReportPDF'
+> 12 | import { getAuthToken } from '@/app/services/token.service'
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  13 |
+  14 | const IconSpinner = () => <Loader2 className="w-5 h-5 animate-spin" />
+  15 |
+
+The export getAuthToken was not found in module [project]/app/services/token.service.ts [app-client] (ecmascript).
+Did you mean to import getTokenFromCookie?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  Client Component Browser:
+    ./app/report-download/page.tsx [Client Component Browser]
+    ./app/report-download/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/report-download/page.tsx [Client Component SSR]
+    ./app/report-download/page.tsx [Server Component]
+[00:07:49.460] Browser ERROR   ./app/report-download/page.tsx:12:1
+Export getAuthToken doesn't exist in target module
+  10 | import { getApiUrl } from "@/app/utils/apiUrl"
+  11 | import { PatrolReportPDF } from './components/PatrolReportPDF'
+> 12 | import { getAuthToken } from '@/app/services/token.service'
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  13 |
+  14 | const IconSpinner = () => <Loader2 className="w-5 h-5 animate-spin" />
+  15 |
+
+The export getAuthToken was not found in module [project]/app/services/token.service.ts [app-ssr] (ecmascript).
+Did you mean to import getTokenFromCookie?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  Client Component Browser:
+    ./app/report-download/page.tsx [Client Component Browser]
+    ./app/report-download/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/report-download/page.tsx [Client Component SSR]
+    ./app/report-download/page.tsx [Server Component]
+[00:07:49.465] Browser ERROR   ./app/report-download/page.tsx:11:1
+Module not found: Can't resolve './components/PatrolReportPDF'
+   9 | import ReportTable from './components/ReportTable'
+  10 | import { getApiUrl } from "@/app/utils/apiUrl"
+> 11 | import { PatrolReportPDF } from './components/PatrolReportPDF'
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  12 | import { getAuthToken } from '@/app/services/token.service'
+  13 |
+  14 | const IconSpinner = () => <Loader2 className="w-5 h-5 animate-spin" />
+
+Import traces:
+  Client Component Browser:
+    ./app/report-download/page.tsx [Client Component Browser]
+    ./app/report-download/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/report-download/page.tsx [Client Component SSR]
+    ./app/report-download/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:07:49.465] Browser ERROR   ./app/report-download/page.tsx:9:1
+Module not found: Can't resolve './components/ReportTable'
+   7 |
+   8 | // Placeholder imports for your existing components
+>  9 | import ReportTable from './components/ReportTable'
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  10 | import { getApiUrl } from "@/app/utils/apiUrl"
+  11 | import { PatrolReportPDF } from './components/PatrolReportPDF'
+  12 | import { getAuthToken } from '@/app/services/token.service'
+
+Import traces:
+  Client Component Browser:
+    ./app/report-download/page.tsx [Client Component Browser]
+    ./app/report-download/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/report-download/page.tsx [Client Component SSR]
+    ./app/report-download/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:07:49.465] Browser ERROR   ./app/report-download/page.tsx:12:1
+Export getAuthToken doesn't exist in target module
+  10 | import { getApiUrl } from "@/app/utils/apiUrl"
+  11 | import { PatrolReportPDF } from './components/PatrolReportPDF'
+> 12 | import { getAuthToken } from '@/app/services/token.service'
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  13 |
+  14 | const IconSpinner = () => <Loader2 className="w-5 h-5 animate-spin" />
+  15 |
+
+The export getAuthToken was not found in module [project]/app/services/token.service.ts [app-client] (ecmascript).
+Did you mean to import getTokenFromCookie?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  Client Component Browser:
+    ./app/report-download/page.tsx [Client Component Browser]
+    ./app/report-download/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/report-download/page.tsx [Client Component SSR]
+    ./app/report-download/page.tsx [Server Component]
+[00:07:49.465] Browser ERROR   ./app/report-download/page.tsx:12:1
+Export getAuthToken doesn't exist in target module
+  10 | import { getApiUrl } from "@/app/utils/apiUrl"
+  11 | import { PatrolReportPDF } from './components/PatrolReportPDF'
+> 12 | import { getAuthToken } from '@/app/services/token.service'
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  13 |
+  14 | const IconSpinner = () => <Loader2 className="w-5 h-5 animate-spin" />
+  15 |
+
+The export getAuthToken was not found in module [project]/app/services/token.service.ts [app-ssr] (ecmascript).
+Did you mean to import getTokenFromCookie?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  Client Component Browser:
+    ./app/report-download/page.tsx [Client Component Browser]
+    ./app/report-download/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/report-download/page.tsx [Client Component SSR]
+    ./app/report-download/page.tsx [Server Component]
+[00:07:49.480] Server  ERROR    ⨯ ./app/report-download/page.tsx:11:1
+Module not found: Can't resolve './components/PatrolReportPDF'
+   9 | import ReportTable from './components/ReportTable'
+  10 | import { getApiUrl } from "@/app/utils/apiUrl"
+> 11 | import { PatrolReportPDF } from './components/PatrolReportPDF'
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  12 | import { getAuthToken } from '@/app/services/token.service'
+  13 |
+  14 | const IconSpinner = () => <Loader2 className="w-5 h-5 animate-spin" />
+
+
+
+Import traces:
+  Client Component Browser:
+    ./app/report-download/page.tsx [Client Component Browser]
+    ./app/report-download/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/report-download/page.tsx [Client Component SSR]
+    ./app/report-download/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./app/report-download/page.tsx:9:1
+Module not found: Can't resolve './components/ReportTable'
+   7 |
+   8 | // Placeholder imports for your existing components
+>  9 | import ReportTable from './components/ReportTable'
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  10 | import { getApiUrl } from "@/app/utils/apiUrl"
+  11 | import { PatrolReportPDF } from './components/PatrolReportPDF'
+  12 | import { getAuthToken } from '@/app/services/token.service'
+
+
+
+Import traces:
+  Client Component Browser:
+    ./app/report-download/page.tsx [Client Component Browser]
+    ./app/report-download/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/report-download/page.tsx [Client Component SSR]
+    ./app/report-download/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+
+./app/report-download/page.tsx:12:1
+Export getAuthToken doesn't exist in target module
+  10 | import { getApiUrl } from "@/app/utils/apiUrl"
+  11 | import { PatrolReportPDF } from './components/PatrolReportPDF'
+> 12 | import { getAuthToken } from '@/app/services/token.service'
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  13 |
+  14 | const IconSpinner = () => <Loader2 className="w-5 h-5 animate-spin" />
+  15 |
+
+The export getAuthToken was not found in module [project]/app/services/token.service.ts [app-client] (ecmascript).
+Did you mean to import getTokenFromCookie?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  Client Component Browser:
+    ./app/report-download/page.tsx [Client Component Browser]
+    ./app/report-download/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/report-download/page.tsx [Client Component SSR]
+    ./app/report-download/page.tsx [Server Component]
+
+
+
+./app/report-download/page.tsx:12:1
+Export getAuthToken doesn't exist in target module
+  10 | import { getApiUrl } from "@/app/utils/apiUrl"
+  11 | import { PatrolReportPDF } from './components/PatrolReportPDF'
+> 12 | import { getAuthToken } from '@/app/services/token.service'
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  13 |
+  14 | const IconSpinner = () => <Loader2 className="w-5 h-5 animate-spin" />
+  15 |
+
+The export getAuthToken was not found in module [project]/app/services/token.service.ts [app-ssr] (ecmascript).
+Did you mean to import getTokenFromCookie?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  Client Component Browser:
+    ./app/report-download/page.tsx [Client Component Browser]
+    ./app/report-download/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/report-download/page.tsx [Client Component SSR]
+    ./app/report-download/page.tsx [Server Component]
+
+
+[00:07:49.710] Browser ERROR   uncaughtError: Error: ./app/report-download/page.tsx:11:1
+Module not found: Can't resolve './components/PatrolReportPDF'
+   9 | import ReportTable from './components/ReportTable'
+  10 | import { getApiUrl } from "@/app/utils/apiUrl"
+> 11 | import { PatrolReportPDF } from './components/PatrolReportPDF'
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  12 | import { getAuthToken } from '@/app/services/token.service'
+  13 |
+  14 | const IconSpinner = () => <Loader2 className="w-5 h-5 animate-spin" />
+
+
+
+Import traces:
+  Client Component Browser:
+    ./app/report-download/page.tsx [Client Component Browser]
+    ./app/report-download/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/report-download/page.tsx [Client Component SSR]
+    ./app/report-download/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+[00:07:49.710] Browser ERROR   ./app/report-download/page.tsx:11:1
+Module not found: Can't resolve './components/PatrolReportPDF'
+   9 | import ReportTable from './components/ReportTable'
+  10 | import { getApiUrl } from "@/app/utils/apiUrl"
+> 11 | import { PatrolReportPDF } from './components/PatrolReportPDF'
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  12 | import { getAuthToken } from '@/app/services/token.service'
+  13 |
+  14 | const IconSpinner = () => <Loader2 className="w-5 h-5 animate-spin" />
+
+Import traces:
+  Client Component Browser:
+    ./app/report-download/page.tsx [Client Component Browser]
+    ./app/report-download/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/report-download/page.tsx [Client Component SSR]
+    ./app/report-download/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:07:49.710] Browser ERROR   ./app/report-download/page.tsx:9:1
+Module not found: Can't resolve './components/ReportTable'
+   7 |
+   8 | // Placeholder imports for your existing components
+>  9 | import ReportTable from './components/ReportTable'
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  10 | import { getApiUrl } from "@/app/utils/apiUrl"
+  11 | import { PatrolReportPDF } from './components/PatrolReportPDF'
+  12 | import { getAuthToken } from '@/app/services/token.service'
+
+Import traces:
+  Client Component Browser:
+    ./app/report-download/page.tsx [Client Component Browser]
+    ./app/report-download/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/report-download/page.tsx [Client Component SSR]
+    ./app/report-download/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:07:49.710] Browser ERROR   ./app/report-download/page.tsx:12:1
+Export getAuthToken doesn't exist in target module
+  10 | import { getApiUrl } from "@/app/utils/apiUrl"
+  11 | import { PatrolReportPDF } from './components/PatrolReportPDF'
+> 12 | import { getAuthToken } from '@/app/services/token.service'
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  13 |
+  14 | const IconSpinner = () => <Loader2 className="w-5 h-5 animate-spin" />
+  15 |
+
+The export getAuthToken was not found in module [project]/app/services/token.service.ts [app-client] (ecmascript).
+Did you mean to import getTokenFromCookie?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  Client Component Browser:
+    ./app/report-download/page.tsx [Client Component Browser]
+    ./app/report-download/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/report-download/page.tsx [Client Component SSR]
+    ./app/report-download/page.tsx [Server Component]
+[00:07:49.710] Browser ERROR   ./app/report-download/page.tsx:12:1
+Export getAuthToken doesn't exist in target module
+  10 | import { getApiUrl } from "@/app/utils/apiUrl"
+  11 | import { PatrolReportPDF } from './components/PatrolReportPDF'
+> 12 | import { getAuthToken } from '@/app/services/token.service'
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  13 |
+  14 | const IconSpinner = () => <Loader2 className="w-5 h-5 animate-spin" />
+  15 |
+
+The export getAuthToken was not found in module [project]/app/services/token.service.ts [app-ssr] (ecmascript).
+Did you mean to import getTokenFromCookie?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  Client Component Browser:
+    ./app/report-download/page.tsx [Client Component Browser]
+    ./app/report-download/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/report-download/page.tsx [Client Component SSR]
+    ./app/report-download/page.tsx [Server Component]
+[00:07:49.710] Browser ERROR   ./app/report-download/page.tsx:11:1
+Module not found: Can't resolve './components/PatrolReportPDF'
+   9 | import ReportTable from './components/ReportTable'
+  10 | import { getApiUrl } from "@/app/utils/apiUrl"
+> 11 | import { PatrolReportPDF } from './components/PatrolReportPDF'
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  12 | import { getAuthToken } from '@/app/services/token.service'
+  13 |
+  14 | const IconSpinner = () => <Loader2 className="w-5 h-5 animate-spin" />
+
+Import traces:
+  Client Component Browser:
+    ./app/report-download/page.tsx [Client Component Browser]
+    ./app/report-download/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/report-download/page.tsx [Client Component SSR]
+    ./app/report-download/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:07:49.710] Browser ERROR   ./app/report-download/page.tsx:9:1
+Module not found: Can't resolve './components/ReportTable'
+   7 |
+   8 | // Placeholder imports for your existing components
+>  9 | import ReportTable from './components/ReportTable'
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  10 | import { getApiUrl } from "@/app/utils/apiUrl"
+  11 | import { PatrolReportPDF } from './components/PatrolReportPDF'
+  12 | import { getAuthToken } from '@/app/services/token.service'
+
+Import traces:
+  Client Component Browser:
+    ./app/report-download/page.tsx [Client Component Browser]
+    ./app/report-download/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/report-download/page.tsx [Client Component SSR]
+    ./app/report-download/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:07:49.710] Browser ERROR   ./app/report-download/page.tsx:12:1
+Export getAuthToken doesn't exist in target module
+  10 | import { getApiUrl } from "@/app/utils/apiUrl"
+  11 | import { PatrolReportPDF } from './components/PatrolReportPDF'
+> 12 | import { getAuthToken } from '@/app/services/token.service'
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  13 |
+  14 | const IconSpinner = () => <Loader2 className="w-5 h-5 animate-spin" />
+  15 |
+
+The export getAuthToken was not found in module [project]/app/services/token.service.ts [app-client] (ecmascript).
+Did you mean to import getTokenFromCookie?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  Client Component Browser:
+    ./app/report-download/page.tsx [Client Component Browser]
+    ./app/report-download/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/report-download/page.tsx [Client Component SSR]
+    ./app/report-download/page.tsx [Server Component]
+[00:07:49.710] Browser ERROR   ./app/report-download/page.tsx:12:1
+Export getAuthToken doesn't exist in target module
+  10 | import { getApiUrl } from "@/app/utils/apiUrl"
+  11 | import { PatrolReportPDF } from './components/PatrolReportPDF'
+> 12 | import { getAuthToken } from '@/app/services/token.service'
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  13 |
+  14 | const IconSpinner = () => <Loader2 className="w-5 h-5 animate-spin" />
+  15 |
+
+The export getAuthToken was not found in module [project]/app/services/token.service.ts [app-ssr] (ecmascript).
+Did you mean to import getTokenFromCookie?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  Client Component Browser:
+    ./app/report-download/page.tsx [Client Component Browser]
+    ./app/report-download/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/report-download/page.tsx [Client Component SSR]
+    ./app/report-download/page.tsx [Server Component]
+[00:07:53.752] Browser ERROR   ./app/report-download/page.tsx:11:1
+Module not found: Can't resolve './components/PatrolReportPDF'
+   9 | import ReportTable from './components/ReportTable'
+  10 | import { getApiUrl } from "@/app/utils/apiUrl"
+> 11 | import { PatrolReportPDF } from './components/PatrolReportPDF'
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  12 | import { getAuthToken } from '@/app/services/token.service'
+  13 |
+  14 | const IconSpinner = () => <Loader2 className="w-5 h-5 animate-spin" />
+
+Import traces:
+  Client Component Browser:
+    ./app/report-download/page.tsx [Client Component Browser]
+    ./app/report-download/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/report-download/page.tsx [Client Component SSR]
+    ./app/report-download/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:07:53.752] Browser ERROR   ./app/report-download/page.tsx:9:1
+Module not found: Can't resolve './components/ReportTable'
+   7 |
+   8 | // Placeholder imports for your existing components
+>  9 | import ReportTable from './components/ReportTable'
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  10 | import { getApiUrl } from "@/app/utils/apiUrl"
+  11 | import { PatrolReportPDF } from './components/PatrolReportPDF'
+  12 | import { getAuthToken } from '@/app/services/token.service'
+
+Import traces:
+  Client Component Browser:
+    ./app/report-download/page.tsx [Client Component Browser]
+    ./app/report-download/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/report-download/page.tsx [Client Component SSR]
+    ./app/report-download/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:07:53.752] Browser ERROR   ./app/report-download/page.tsx:12:1
+Export getAuthToken doesn't exist in target module
+  10 | import { getApiUrl } from "@/app/utils/apiUrl"
+  11 | import { PatrolReportPDF } from './components/PatrolReportPDF'
+> 12 | import { getAuthToken } from '@/app/services/token.service'
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  13 |
+  14 | const IconSpinner = () => <Loader2 className="w-5 h-5 animate-spin" />
+  15 |
+
+The export getAuthToken was not found in module [project]/app/services/token.service.ts [app-client] (ecmascript).
+Did you mean to import getTokenFromCookie?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  Client Component Browser:
+    ./app/report-download/page.tsx [Client Component Browser]
+    ./app/report-download/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/report-download/page.tsx [Client Component SSR]
+    ./app/report-download/page.tsx [Server Component]
+[00:07:53.752] Browser ERROR   ./app/report-download/page.tsx:12:1
+Export getAuthToken doesn't exist in target module
+  10 | import { getApiUrl } from "@/app/utils/apiUrl"
+  11 | import { PatrolReportPDF } from './components/PatrolReportPDF'
+> 12 | import { getAuthToken } from '@/app/services/token.service'
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  13 |
+  14 | const IconSpinner = () => <Loader2 className="w-5 h-5 animate-spin" />
+  15 |
+
+The export getAuthToken was not found in module [project]/app/services/token.service.ts [app-ssr] (ecmascript).
+Did you mean to import getTokenFromCookie?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  Client Component Browser:
+    ./app/report-download/page.tsx [Client Component Browser]
+    ./app/report-download/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/report-download/page.tsx [Client Component SSR]
+    ./app/report-download/page.tsx [Server Component]
+[00:07:53.752] Browser ERROR   ./app/report-download/page.tsx:11:1
+Module not found: Can't resolve './components/PatrolReportPDF'
+   9 | import ReportTable from './components/ReportTable'
+  10 | import { getApiUrl } from "@/app/utils/apiUrl"
+> 11 | import { PatrolReportPDF } from './components/PatrolReportPDF'
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  12 | import { getAuthToken } from '@/app/services/token.service'
+  13 |
+  14 | const IconSpinner = () => <Loader2 className="w-5 h-5 animate-spin" />
+
+Import traces:
+  Client Component Browser:
+    ./app/report-download/page.tsx [Client Component Browser]
+    ./app/report-download/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/report-download/page.tsx [Client Component SSR]
+    ./app/report-download/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:07:53.752] Browser ERROR   ./app/report-download/page.tsx:9:1
+Module not found: Can't resolve './components/ReportTable'
+   7 |
+   8 | // Placeholder imports for your existing components
+>  9 | import ReportTable from './components/ReportTable'
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  10 | import { getApiUrl } from "@/app/utils/apiUrl"
+  11 | import { PatrolReportPDF } from './components/PatrolReportPDF'
+  12 | import { getAuthToken } from '@/app/services/token.service'
+
+Import traces:
+  Client Component Browser:
+    ./app/report-download/page.tsx [Client Component Browser]
+    ./app/report-download/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/report-download/page.tsx [Client Component SSR]
+    ./app/report-download/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+[00:07:53.752] Browser ERROR   ./app/report-download/page.tsx:12:1
+Export getAuthToken doesn't exist in target module
+  10 | import { getApiUrl } from "@/app/utils/apiUrl"
+  11 | import { PatrolReportPDF } from './components/PatrolReportPDF'
+> 12 | import { getAuthToken } from '@/app/services/token.service'
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  13 |
+  14 | const IconSpinner = () => <Loader2 className="w-5 h-5 animate-spin" />
+  15 |
+
+The export getAuthToken was not found in module [project]/app/services/token.service.ts [app-client] (ecmascript).
+Did you mean to import getTokenFromCookie?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  Client Component Browser:
+    ./app/report-download/page.tsx [Client Component Browser]
+    ./app/report-download/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/report-download/page.tsx [Client Component SSR]
+    ./app/report-download/page.tsx [Server Component]
+[00:07:53.752] Browser ERROR   ./app/report-download/page.tsx:12:1
+Export getAuthToken doesn't exist in target module
+  10 | import { getApiUrl } from "@/app/utils/apiUrl"
+  11 | import { PatrolReportPDF } from './components/PatrolReportPDF'
+> 12 | import { getAuthToken } from '@/app/services/token.service'
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  13 |
+  14 | const IconSpinner = () => <Loader2 className="w-5 h-5 animate-spin" />
+  15 |
+
+The export getAuthToken was not found in module [project]/app/services/token.service.ts [app-ssr] (ecmascript).
+Did you mean to import getTokenFromCookie?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  Client Component Browser:
+    ./app/report-download/page.tsx [Client Component Browser]
+    ./app/report-download/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/report-download/page.tsx [Client Component SSR]
+    ./app/report-download/page.tsx [Server Component]

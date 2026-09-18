@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState } from "react"
+import { SpotlightCard } from "../ui/SpotlightCard"
 import { deleteSecurityUser } from '@/app/api/securityUsers.api'
 import { SecurityUser } from '@/app/types/securityUser'
 
@@ -39,7 +40,7 @@ export default function UsersTable({
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden w-full transition-shadow duration-300 hover:shadow-md">
+    <SpotlightCard className="shadow-sm overflow-hidden w-full p-0">
       <table className="min-w-full divide-y divide-slate-100">
         <thead className="bg-slate-50">
           <tr>
@@ -137,7 +138,7 @@ export default function UsersTable({
           )}
         </tbody>
       </table>
-    </div>
+    </SpotlightCard>
   )
 }
 

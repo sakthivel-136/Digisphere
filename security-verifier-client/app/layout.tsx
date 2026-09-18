@@ -18,8 +18,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Security-Verifier",
-  description: "Admin panel for Security-Verifier system",
+  title: "Security-Verifier Dashboard",
+  description: "Modern admin panel for Security-Verifier system",
   icons: {
     icon: "/icon.png",
     shortcut: "/icon.png",
@@ -33,23 +33,26 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="h-full">
+    <html lang="en" className="h-full scroll-smooth">
       <body
         className={`
           ${geistSans.variable}
           ${geistMono.variable}
           min-h-screen
-          text-slate-900
+          flex
+          flex-col
           antialiased
+          bg-background
+          text-foreground
         `}
       >
-        {/* Navbar (hidden on home page) */}
+        {/* Navbar (hidden on home page via NavbarWrapper logic) */}
         <NavbarWrapper>
           <NavbarClient />
         </NavbarWrapper>
 
         {/* Page Content */}
-        <main className="min-h-screen">
+        <main className="flex-1 flex flex-col min-h-[calc(100vh-64px)] w-full">
           {children}
         </main>
       </body>

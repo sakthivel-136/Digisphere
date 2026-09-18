@@ -2,6 +2,7 @@
 
 import { QRData } from "@/app/api/qr.api";
 import { Eye, Pencil, Trash2 } from "lucide-react";
+import { SpotlightCard } from "../ui/SpotlightCard";
 
 export type QRCode = QRData;
 
@@ -37,7 +38,7 @@ export default function QrTable({
   onToggleStatus, // ✅ properly destructured (even if not used directly)
 }: QrTableProps) {
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+    <SpotlightCard className="shadow-sm overflow-hidden p-0">
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-slate-100">
           <thead className="bg-slate-50">
@@ -194,6 +195,6 @@ export default function QrTable({
           </p>
         </div>
       )}
-    </div>
+    </SpotlightCard>
   );
 }

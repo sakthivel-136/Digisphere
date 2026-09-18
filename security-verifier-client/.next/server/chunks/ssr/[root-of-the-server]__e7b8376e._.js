@@ -1,0 +1,3 @@
+module.exports=[14747,(a,b,c)=>{b.exports=a.x("path",()=>require("path"))},24361,(a,b,c)=>{b.exports=a.x("util",()=>require("util"))},93925,a=>{"use strict";a.s(["getApiUrl",0,()=>{let a=process.env.NEXT_PUBLIC_API_URL;return!a||a.includes("localhost")||a.includes("127.0.0.1")||a.includes("0.0.0.0")?"http://localhost:8000":a}])},22734,(a,b,c)=>{b.exports=a.x("fs",()=>require("fs"))}];
+
+//# sourceMappingURL=%5Broot-of-the-server%5D__e7b8376e._.js.map

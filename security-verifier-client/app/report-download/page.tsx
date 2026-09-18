@@ -1,234 +1,188 @@
-"use client";
+'use client'
 
-import { useState, useEffect, useRef, useMemo } from "react";
-import { getPatrolReport, PatrolReportItem } from "../api/report";
-import { getFactories } from "../api/factories.api";
-import PatrolReportPDF from "../components/reports/PatrolReportPDF";
-import ReportTable from "../components/reports/ReportTable";
-import { useAuthGuard } from "@/app/services/auth.guard";
+import React, { useState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
+import { Download, Search, AlertTriangle, FileText, Calendar, Building2, User, Loader2 } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
 
-// ================= TYPES =================
-type Factory = {
-  factory_code: string;
-  factory_name: string;
-  factory_address: string | null;
-};
+// Placeholder imports for your existing components
+import ReportTable from '@/app/components/reports/ReportTable'
+import { getApiUrl } from "@/app/utils/apiUrl"
+import PatrolReportPDF from '@/app/components/reports/PatrolReportPDF'
+import { tokenService } from '@/app/services/token.service'
 
-// ================= ICONS (SVG) =================
-const IconFactory = () => (
-  <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-      d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-  </svg>
-);
+const IconSpinner = () => <Loader2 className="w-5 h-5 animate-spin" />
 
-const IconCalendar = () => (
-  <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-  </svg>
-);
-
-const IconDownload = () => (
-  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
-      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-  </svg>
-);
-
-const IconSpinner = () => (
-  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-    <path className="opacity-75" fill="currentColor"
-      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-    </path>
-  </svg>
-);
-
-// ================= PAGE =================
-// ================= PAGE =================
 export default function ReportDownloadPage() {
-  const { authorized } = useAuthGuard();
-  const [adminName, setAdminName] = useState("");
-  const [factories, setFactories] = useState<Factory[]>([]);
-  const [factoryCode, setFactoryCode] = useState("");
-  const [reportDate, setReportDate] = useState(new Date().toISOString().slice(0, 10));
-  const [endDate, setEndDate] = useState(new Date().toISOString().slice(0, 10));
-  const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7)); // YYYY-MM
-  const [reportType, setReportType] = useState<"single" | "range" | "month">("single");
-  const [report, setReport] = useState<PatrolReportItem[]>([]);
+  const router = useRouter()
+  const [factories, setFactories] = useState<any[]>([])
+  const [factoryCode, setFactoryCode] = useState("")
+  
+  const [reportType, setReportType] = useState<"single" | "range" | "month">("single")
+  const [reportDate, setReportDate] = useState(() => new Date().toISOString().split("T")[0])
+  const [endDate, setEndDate] = useState(() => new Date().toISOString().split("T")[0])
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  })
 
-  const [loading, setLoading] = useState(false);
-  const [pdfLoading, setPdfLoading] = useState(false);
-  const [pdfTrigger, setPdfTrigger] = useState<number | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const printRef = useRef<HTMLDivElement>(null);
+  const [report, setReport] = useState<any[]>([])
+  const [loading, setLoading] = useState(false)
+  const [pdfLoading, setPdfLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  
+  const [adminName, setAdminName] = useState("")
+  const [pdfTrigger, setPdfTrigger] = useState(0)
+  
+  // Purge State
+  const [showPurgeModal, setShowPurgeModal] = useState(false)
+  const [purgeConfirmText, setPurgeConfirmText] = useState("")
 
-  // ================= INITIAL LOAD =================
+  const printRef = useRef<HTMLDivElement>(null)
+
   useEffect(() => {
-    if (authorized && factoryCode) {
-      fetchReport();
-    }
-  }, [factoryCode, reportDate, endDate, selectedMonth, reportType, authorized]);
-
-  // ================= LOAD ADMIN =================
-  useEffect(() => {
-    if (authorized) {
-      const name = localStorage.getItem("adminName");
-      if (name && name.trim() !== "") {
-        setAdminName(name);
-      }
-    }
-  }, [authorized]);
-
-  // ================= LOAD FACTORIES =================
-  useEffect(() => {
-    if (!authorized) return;
-    const load = async () => {
-      try {
-        const res = await getFactories();
-        if (res?.data?.length) {
-          setFactories(res.data);
-          setFactoryCode(res.data[0].factory_code);
-        }
-      } catch {
-        setError("Failed to load factories list.");
-      }
-    };
-    load();
-  }, [authorized]);
-
-  // ================= FETCH =================
-  const fetchReport = async () => {
-    if (!authorized || !factoryCode) return;
-
-    setLoading(true);
-    setError(null);
-    setPdfTrigger(null);
-
-    let start = reportDate;
-    let end = reportDate;
-
-    if (reportType === "range") {
-      start = reportDate;
-      end = endDate;
-    } else if (reportType === "month") {
-      const [year, month] = selectedMonth.split("-").map(Number);
-      const lastDay = new Date(year, month, 0); // last day of current month
-      const pad = (n: number) => String(n).padStart(2, "0");
-      start = `${year}-${pad(month)}-01`;
-      end = `${year}-${pad(month)}-${pad(lastDay.getDate())}`;
+    const token = tokenService.get()
+    if (!token) {
+      router.push('/login')
+      return
     }
 
+    const storedName = localStorage.getItem('adminName') || localStorage.getItem('name') || "Admin"
+    setAdminName(storedName)
+
+    fetchFactories()
+  }, [router])
+
+  const fetchFactories = async () => {
     try {
-      const data = await getPatrolReport(factoryCode, start, end);
-      setReport(data);
-      if (data.length === 0) setError("No patrol records found for this timeframe.");
-    } catch (err) {
-      setError("Failed to fetch report data. Please try again.");
-      console.error(err);
-    } finally {
-      setLoading(false);
+      const token = tokenService.get()
+      const res = await fetch(`${getApiUrl()}/factories`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if (!res.ok) throw new Error("Failed to fetch factories")
+      const data = await res.json()
+      setFactories(data)
+      if (data.length > 0) setFactoryCode(data[0].factory_code)
+    } catch (e: any) {
+      setError(e.message)
     }
-  };
-
-  // ================= PDF =================
-  const handleDownloadPdf = () => {
-    if (!report.length) return;
-    setPdfLoading(true);
-    setPdfTrigger(Date.now());
-    setTimeout(() => setPdfLoading(false), 800);
-  };
-
-  // ================= CLEAN =================
-  const cleanLogs = useMemo(() => {
-    return report.map((i) => ({
-      ...i,
-      lat: i.lat ?? undefined,
-      lon: i.lon ?? undefined,
-      guard_name: i.guard_name ?? undefined,
-    }));
-  }, [report]);
-
-  if (!authorized) {
-    return <div className="p-6 text-white min-h-screen bg-[#07071f] flex items-center justify-center">Checking access...</div>;
   }
 
-  const currentFactory = factories.find((f) => f.factory_code === factoryCode);
-  const factoryName = currentFactory?.factory_name || factoryCode;
+  const fetchReport = async () => {
+    setLoading(true)
+    setError(null)
+    setReport([])
+    
+    try {
+      const token = tokenService.get()
+      let url = `${getApiUrl()}/report/download?factory_code=${factoryCode}`
+      
+      if (reportType === 'single') {
+        url += `&report_date=${reportDate}`
+      } else if (reportType === 'range') {
+        url += `&report_date=${reportDate}&end_date=${endDate}`
+      } else {
+        const y = selectedMonth.split('-')[0]
+        const m = selectedMonth.split('-')[1]
+        const lastDay = new Date(parseInt(y), parseInt(m), 0).getDate()
+        url += `&report_date=${selectedMonth}-01&end_date=${selectedMonth}-${lastDay}`
+      }
+
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.detail || "Failed to fetch report")
+      
+      setReport(Array.isArray(data) ? data : data.data || [])
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDownloadPdf = () => {
+    setPdfLoading(true)
+    setPdfTrigger(prev => prev + 1)
+    setTimeout(() => {
+      setPdfLoading(false)
+    }, 1500)
+  }
+
+  const handlePurgeData = async () => {
+    // Standard Purge Logic (You can hook this up to your actual API)
+    alert(`Purging data for ${factoryCode}...`)
+    setShowPurgeModal(false)
+    setPurgeConfirmText("")
+  }
+
+  const currentFactory = factories.find(f => f.factory_code === factoryCode)
+  const factoryName = currentFactory?.factory_name || factoryCode
+
+  // Calculate cleanLogs for rendering
+  const cleanLogs = report
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-
+    <div className="w-full flex-1">
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
+        
         {/* HEADER */}
-        <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900">Patrol Reports</h1>
-            <p className="mt-2 text-slate-500">
-              View logs and generate official patrol documentation.
-            </p>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-8">
+          <div className="space-y-1">
+            <h1 className="text-3xl font-bold tracking-tight">Patrol Reports</h1>
+            <p className="text-[var(--foreground-muted)] text-sm">View logs, generate documentation, and manage patrol data.</p>
           </div>
-
-          <div className="flex items-center gap-3 px-4 py-2 bg-white rounded-lg border border-slate-200 shadow-sm">
-            <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-            <span className="text-sm font-medium text-slate-600">
-              Admin: {adminName || "Loading..."}
-            </span>
+          <div className="glass-panel px-4 py-2 rounded-full flex items-center gap-2 border-[var(--border)] shadow-sm">
+            <div className="w-2.5 h-2.5 rounded-full bg-[var(--success)] shadow-[0_0_8px_var(--success)]" />
+            <span className="text-sm font-medium">Admin: {adminName || "Loading..."}</span>
           </div>
         </div>
 
-        {/* CONTROLS */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 mb-6">
+        {/* ERROR TOAST */}
+        <AnimatePresence>
           {error && (
-            <div className="mb-4 p-4 rounded-lg bg-red-50 border border-red-100 text-red-600 text-sm">
-              {error}
-            </div>
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="mb-6 p-4 rounded-xl bg-[var(--danger-muted)] text-[var(--danger)] border border-[var(--danger)]/20 shadow-sm flex items-center gap-3"
+            >
+              <AlertTriangle className="w-5 h-5" />
+              <span className="text-sm font-medium">{error}</span>
+            </motion.div>
           )}
+        </AnimatePresence>
 
-          {/* Toggle buttons for Report Type */}
-          <div className="flex gap-2 mb-6 border-b pb-4">
-            <button
-              onClick={() => setReportType("single")}
-              className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${
-                reportType === "single"
-                  ? "bg-indigo-600 text-white"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-              }`}
-            >
-              One Day Report
-            </button>
-            <button
-              onClick={() => setReportType("range")}
-              className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${
-                reportType === "range"
-                  ? "bg-indigo-600 text-white"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-              }`}
-            >
-              Date Range Report
-            </button>
-            <button
-              onClick={() => setReportType("month")}
-              className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${
-                reportType === "month"
-                  ? "bg-indigo-600 text-white"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-              }`}
-            >
-              Month-wise Report
-            </button>
+        {/* CONTROLS CARD */}
+        <div className="card-modern p-6 mb-8 relative z-10">
+          
+          {/* Tabs */}
+          <div className="flex gap-2 mb-6 bg-[var(--surface-muted)] p-1 rounded-xl inline-flex">
+            {(['single', 'range', 'month'] as const).map(type => (
+              <button
+                key={type}
+                onClick={() => setReportType(type)}
+                className={`relative px-4 py-2 text-sm font-medium rounded-lg transition-spring z-10 ${reportType === type ? 'text-[var(--primary)]' : 'text-[var(--foreground-muted)] hover:text-[var(--foreground)]'}`}
+              >
+                {reportType === type && (
+                  <motion.div layoutId="reportTab" className="absolute inset-0 bg-white shadow-sm rounded-lg -z-10" transition={{ type: "spring", stiffness: 300, damping: 25 }} />
+                )}
+                {type === 'single' ? 'Daily' : type === 'range' ? 'Date Range' : 'Monthly'}
+              </button>
+            ))}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-end">
-
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-end">
+            
             {/* FACTORY */}
-            <div className={reportType === "range" ? "md:col-span-3" : "md:col-span-5"}>
-              <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Factory Location
+            <div className={reportType === "range" ? "md:col-span-3" : "md:col-span-4"}>
+              <label className="flex items-center gap-2 text-xs font-semibold text-[var(--foreground-muted)] uppercase tracking-wider mb-2">
+                <Building2 className="w-4 h-4" /> Location
               </label>
               <select
-                className="w-full mt-2 pl-3 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg"
+                className="input-modern"
                 value={factoryCode}
                 onChange={(e) => setFactoryCode(e.target.value)}
               >
@@ -240,15 +194,15 @@ export default function ReportDownloadPage() {
               </select>
             </div>
 
-            {/* DATE SELECTORS BASED ON TYPE */}
+            {/* DATE SELECTORS */}
             {reportType === "single" && (
               <div className="md:col-span-4">
-                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                  Patrol Date
+                <label className="flex items-center gap-2 text-xs font-semibold text-[var(--foreground-muted)] uppercase tracking-wider mb-2">
+                  <Calendar className="w-4 h-4" /> Patrol Date
                 </label>
                 <input
                   type="date"
-                  className="w-full mt-2 pl-3 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg"
+                  className="input-modern"
                   value={reportDate}
                   onChange={(e) => setReportDate(e.target.value)}
                 />
@@ -258,23 +212,19 @@ export default function ReportDownloadPage() {
             {reportType === "range" && (
               <>
                 <div className="md:col-span-3">
-                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                    From Date
-                  </label>
+                  <label className="text-xs font-semibold text-[var(--foreground-muted)] uppercase tracking-wider mb-2">From Date</label>
                   <input
                     type="date"
-                    className="w-full mt-2 pl-3 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg"
+                    className="input-modern"
                     value={reportDate}
                     onChange={(e) => setReportDate(e.target.value)}
                   />
                 </div>
                 <div className="md:col-span-3">
-                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                    To Date
-                  </label>
+                  <label className="text-xs font-semibold text-[var(--foreground-muted)] uppercase tracking-wider mb-2">To Date</label>
                   <input
                     type="date"
-                    className="w-full mt-2 pl-3 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg"
+                    className="input-modern"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
                   />
@@ -284,53 +234,80 @@ export default function ReportDownloadPage() {
 
             {reportType === "month" && (
               <div className="md:col-span-4">
-                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                  Select Month
-                </label>
+                <label className="text-xs font-semibold text-[var(--foreground-muted)] uppercase tracking-wider mb-2">Select Month</label>
                 <input
                   type="month"
-                  className="w-full mt-2 pl-3 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg"
+                  className="input-modern"
                   value={selectedMonth}
                   onChange={(e) => setSelectedMonth(e.target.value)}
                 />
               </div>
             )}
 
-            {/* BUTTONS */}
-            <div className="md:col-span-3 flex gap-3">
+            {/* ACTION BUTTONS */}
+            <div className={`md:col-span-4 flex gap-3 ${reportType === "range" ? "md:col-span-3" : ""}`}>
               <button
                 onClick={fetchReport}
                 disabled={loading}
-                className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white font-semibold py-2.5 rounded-lg flex items-center justify-center"
+                className="btn-secondary flex-1 flex items-center justify-center gap-2 text-sm"
               >
-                {loading ? <IconSpinner /> : "View Report"}
+                {loading ? <IconSpinner /> : <><Search className="w-4 h-4" /> View</>}
               </button>
 
               <button
                 onClick={handleDownloadPdf}
                 disabled={!report.length || pdfLoading || loading}
-                className="flex-1 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-semibold py-2.5 px-3 rounded-lg flex items-center justify-center gap-2 transition-colors"
+                className="btn-primary flex-1 flex items-center justify-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {pdfLoading ? <IconSpinner /> : <><IconDownload /><span>Download PDF</span></>}
+                {pdfLoading ? <IconSpinner /> : <><Download className="w-4 h-4" /> Export</>}
               </button>
             </div>
           </div>
         </div>
 
-        {/* TABLE */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden min-h-[400px]">
-          {!loading && cleanLogs.length > 0 && (
-            <div ref={printRef}>
-              <div className="border-b px-6 py-4 bg-slate-50">
-                <h3 className="font-semibold text-slate-800">Report Data</h3>
+        {/* RESULTS AREA */}
+        <div className="grid grid-cols-1 gap-6">
+          
+          {/* PURGE ACTION BAR */}
+          <div className="flex justify-end">
+             <button 
+                onClick={() => setShowPurgeModal(true)}
+                className="btn-danger flex items-center gap-2 text-sm py-2 px-4 shadow-sm"
+              >
+                <AlertTriangle className="w-4 h-4" />
+                Purge Old Data
+             </button>
+          </div>
+
+          <div className="card-modern overflow-hidden min-h-[400px] flex flex-col">
+            {loading ? (
+              <div className="flex-1 flex flex-col items-center justify-center text-[var(--foreground-subtle)] space-y-4">
+                <IconSpinner />
+                <p className="text-sm">Fetching patrol data...</p>
               </div>
-              <ReportTable logs={cleanLogs} loading={loading} />
-            </div>
-          )}
+            ) : cleanLogs.length > 0 ? (
+              <div ref={printRef} className="flex-1">
+                <div className="border-b border-[var(--border)] px-6 py-4 bg-[var(--surface-muted)] flex items-center gap-3">
+                  <FileText className="w-5 h-5 text-[var(--primary)]" />
+                  <h3 className="font-semibold">Report Data</h3>
+                  <span className="ml-auto text-xs font-medium px-2.5 py-1 bg-[var(--primary-muted)] text-[var(--primary)] rounded-full">
+                    {cleanLogs.length} Records
+                  </span>
+                </div>
+                <ReportTable logs={cleanLogs} loading={loading} />
+              </div>
+            ) : (
+              <div className="flex-1 flex flex-col items-center justify-center text-[var(--foreground-subtle)] space-y-3 opacity-60">
+                <Search className="w-10 h-10 mb-2 opacity-50" />
+                <p className="font-medium text-lg">No data found</p>
+                <p className="text-sm">Select a factory and date range to view logs.</p>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* PDF */}
-        {pdfTrigger && cleanLogs.length > 0 && (
+        {/* PDF HIDDEN RENDER */}
+        {pdfTrigger > 0 && cleanLogs.length > 0 && (
           <div className="hidden">
             <PatrolReportPDF
               key={pdfTrigger}
@@ -349,7 +326,62 @@ export default function ReportDownloadPage() {
             />
           </div>
         )}
+
+        {/* PURGE MODAL */}
+        <AnimatePresence>
+          {showPurgeModal && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4"
+            >
+              <motion.div 
+                initial={{ scale: 0.95, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                exit={{ scale: 0.95, y: 20 }}
+                transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden border border-[var(--border)]"
+              >
+                <div className="p-6">
+                  <div className="w-12 h-12 rounded-full bg-[var(--danger-muted)] flex items-center justify-center mb-4">
+                    <AlertTriangle className="w-6 h-6 text-[var(--danger)]" />
+                  </div>
+                  <h3 className="text-xl font-bold text-[var(--foreground)] mb-2">Purge Old Data?</h3>
+                  <p className="text-sm text-[var(--foreground-muted)] mb-6">
+                    This action is permanent and cannot be undone. To confirm, please type the factory code <strong className="text-[var(--foreground)]">{factoryCode}</strong> below.
+                  </p>
+                  
+                  <input
+                    type="text"
+                    placeholder="Factory Code"
+                    value={purgeConfirmText}
+                    onChange={(e) => setPurgeConfirmText(e.target.value)}
+                    className="input-modern mb-6"
+                  />
+                  
+                  <div className="flex justify-end gap-3">
+                    <button 
+                      onClick={() => setShowPurgeModal(false)}
+                      className="btn-secondary"
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      onClick={handlePurgeData}
+                      disabled={purgeConfirmText !== factoryCode}
+                      className="btn-danger disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Purge Data
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
       </div>
     </div>
-  );
+  )
 }

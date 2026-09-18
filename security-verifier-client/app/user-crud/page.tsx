@@ -7,6 +7,7 @@ import UsersTable from '@/app/components/users/UsersTable'
 import UserForm from '@/app/components/users/UserForm'
 import { SecurityUser } from '@/app/types/securityUser'
 import { useAuthGuard } from '@/app/services/auth.guard'
+import { StaggeredList, StaggeredItem } from '@/app/components/ui/LayoutOrchestration'
 
 interface Factory {
   factory_code: string
@@ -28,23 +29,18 @@ export default function UserCrudPage() {
     if (!authorized) return
     try {
       setLoading(true)
-      const usersData = await getSecurityUsers()
-      setUsers(Array.isArray(usersData) ? usersData : [])
-      
-      const factoriesRes = await getFactories()
-      const factoriesList = factoriesRes?.data || factoriesRes || []
-      setFactories(factoriesList)
+      const [u, f] = await Promise.all([getSecurityUsers(), getFactories()])
+      setUsers(u)
+      setFactories(f?.data || f || [])
     } catch (error) {
-      console.error("Fetch failed:", error)
+      console.error('Failed to load data:', error)
     } finally {
       setLoading(false)
     }
   }
 
   useEffect(() => {
-    if (authorized) {
-      loadData()
-    }
+    loadData()
   }, [authorized])
 
   const handleAddUser = () => {
@@ -59,19 +55,19 @@ export default function UserCrudPage() {
 
   if (!authorized) {
     return (
-      <div className="p-6 text-white min-h-screen bg-[#07071f] flex items-center justify-center">
+      <div className="p-6 text-slate-400 min-h-screen bg-slate-50 flex items-center justify-center">
         Checking access...
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-8 font-sans selection:bg-blue-100 selection:text-blue-900">
+    <StaggeredList className="min-h-screen bg-slate-50 p-8 font-sans">
       {/* HEADER SECTION */}
-      <div className="max-w-7xl mx-auto mb-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <StaggeredItem className="max-w-7xl mx-auto mb-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight">Security Users</h1>
-          <p className="text-slate-500 mt-1 font-medium">Manage and register security guards and portal admins</p>
+          <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight">System Users</h1>
+          <p className="text-slate-500 mt-1 font-medium">Manage and register factory operators and portal admins</p>
         </div>
         
         <button
@@ -83,9 +79,9 @@ export default function UserCrudPage() {
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
           </svg>
         </button>
-      </div>
+      </StaggeredItem>
 
-      <div className="max-w-7xl mx-auto">
+      <StaggeredItem className="max-w-7xl mx-auto">
         {loading && users.length === 0 ? (
           <div className="flex items-center justify-center p-12 bg-white rounded-2xl border border-slate-200 shadow-sm">
             <p className="text-slate-500 font-medium">Loading user management...</p>
@@ -98,7 +94,7 @@ export default function UserCrudPage() {
             onRefresh={loadData}
           />
         )}
-      </div>
+      </StaggeredItem>
 
       {isFormOpen && (
         <UserForm
@@ -108,7 +104,7 @@ export default function UserCrudPage() {
           onSave={loadData}
         />
       )}
-    </div>
+    </StaggeredList>
   )
 }
 

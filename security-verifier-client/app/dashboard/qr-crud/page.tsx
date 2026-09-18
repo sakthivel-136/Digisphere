@@ -14,6 +14,7 @@ import {
   QRData,
 } from "@/app/api/qr.api";
 import { useAuthGuard } from "@/app/services/auth.guard";
+import { StaggeredList, StaggeredItem } from "@/app/components/ui/LayoutOrchestration";
 
 // ----------------- TYPES -----------------
 
@@ -154,84 +155,90 @@ export default function QrCrudPage() {
     }
   };
 
-  const handleToggleStatus = (id: number) => {
+
+  const handleToggleStatus = async (id: number) => {
     const qr = qrCodes.find((q) => q.qr_id === id);
     if (!qr) return;
 
-    const newStatus =
-      qr.status === "active" ? "inactive" : "active";
-
-    handleSaveQr({
-      ...qr,
-      status: newStatus,
-    });
+    try {
+      const updatedQr = await updateQR(id, { status: qr.status === "active" ? "inactive" : "active" });
+      setQrCodes(qrCodes.map((q) => (q.qr_id === id ? { ...q, status: updatedQr.status } : q)));
+      setFilteredQrCodes(filteredQrCodes.map((q) => (q.qr_id === id ? { ...q, status: updatedQr.status } : q)));
+    } catch (error) {
+      console.error("Failed to toggle QR status", error);
+    }
   };
 
   const handleDeleteQr = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this QR?")) return;
-
-    try {
-      await deleteQR(id);
-      setQrCodes((prev) => prev.filter((q) => q.qr_id !== id));
-    } catch (err) {
-      console.error("Delete QR failed:", err);
-      alert("Failed to delete QR");
+    if (confirm("Are you sure you want to delete this QR code?")) {
+      try {
+        await deleteQR(id);
+        setQrCodes(qrCodes.filter((qr) => qr.qr_id !== id));
+        setFilteredQrCodes(filteredQrCodes.filter((qr) => qr.qr_id !== id));
+      } catch (error) {
+        console.error("Failed to delete QR code", error);
+      }
     }
   };
 
   // ----------------- RENDER (UI UNCHANGED) -----------------
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4 sm:mb-0">
-            QR Codes
-          </h1>
-          <button
-            onClick={handleAddQr}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-          >
-            Add QR
-          </button>
+    <StaggeredList className="min-h-screen bg-slate-50 p-8 font-sans">
+      <StaggeredItem className="max-w-7xl mx-auto mb-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight">Workstations / QR Codes</h1>
+          <p className="text-slate-500 mt-1 font-medium">Manage and generate QR tags for factory lines</p>
         </div>
+        <button
+          onClick={handleAddQr}
+          className="group relative inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold shadow-[0_4px_14px_0_rgba(37,99,235,0.39)] transition-all duration-300 hover:bg-blue-700 hover:-translate-y-0.5 hover:shadow-[0_6px_20px_rgba(37,99,235,0.23)]"
+        >
+          <span>Add Workstation QR</span>
+          <svg className="w-4 h-4 transition-transform group-hover:rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+          </svg>
+        </button>
+      </StaggeredItem>
 
-        <div className="mb-4">
-          <QrFilters
-            value={selectedFactory}
-            onChange={(code) => {
-              setSelectedFactory(code);
-              loadQRCodes(code);
-            }}
-            factories={factories}
-          />
-        </div>
+      <StaggeredItem className="max-w-7xl mx-auto mb-6">
+        <QrFilters
+          value={selectedFactory}
+          onChange={(code) => {
+            setSelectedFactory(code);
+            loadQRCodes(code);
+          }}
+          factories={factories}
+        />
+      </StaggeredItem>
 
+      <StaggeredItem className="max-w-7xl mx-auto">
         <QrTable
           qrCodes={filteredQrCodes}
           onEdit={handleEditQr}
+          onDelete={handleDeleteQr}
           onView={handleViewQr}
           onToggleStatus={handleToggleStatus}
-          onDelete={handleDeleteQr}
         />
+      </StaggeredItem>
 
-        {isFormOpen && (
-          <QrForm
-            qr={currentQr}
-            factories={factories}
-            isEditMode={isEditMode}
-            onSave={handleSaveQr}
-            onClose={() => setIsFormOpen(false)}
-          />
-        )}
+      {/* Modals remain un-animated in the list since they are portals/fixed */}
+      {isFormOpen && (
+        <QrForm
+          qr={currentQr}
+          factories={factories}
+          isEditMode={isEditMode}
+          onSave={handleSaveQr}
+          onClose={() => setIsFormOpen(false)}
+        />
+      )}
 
-        {isPreviewOpen && currentQr && (
-          <QrPreview
-            qr={currentQr}
-            onClose={() => setIsPreviewOpen(false)}
-          />
-        )}
-      </div>
-    </div>
+      {isPreviewOpen && currentQr && (
+        <QrPreview
+          qr={currentQr}
+          onClose={() => setIsPreviewOpen(false)}
+        />
+      )}
+    </StaggeredList>
   );
 }

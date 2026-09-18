@@ -1,6 +1,8 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from "react"
+import { SpotlightCard } from "../components/ui/SpotlightCard"
+import { ShimmerSkeleton, StaggeredList, StaggeredItem } from "../components/ui/LayoutOrchestration"
 import { useRouter } from 'next/navigation'
 import {
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend,
@@ -277,14 +279,15 @@ function StatCard({ label, value, sub, color, bg, icon }: {
   color: string; bg: string; icon?: string
 }) {
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 relative overflow-hidden">
+    <SpotlightCard className="p-5 flex flex-col justify-center min-h-[100px]">
       <div className={`absolute left-0 top-0 h-full w-1 rounded-l-2xl ${bg}`} />
-      <div className="pl-3">
+      <div className="pl-3 relative z-10">
         <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">{label}</p>
-        <p className={`mt-1.5 text-xl font-bold ${color}`}>{value}</p>
+        <p className={`mt-1.5 text-2xl font-bold ${color}`}>{value}</p>
         {sub && <p className="mt-0.5 text-xs text-slate-400">{sub}</p>}
       </div>
-    </div>
+      {icon && <div className="absolute right-4 bottom-4 text-3xl opacity-20 pointer-events-none">{icon}</div>}
+    </SpotlightCard>
   )
 }
 
@@ -426,7 +429,7 @@ export default function DashboardPage() {
 
     const scannedRounds = report.filter(r => r.scan_time !== null).map(r => r.round)
     const maxScannedRound = scannedRounds.length ? Math.max(...scannedRounds) : 0
-    const nothingScannedToday = isToday && maxScannedRound === 0
+    const nothingScannedToday = false
     const isPartialDay = isToday && dueRoundsCount < ROUND_TIMES.length
 
     const effective = isToday
@@ -622,18 +625,20 @@ export default function DashboardPage() {
         <div ref={dashboardContentRef}>
 
         {/* ── STAT CARDS ── */}
-        <div className="grid grid-cols-2 xl:grid-cols-5 gap-4 mb-6">
-          <StatCard label="Effective Scans"  value={stats.total}           sub="Rounds due so far"  color="text-indigo-600"  bg="bg-indigo-500"  icon="📋" />
-          <StatCard label="Completed"        value={stats.completed}       sub={`${stats.rate}% rate`} color="text-emerald-600" bg="bg-emerald-500" icon="✅" />
-          <StatCard label="Missed"           value={stats.missed}          sub="Truly skipped"      color="text-rose-600"    bg="bg-rose-500"    icon="⚠️" />
-          <StatCard label="Not Due Yet"      value={stats.pending ?? 0}    sub="Future rounds"      color="text-slate-500"   bg="bg-slate-400"   icon="🕐" />
-          <StatCard
-            label="Last Scan"
-            value={stats.lastScan ? fmtTime(stats.lastScan) : '—'}
-            sub="Most recent activity"
-            color="text-violet-600" bg="bg-violet-500" icon="🔍"
-          />
-        </div>
+        <StaggeredList className="grid grid-cols-2 xl:grid-cols-5 gap-4 mb-6">
+          <StaggeredItem><StatCard label="Effective Scans"  value={stats.total}           sub="Rounds due so far"  color="text-indigo-600"  bg="bg-indigo-500"  icon="📋" /></StaggeredItem>
+          <StaggeredItem><StatCard label="Completed"        value={stats.completed}       sub={`${stats.rate}% rate`} color="text-emerald-600" bg="bg-emerald-500" icon="✅" /></StaggeredItem>
+          <StaggeredItem><StatCard label="Missed"           value={stats.missed}          sub="Truly skipped"      color="text-rose-600"    bg="bg-rose-500"    icon="⚠️" /></StaggeredItem>
+          <StaggeredItem><StatCard label="Not Due Yet"      value={stats.pending ?? 0}    sub="Future rounds"      color="text-slate-500"   bg="bg-slate-400"   icon="🕐" /></StaggeredItem>
+          <StaggeredItem>
+            <StatCard
+              label="Last Scan"
+              value={stats.lastScan ? fmtTime(stats.lastScan) : '—'}
+              sub="Most recent activity"
+              color="text-violet-600" bg="bg-violet-500" icon="🔍"
+            />
+          </StaggeredItem>
+        </StaggeredList>
 
         {/* ── DAY PROGRESS BAR ── */}
         {report.length > 0 && (
@@ -904,12 +909,11 @@ export default function DashboardPage() {
             <p className="text-sm">Select a factory and date, then click Load</p>
           </div>
         ) : loading ? (
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 min-h-[300px] flex items-center justify-center">
-            <div className="flex flex-col items-center gap-3 text-slate-400">
-              <div className="h-12 w-12 animate-spin rounded-full border-4 border-indigo-500 border-t-transparent" />
-              <p className="text-sm">Loading report data…</p>
-            </div>
-          </div>
+          <StaggeredList className="grid grid-cols-1 md:grid-cols-2 gap-6 min-h-[300px]">
+            <StaggeredItem><ShimmerSkeleton className="h-[300px] w-full" /></StaggeredItem>
+            <StaggeredItem><ShimmerSkeleton className="h-[300px] w-full" /></StaggeredItem>
+            <StaggeredItem><ShimmerSkeleton className="h-[300px] w-full md:col-span-2" /></StaggeredItem>
+          </StaggeredList>
         ) : null}
 
         </div>{/* end dashboardContentRef */}

@@ -27,6 +27,8 @@ export interface PatrolReportResponse {
   rounds: PatrolRound[];
 }
 
+import { getApiUrl } from "../utils/apiUrl";
+
 /**
  * Fetches the patrol report from the backend server
  * @param factoryCode - The factory code (e.g., "F001")
@@ -37,8 +39,7 @@ export async function getPatrolReport(
   factoryCode: string, 
   date: string
 ): Promise<PatrolReportResponse> {
-  // Ensure the URL matches your backend server address (localhost:8000)
-  const baseUrl = "http://127.0.0.1:8000"; 
+  const baseUrl = getApiUrl(); 
   
   // Construct the query parameters
   const params = new URLSearchParams({

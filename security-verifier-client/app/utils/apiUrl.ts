@@ -12,9 +12,12 @@ export const getApiUrl = (): string => {
     if (hostname === "apps.pentagontextiles.com") {
       return `https://${hostname}:8000`;
     }
-    // Always use the static IP for local connections
+    if (hostname === "localhost") {
+      return "http://localhost:8000";
+    }
     return "http://172.16.16.100:8000";
   }
-  return "http://172.16.16.100:8000";
+  
+  return "http://localhost:8000";
 };
 
