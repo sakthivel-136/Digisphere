@@ -101,7 +101,7 @@ export default function Hero() {
       </header>
 
       {/* ── HERO SECTION ── */}
-      <section className="relative w-full min-h-[100dvh] flex items-center justify-center overflow-hidden bg-slate-50 pt-32 pb-16 border-b border-[var(--border)]">
+      <section className="relative w-full min-h-[100dvh] flex md:items-center justify-center overflow-hidden bg-slate-50 pt-32 pb-16 border-b border-[var(--border)]">
         {/* Ambient Splashes */}
         <div className="absolute top-[-20%] right-[-10%] w-[600px] h-[600px] bg-[var(--primary)] rounded-full mix-blend-multiply filter blur-[140px] opacity-10 animate-pulse-subtle pointer-events-none" />
         <div className="absolute bottom-[-20%] left-[-10%] w-[700px] h-[700px] bg-[var(--success)] rounded-full mix-blend-multiply filter blur-[140px] opacity-[0.05] animate-pulse-subtle delay-700 pointer-events-none" />
