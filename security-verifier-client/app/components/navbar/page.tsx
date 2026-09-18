@@ -9,6 +9,7 @@ import {
   Menu,
   User,
   X,
+  ChevronDown,
   Download,
   RefreshCw,
   Moon,
@@ -179,36 +180,18 @@ const Navbar = () => {
                   e.stopPropagation();
                   setIsUserMenuOpen((prev) => !prev)
                 }}
-                className="flex items-center justify-center p-2 touch-target rounded-full bg-[var(--primary-muted)] text-[var(--primary)] border border-[var(--ring)] hover:bg-[var(--primary)] hover:text-white transition-all duration-200"
+                className="flex items-center gap-1 justify-center px-3 py-2 touch-target rounded-full bg-[var(--primary-muted)] text-[var(--primary)] border border-[var(--ring)] hover:bg-[var(--primary)] hover:text-white transition-all duration-200"
                 aria-label="User menu"
                 aria-expanded={isUserMenuOpen}
               >
                 <User className="h-5 w-5" />
+                <ChevronDown className="h-4 w-4" />
               </button>
 
-              <AnimatePresence>
-                {isUserMenuOpen && (
-                  <motion.div
-                    initial={{
-                      opacity: 0,
-                      y: -8,
-                      scale: 0.96,
-                    }}
-                    animate={{
-                      opacity: 1,
-                      y: 0,
-                      scale: 1,
-                    }}
-                    exit={{
-                      opacity: 0,
-                      y: -8,
-                      scale: 0.96,
-                    }}
-                    transition={{
-                      duration: 0.18,
-                    }}
-                    className="absolute right-0 top-full mt-3 w-60 overflow-hidden rounded-2xl bg-[var(--surface)] shadow-2xl ring-1 ring-black/5"
-                  >
+              {isUserMenuOpen && (
+                <div
+                  className="absolute right-0 top-full mt-3 w-60 overflow-hidden rounded-2xl bg-[var(--surface)] shadow-2xl ring-1 ring-black/5 z-[9999]"
+                >
 
                     {/* USER HEADER */}
                     <div className="px-4 py-4 bg-[var(--surface-muted)] border-b border-[var(--border)]">
@@ -310,9 +293,8 @@ const Navbar = () => {
                       </button>
                     </div>
 
-                  </motion.div>
+                  </div>
                 )}
-              </AnimatePresence>
             </div>
 
             {/* MOBILE MENU BUTTON */}
@@ -333,26 +315,8 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* MOBILE MENU */}
-        <AnimatePresence>
-          {isMobileMenuOpen && (
-            <motion.div
-              initial={{
-                height: 0,
-                opacity: 0,
-              }}
-              animate={{
-                height: 'auto',
-                opacity: 1,
-              }}
-              exit={{
-                height: 0,
-                opacity: 0,
-              }}
-              transition={{
-                duration: 0.3,
-                ease: [0.16, 1, 0.3, 1],
-              }}
+        {isMobileMenuOpen && (
+            <div
               className="max-[1050px]:block hidden border-t border-[var(--border)] bg-[var(--surface)] backdrop-blur-xl overflow-hidden"
             >
               <div className="px-4 py-6 space-y-2">
@@ -445,9 +409,8 @@ const Navbar = () => {
 
                 </div>
               </div>
-            </motion.div>
+            </div>
           )}
-        </AnimatePresence>
 
       </header>
     </>
