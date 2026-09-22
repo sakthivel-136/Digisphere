@@ -1,4 +1,9 @@
-import axios, { AxiosError } from "axios";
+/**
+ * app/api/report.ts
+ * Uses shared axiosClient — no separate axios instance, no duplicate token logic.
+ */
+import { AxiosError } from "axios";
+import axiosClient from "./axiosClient";
 
 /* =====================================================
    TYPES
@@ -27,28 +32,6 @@ interface WrappedResponse {
   message?: string;
 }
 
-import { getApiUrl } from "../utils/apiUrl";
-
-/* =====================================================
-   API CONFIG
-===================================================== */
-
-const BASE_URL = getApiUrl();
-
-const api = axios.create({
-  baseURL: BASE_URL,
-  timeout: 15000,
-});
-
-// Attach JWT on every request
-api.interceptors.request.use((config) => {
-  if (typeof window !== "undefined") {
-    const token = localStorage.getItem("access_token");
-    if (token) config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
 /* =====================================================
    CORE FETCH FUNCTION
 ===================================================== */
@@ -58,12 +41,8 @@ async function fetchPatrolReportData(
   reportDate: string,
   endDate?: string
 ): Promise<PatrolReportItem[]> {
-
   try {
-
-    const response = await api.get<
-      PatrolReportItem[] | WrappedResponse
-    >(
+    const response = await axiosClient.get<PatrolReportItem[] | WrappedResponse>(
       "/report/download",
       {
         params: {
@@ -76,35 +55,20 @@ async function fetchPatrolReportData(
 
     const result = response.data;
 
-    if (Array.isArray(result)) {
-      return result;
-    }
-
-    if (result?.data && Array.isArray(result.data)) {
-      return result.data;
-    }
+    if (Array.isArray(result)) return result;
+    if (result?.data && Array.isArray(result.data)) return result.data;
 
     console.error("Unexpected patrol report response:", result);
     return [];
-
   } catch (err) {
-
     const error = err as AxiosError<any>;
-
-    console.error(
-      "Error fetching patrol report:",
-      error.response?.data || error.message
-    );
-
-    throw new Error(
-      error.response?.data?.message ||
-      "Unable to fetch patrol report"
-    );
+    console.error("Error fetching patrol report:", error.response?.data || error.message);
+    throw new Error(error.response?.data?.message || "Unable to fetch patrol report");
   }
 }
 
 /* =====================================================
-   EXPORT 1: Used by report-download/page.tsx
+   EXPORT 1: Used by dashboard/page.tsx and report-download/page.tsx
 ===================================================== */
 
 export async function getPatrolReport(
@@ -124,12 +88,7 @@ export async function getPatrolReportPDF(
   reportDate: string,
   endDate?: string
 ): Promise<PatrolReportResponse> {
-
   const items = await fetchPatrolReportData(factoryCode, reportDate, endDate);
-
-  return {
-    factory_code: factoryCode,
-    report_date: reportDate,
-    items,
-  };
+  return { factory_code: factoryCode, report_date: reportDate, items };
 }
+

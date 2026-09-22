@@ -5,7 +5,7 @@ import { ScanPointsTable, ScanPoint } from '../components/scan/ScanPointsTable'
 import { ScanPointForm } from '../components/scan/ScanPointForm'
 import { getScanPointsByFactory, createScanPoint, updateScanPoint } from '../api/scanPoints.api'
 import { useAuthGuard } from '../services/auth.guard'
-import { getApiUrl } from '../utils/apiUrl'
+import axiosClient from '../api/axiosClient'
 import { PageTransition } from '@/app/components/layout/PageTransition'
 import { PageContainer } from '@/app/components/layout/PageContainer'
 import { GlassCard } from '@/app/components/ui/GlassCard'
@@ -38,37 +38,25 @@ export default function ScanPointsPage() {
   const [statusFilter,      setStatusFilter]      = useState<StatusFilter>('All')
   const [priorityFilter,    setPriorityFilter]    = useState<PriorityFilter>('All')
 
-  /* ── Load Factories (preserved) ── */
+  /* ── Load Factories — uses axiosClient so auth token is attached ── */
   useEffect(() => {
     if (!authorized) return
-    const API_BASE_URL = getApiUrl()
-    const FACTORY_ENDPOINT = `${API_BASE_URL}/factories/minimal`
-
-    console.log(`🔍 Fetching from: ${FACTORY_ENDPOINT}`)
-
-    fetch(FACTORY_ENDPOINT)
+    axiosClient.get('/factories/minimal')
       .then(res => {
-        if (!res.ok) {
-          console.error(`❌ Backend Error: ${res.status} at ${FACTORY_ENDPOINT}`)
-          throw new Error(`HTTP error! status: ${res.status}`)
-        }
-        return res.json()
-      })
-      .then((data) => {
-        const factoryArray = Array.isArray(data) ? data : []
-        console.log('✅ Factories loaded:', factoryArray)
+        const factoryArray = Array.isArray(res.data) ? res.data : []
         setFactories(factoryArray)
         if (factoryArray.length > 0) {
-          setSelectedFactory(factoryArray[0].id)
+          setSelectedFactory(factoryArray[0].factory_code) // ✅ correct field (was: .id)
         } else {
           setSelectedFactory('')
         }
       })
       .catch((err: unknown) => {
-        console.error('⚠️ Network or Parsing Error:', err)
+        console.error('Failed to load factories:', err)
         setFactories([])
       })
   }, [authorized])
+
 
   /* ── Load Scan Points (preserved) ── */
   useEffect(() => {

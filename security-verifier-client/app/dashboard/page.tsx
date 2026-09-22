@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo, useCallback, useRef } from "react"
+import { useVisibilityPolling } from '@/lib/useVisibilityPolling'
 import { PageTransition } from '@/app/components/layout/PageTransition'
 import { PageContainer } from '@/app/components/layout/PageContainer'
 import { GlassCard } from '@/app/components/ui/GlassCard'
@@ -402,11 +403,8 @@ export default function DashboardPage() {
     fetchReport()
   }, [fetchReport])
 
-  /* auto-poll every 5 seconds for live updates (silent background refresh) */
-  useEffect(() => {
-    const interval = setInterval(pollReport, 5000)
-    return () => clearInterval(interval)
-  }, [pollReport])
+  /* auto-poll every 30 seconds — pauses when tab is hidden (saves ~83% idle requests) */
+  useVisibilityPolling(pollReport, 30_000, authorized && !!selectedFactory)
 
   /* ================================================================
      COMPUTED STATS (time-aware)

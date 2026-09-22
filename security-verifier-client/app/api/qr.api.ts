@@ -1,4 +1,6 @@
 import axiosClient from "./axiosClient";
+// fetchFactories removed — use getFactories from factories.api.js (cached, single source of truth)
+export { getFactories as fetchFactories } from "./factories.api";
 
 // ----------------- QR Data (Response Model) -----------------
 export interface QRData {
@@ -78,8 +80,5 @@ export const deleteQR = async (qrId: number): Promise<void> => {
   await axiosClient.delete(`/qr/${qrId}`);
 };
 
-// ----------------- FETCH FACTORIES -----------------
-export const fetchFactories = async (): Promise<Factory[]> => {
-  const res = await axiosClient.get("/factories");
-  return res.data;
-};
+// fetchFactories is re-exported from ./factories.api (see top of file)
+

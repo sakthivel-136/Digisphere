@@ -12,6 +12,7 @@ import { tokenService } from '@/app/services/token.service'
 import { PageTransition } from '@/app/components/layout/PageTransition'
 import { PageContainer } from '@/app/components/layout/PageContainer'
 import { GlassCard } from '@/app/components/ui/GlassCard'
+import { useVisibilityPolling } from '@/lib/useVisibilityPolling'
 
 const IconSpinner = () => <Loader2 className="w-5 h-5 animate-spin" />
 
@@ -60,13 +61,11 @@ export default function ReportDownloadPage() {
     }
   }, [factoryCode, reportType, reportDate, endDate, selectedMonth])
 
-  // Poll every 5 seconds automatically (silent background refresh)
-  useEffect(() => {
-    const interval = setInterval(() => {
-      pollReport()
-    }, 5000)
-    return () => clearInterval(interval)
-  }, [pollReport])
+  // Guard: only auto-fetch once when the factory first loads — not on every filter change
+  const [hasFetchedOnce, setHasFetchedOnce] = useState(false)
+
+  // Poll every 30 seconds — pauses when tab is hidden (saves ~83% idle requests)
+  useVisibilityPolling(pollReport, 30_000, !!factoryCode && hasFetchedOnce)
 
   // Get Admin Name (JWT payload)
   const [adminName, setAdminName] = useState("")
@@ -141,11 +140,15 @@ export default function ReportDownloadPage() {
     }
   }, [factoryCode, reportType, reportDate, endDate, selectedMonth])
 
+  // Auto-fetch only once when factory first becomes available
+  // After that, require the user to click "Load Report"
   useEffect(() => {
-    if (factoryCode) {
+    if (factoryCode && !hasFetchedOnce) {
       fetchReport()
+      setHasFetchedOnce(true)
     }
-  }, [fetchReport, factoryCode])
+  }, [factoryCode]) // eslint-disable-line react-hooks/exhaustive-deps
+
 
   const handleDownloadPdf = () => {
     setPdfLoading(true)

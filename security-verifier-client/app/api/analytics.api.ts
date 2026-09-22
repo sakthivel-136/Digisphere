@@ -60,48 +60,54 @@ export interface DashboardChartsResponse {
    API CALLS
 ===================================================== */
 
-export const getAnalyticsOverview = async (): Promise<AnalyticsOverview> => {
-  const response = await axios.get("/analytics/overview");
-  return response.data;
-};
+/* =====================================================
+   API CALLS — ALL COMMENTED OUT
+   Reason: /analytics/* routes are NOT registered on the server (main.py).
+   Every call was returning 404. Re-enable when backend routes are added.
+===================================================== */
 
-export const getScansByGuard = async (): Promise<GuardScan[]> => {
-  const response = await axios.get("/analytics/scans-by-guard");
-  return response.data;
-};
+// export const getAnalyticsOverview = async (): Promise<AnalyticsOverview> => {
+//   const response = await axios.get("/analytics/overview");
+//   return response.data;
+// };
 
-export const getMissedScans = async (
-  factoryCode: string
-): Promise<MissedScansResponse> => {
-  const response = await axios.get("/analytics/missed-scans", {
-    params: { factory_code: factoryCode },
-  });
-  return response.data;
-};
+// export const getScansByGuard = async (): Promise<GuardScan[]> => {
+//   const response = await axios.get("/analytics/scans-by-guard");
+//   return response.data;
+// };
 
-export const getGuardPerformance = async (
-  date: string
-): Promise<GuardPerformanceResponse> => {
-  const response = await axios.get("/analytics/guard-performance", {
-    params: { target_date: date },
-  });
-  return response.data;
-};
+// export const getMissedScans = async (
+//   factoryCode: string
+// ): Promise<MissedScansResponse> => {
+//   const response = await axios.get("/analytics/missed-scans", {
+//     params: { factory_code: factoryCode },
+//   });
+//   return response.data;
+// };
 
-export const getDashboardCharts = async (
-  factoryCode?: string
-): Promise<DashboardChartsResponse> => {
-  const response = await axios.get("/analytics/dashboard-charts", {
-    params: { factory_code: factoryCode },
-  });
-  return response.data;
-};
+// export const getGuardPerformance = async (
+//   date: string
+// ): Promise<GuardPerformanceResponse> => {
+//   const response = await axios.get("/analytics/guard-performance", {
+//     params: { target_date: date },
+//   });
+//   return response.data;
+// };
 
-export const processScans = async (
-  target_date: string
-): Promise<ProcessResponse> => {
-  const response = await axios.post("/analytics/process-scans", {
-    target_date,
-  });
-  return response.data;
-};
+// export const getDashboardCharts = async (
+//   factoryCode?: string
+// ): Promise<DashboardChartsResponse> => {
+//   const response = await axios.get("/analytics/dashboard-charts", {
+//     params: { factory_code: factoryCode },
+//   });
+//   return response.data;
+// };
+
+// export const processScans = async (
+//   target_date: string
+// ): Promise<ProcessResponse> => {
+//   const response = await axios.post("/analytics/process-scans", {
+//     target_date,
+//   });
+//   return response.data;
+// };
