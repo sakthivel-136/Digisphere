@@ -64,8 +64,8 @@ export default function ReportDownloadPage() {
   // Guard: only auto-fetch once when the factory first loads — not on every filter change
   const [hasFetchedOnce, setHasFetchedOnce] = useState(false)
 
-  // Poll every 30 seconds — pauses when tab is hidden (saves ~83% idle requests)
-  useVisibilityPolling(pollReport, 30_000, !!factoryCode && hasFetchedOnce)
+  // Poll every 10 minutes — pauses when tab is hidden (saves ~95% idle requests)
+  useVisibilityPolling(pollReport, 600_000, !!factoryCode && hasFetchedOnce)
 
   // Get Admin Name (JWT payload)
   const [adminName, setAdminName] = useState("")

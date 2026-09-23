@@ -403,8 +403,8 @@ export default function DashboardPage() {
     fetchReport()
   }, [fetchReport])
 
-  /* auto-poll every 30 seconds — pauses when tab is hidden (saves ~83% idle requests) */
-  useVisibilityPolling(pollReport, 30_000, authorized && !!selectedFactory)
+  /* auto-poll every 10 minutes — pauses when tab is hidden (saves 95% idle requests) */
+  useVisibilityPolling(pollReport, 600_000, authorized && !!selectedFactory)
 
   /* ================================================================
      COMPUTED STATS (time-aware)
