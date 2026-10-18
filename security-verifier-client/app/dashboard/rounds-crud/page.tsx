@@ -51,13 +51,15 @@ export default function RoundsCrudPage() {
   const [isExporting, setIsExporting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Modals state
+  // Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRound, setEditingRound] = useState<PatrolRound | null>(null);
   const [formRoundNumber, setFormRoundNumber] = useState<number>(1);
   const [formStartTime, setFormStartTime] = useState<string>('06:00');
   const [formEndTime, setFormEndTime] = useState<string>('07:00');
   const [formError, setFormError] = useState<string | null>(null);
+  const [collisionWarning, setCollisionWarning] = useState<string | null>(null);
+  const [confirmCollisionTick, setConfirmCollisionTick] = useState<boolean>(false);
 
   // Delete Confirmation state
   const [deleteConfirmRound, setDeleteConfirmRound] = useState<PatrolRound | null>(null);
@@ -113,6 +115,14 @@ export default function RoundsCrudPage() {
     );
   }, [rounds, searchQuery]);
 
+  // Check for time slot overlap / exact collision
+  const findCollidingRound = (start: string, end: string, currentId?: string) => {
+    return rounds.find((r) => {
+      if (currentId && r.id === currentId) return false;
+      return r.start_time === start || r.end_time === end;
+    });
+  };
+
   // Open Create Modal
   const handleOpenCreateModal = () => {
     setEditingRound(null);
@@ -120,6 +130,8 @@ export default function RoundsCrudPage() {
     setFormStartTime('06:00');
     setFormEndTime('07:00');
     setFormError(null);
+    setCollisionWarning(null);
+    setConfirmCollisionTick(false);
     setIsModalOpen(true);
   };
 
@@ -130,8 +142,24 @@ export default function RoundsCrudPage() {
     setFormStartTime(round.start_time);
     setFormEndTime(round.end_time);
     setFormError(null);
+    setCollisionWarning(null);
+    setConfirmCollisionTick(false);
     setIsModalOpen(true);
   };
+
+  // Whenever start or end time changes, check if time already exists
+  useEffect(() => {
+    if (!isModalOpen) return;
+    const collision = findCollidingRound(formStartTime, formEndTime, editingRound?.id);
+    if (collision) {
+      setCollisionWarning(
+        `A round slot with start time ${formatTime12h(collision.start_time)} (Round ${String(collision.round_number).padStart(2, '0')}) already exists. Really you want to save it?`
+      );
+    } else {
+      setCollisionWarning(null);
+      setConfirmCollisionTick(false);
+    }
+  }, [formStartTime, formEndTime, isModalOpen, editingRound, rounds]);
 
   // Submit Create or Edit Form
   const handleSubmitForm = async (e: React.FormEvent) => {
@@ -575,6 +603,34 @@ export default function RoundsCrudPage() {
                   </span>
                 </div>
 
+                {/* Collision Warning & Checkbox confirmation */}
+                {collisionWarning && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs space-y-2.5"
+                  >
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                      <p className="leading-relaxed font-medium">
+                        {collisionWarning}
+                      </p>
+                    </div>
+
+                    <label className="flex items-center gap-2.5 pt-1 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={confirmCollisionTick}
+                        onChange={(e) => setConfirmCollisionTick(e.target.checked)}
+                        className="w-4 h-4 rounded border-amber-400/50 bg-amber-950/40 text-amber-500 focus:ring-0 focus:ring-offset-0 cursor-pointer accent-amber-500"
+                      />
+                      <span className="text-amber-300 font-semibold text-[11px]">
+                        Yes, I understand and really want to save this slot.
+                      </span>
+                    </label>
+                  </motion.div>
+                )}
+
                 <div className="pt-4 flex items-center justify-end gap-3 border-t border-white/10">
                   <button
                     type="button"
@@ -585,7 +641,8 @@ export default function RoundsCrudPage() {
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold transition-all shadow-md shadow-indigo-600/30"
+                    disabled={!!collisionWarning && !confirmCollisionTick}
+                    className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:bg-neutral-800 disabled:text-neutral-500 disabled:cursor-not-allowed text-white text-sm font-semibold transition-all shadow-md shadow-indigo-600/30 disabled:shadow-none"
                   >
                     {editingRound ? 'Update Round' : 'Create Round'}
                   </button>
