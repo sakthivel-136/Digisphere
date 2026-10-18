@@ -12,6 +12,7 @@ export type { AuthUser } from "./token.service";
 interface GuardOptions {
   role?: "ADMIN" | "SECURITY" | "SUPERVISOR" | string;
   roles?: string[];
+  allowedRoles?: string[];
 }
 
 export const useAuthGuard = (options?: GuardOptions) => {
@@ -30,8 +31,9 @@ export const useAuthGuard = (options?: GuardOptions) => {
 
     // 🔐 2. If role-based access is required
     const allowedRoles: string[] = [];
-    if (options?.roles && options.roles.length > 0) {
-      allowedRoles.push(...options.roles.map(r => r.toUpperCase()));
+    const rolesList = options?.allowedRoles || options?.roles;
+    if (rolesList && rolesList.length > 0) {
+      allowedRoles.push(...rolesList.map(r => r.toUpperCase()));
     } else if (options?.role) {
       allowedRoles.push(options.role.toUpperCase());
     }
