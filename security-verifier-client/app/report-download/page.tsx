@@ -60,11 +60,13 @@ export default function ReportDownloadPage() {
     }
   }, [factoryCode, reportType, reportDate, endDate, selectedMonth])
 
-  // Poll every 5 seconds automatically (silent background refresh)
+  // Poll every 60 seconds automatically only when active (silent background refresh)
   useEffect(() => {
     const interval = setInterval(() => {
-      pollReport()
-    }, 5000)
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        pollReport()
+      }
+    }, 60000)
     return () => clearInterval(interval)
   }, [pollReport])
 

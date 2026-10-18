@@ -402,9 +402,13 @@ export default function DashboardPage() {
     fetchReport()
   }, [fetchReport])
 
-  /* auto-poll every 5 seconds for live updates (silent background refresh) */
+  /* auto-poll every 30 seconds for live updates only when window/tab is visible */
   useEffect(() => {
-    const interval = setInterval(pollReport, 5000)
+    const interval = setInterval(() => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+        pollReport()
+      }
+    }, 30000)
     return () => clearInterval(interval)
   }, [pollReport])
 
