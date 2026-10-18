@@ -97,14 +97,14 @@ export default function ShiftsPage() {
       // If backend returns empty guards (or in mock env), ensure sample guards for seamless roster management
       if (!fetchedGuards || fetchedGuards.length === 0) {
         setGuards([
-          { security_id: 'SEC-001', security_name: 'Rajesh Kumar', factory: 'Factory A - Tirupur' },
-          { security_id: 'SEC-002', security_name: 'Vigneshwaran M', factory: 'Factory A - Tirupur' },
-          { security_id: 'SEC-003', security_name: 'Anand Sundaram', factory: 'Factory B - Avinashi' },
-          { security_id: 'SEC-004', security_name: 'Prakash Raj', factory: 'Factory C - Perundurai' },
-          { security_id: 'SEC-005', security_name: 'Selvam Perumal', factory: 'Factory A - Tirupur' },
-          { security_id: 'SEC-006', security_name: 'Karthik N', factory: 'Factory B - Avinashi' },
-          { security_id: 'SEC-007', security_name: 'Muruganandam C', factory: 'Factory C - Perundurai' },
-          { security_id: 'SEC-008', security_name: 'Dinesh Balan', factory: 'Factory A - Tirupur' }
+          { security_id: '11401038', security_name: 'THIRUPPATHI A', factory: 'F001' },
+          { security_id: '11401466', security_name: 'CHELLATHURAI', factory: 'F001' },
+          { security_id: '11403128', security_name: 'GOVINDARAJ ALAGARSAMY', factory: 'F001' },
+          { security_id: '11403765', security_name: 'BOMMUSAMY KALIYAPPAN', factory: 'F001' },
+          { security_id: '11403945', security_name: 'SENTHILKUMAR S', factory: 'F001' },
+          { security_id: '11404100', security_name: 'RAMESH KUMAR', factory: 'F002' },
+          { security_id: '11404210', security_name: 'MURUGESAN K', factory: 'F003' },
+          { security_id: '11404350', security_name: 'SELVAM M', factory: 'F004' }
         ]);
       } else {
         setGuards(fetchedGuards);

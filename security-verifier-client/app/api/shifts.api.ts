@@ -26,7 +26,7 @@ const DEFAULT_SHIFTS: Shift[] = [
     startTime: "06:00",
     endTime: "14:00",
     description: "Main perimeter morning verification & access control",
-    assignedGuardIds: ["SEC-001", "SEC-002", "SEC-004"],
+    assignedGuardIds: ["11401038", "11401466", "11403128"],
     createdAt: new Date().toISOString()
   },
   {
@@ -35,7 +35,7 @@ const DEFAULT_SHIFTS: Shift[] = [
     startTime: "14:00",
     endTime: "22:00",
     description: "Factory floor & checkpoint scanning operations",
-    assignedGuardIds: ["SEC-003", "SEC-005"],
+    assignedGuardIds: ["11403765", "11403945"],
     createdAt: new Date().toISOString()
   },
   {
