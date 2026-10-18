@@ -17,7 +17,9 @@ import {
   X,
   RefreshCw,
   Hourglass,
-  CalendarDays
+  CalendarDays,
+  Smartphone,
+  LockKeyhole
 } from 'lucide-react';
 
 import { useAuthGuard } from '@/app/services/auth.guard';
@@ -57,6 +59,8 @@ export default function RoundsCrudPage() {
   const [formRoundNumber, setFormRoundNumber] = useState<number>(1);
   const [formStartTime, setFormStartTime] = useState<string>('06:00');
   const [formEndTime, setFormEndTime] = useState<string>('07:00');
+  const [formScanStartTime, setFormScanStartTime] = useState<string>('06:55');
+  const [formScanEndTime, setFormScanEndTime] = useState<string>('07:20');
   const [formError, setFormError] = useState<string | null>(null);
   const [collisionWarning, setCollisionWarning] = useState<string | null>(null);
   const [confirmCollisionTick, setConfirmCollisionTick] = useState<boolean>(false);
@@ -111,15 +115,22 @@ export default function RoundsCrudPage() {
         `round ${r.round_number}`.includes(q) ||
         r.round_number.toString().includes(q) ||
         r.start_time.includes(q) ||
-        r.end_time.includes(q)
+        r.end_time.includes(q) ||
+        (r.scan_start_time && r.scan_start_time.includes(q)) ||
+        (r.scan_end_time && r.scan_end_time.includes(q))
     );
   }, [rounds, searchQuery]);
 
   // Check for time slot overlap / exact collision
-  const findCollidingRound = (start: string, end: string, currentId?: string) => {
+  const findCollidingRound = (start: string, end: string, scanStart: string, scanEnd: string, currentId?: string) => {
     return rounds.find((r) => {
       if (currentId && r.id === currentId) return false;
-      return r.start_time === start || r.end_time === end;
+      return (
+        r.start_time === start ||
+        r.end_time === end ||
+        r.scan_start_time === scanStart ||
+        r.scan_end_time === scanEnd
+      );
     });
   };
 
@@ -129,6 +140,8 @@ export default function RoundsCrudPage() {
     setFormRoundNumber(nextRoundNumber);
     setFormStartTime('06:00');
     setFormEndTime('07:00');
+    setFormScanStartTime('06:55');
+    setFormScanEndTime('07:20');
     setFormError(null);
     setCollisionWarning(null);
     setConfirmCollisionTick(false);
@@ -141,16 +154,24 @@ export default function RoundsCrudPage() {
     setFormRoundNumber(round.round_number);
     setFormStartTime(round.start_time);
     setFormEndTime(round.end_time);
+    setFormScanStartTime(round.scan_start_time || '06:55');
+    setFormScanEndTime(round.scan_end_time || '07:20');
     setFormError(null);
     setCollisionWarning(null);
     setConfirmCollisionTick(false);
     setIsModalOpen(true);
   };
 
-  // Whenever start or end time changes, check if time already exists
+  // Whenever start, end, or scan window times change, check if slot already exists
   useEffect(() => {
     if (!isModalOpen) return;
-    const collision = findCollidingRound(formStartTime, formEndTime, editingRound?.id);
+    const collision = findCollidingRound(
+      formStartTime,
+      formEndTime,
+      formScanStartTime,
+      formScanEndTime,
+      editingRound?.id
+    );
     if (collision) {
       setCollisionWarning(
         `A round slot with start time ${formatTime12h(collision.start_time)} (Round ${String(collision.round_number).padStart(2, '0')}) already exists. Really you want to save it?`
@@ -159,20 +180,18 @@ export default function RoundsCrudPage() {
       setCollisionWarning(null);
       setConfirmCollisionTick(false);
     }
-  }, [formStartTime, formEndTime, isModalOpen, editingRound, rounds]);
+  }, [formStartTime, formEndTime, formScanStartTime, formScanEndTime, isModalOpen, editingRound, rounds]);
 
   // Submit Create or Edit Form
   const handleSubmitForm = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError(null);
 
-    // Validation 1: Round number positive integer
     if (!formRoundNumber || formRoundNumber <= 0) {
       setFormError('Round Number must be a positive integer.');
       return;
     }
 
-    // Validation 2: Duplicate check
     const duplicate = rounds.find(
       (r) => r.round_number === formRoundNumber && (!editingRound || r.id !== editingRound.id)
     );
@@ -181,9 +200,8 @@ export default function RoundsCrudPage() {
       return;
     }
 
-    // Validation 3: Time values present
-    if (!formStartTime || !formEndTime) {
-      setFormError('Both Start Time and End Time are required.');
+    if (!formStartTime || !formEndTime || !formScanStartTime || !formScanEndTime) {
+      setFormError('Round operating times and Scan Window opening/closing times are all required.');
       return;
     }
 
@@ -193,6 +211,8 @@ export default function RoundsCrudPage() {
           round_number: formRoundNumber,
           start_time: formStartTime,
           end_time: formEndTime,
+          scan_start_time: formScanStartTime,
+          scan_end_time: formScanEndTime,
         });
         setRounds((prev) =>
           prev.map((r) => (r.id === updated.id ? updated : r)).sort((a, b) => a.round_number - b.round_number)
@@ -203,6 +223,8 @@ export default function RoundsCrudPage() {
           round_number: formRoundNumber,
           start_time: formStartTime,
           end_time: formEndTime,
+          scan_start_time: formScanStartTime,
+          scan_end_time: formScanEndTime,
         });
         setRounds((prev) =>
           [...prev, created].sort((a, b) => a.round_number - b.round_number)
@@ -295,7 +317,7 @@ export default function RoundsCrudPage() {
                   Patrol Rounds Management
                 </h1>
                 <p className="text-sm text-[var(--foreground-muted)] mt-0.5">
-                  Configure mandatory factory verification rounds and 24-hour time slots
+                  Configure round timings and enforce guard app login scan windows
                 </p>
               </div>
             </div>
@@ -353,24 +375,24 @@ export default function RoundsCrudPage() {
             <GlassCard hoverable>
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-[var(--foreground-muted)] uppercase tracking-wider">
-                  Daily Cycle
+                  App Login Enforced
                 </span>
-                <div className="p-2 rounded-xl bg-purple-100 dark:bg-purple-950/40">
-                  <CalendarDays className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                <div className="p-2 rounded-xl bg-indigo-100 dark:bg-indigo-950/40">
+                  <LockKeyhole className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                 </div>
               </div>
-              <div className="mt-2 text-2xl sm:text-3xl font-extrabold text-[var(--foreground)] tracking-tight">
-                24 Hours
+              <div className="mt-2 text-2xl sm:text-3xl font-extrabold text-[var(--primary)] tracking-tight">
+                Scan Windows
               </div>
               <div className="mt-1 text-xs text-[var(--foreground-subtle)]">
-                Continuous day & night factory coverage
+                Guards can only log in during open scan windows
               </div>
             </GlassCard>
 
             <GlassCard hoverable>
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-[var(--foreground-muted)] uppercase tracking-wider">
-                  Status
+                  System Status
                 </span>
                 <div className="p-2 rounded-xl bg-emerald-100 dark:bg-emerald-950/40">
                   <Shield className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
@@ -394,7 +416,7 @@ export default function RoundsCrudPage() {
                   <Search className="w-4 h-4 text-[var(--foreground-subtle)] absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
-                    placeholder="Search by round number or time slot..."
+                    placeholder="Search by round number, round timing, or scan window..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="input-modern pl-10"
@@ -423,7 +445,7 @@ export default function RoundsCrudPage() {
             {loading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                 {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                  <GlassCard key={i} className="h-44 animate-pulse">
+                  <GlassCard key={i} className="h-56 animate-pulse">
                     <div className="h-4 bg-[var(--surface-hover)] rounded w-1/3 mb-4" />
                     <div className="h-6 bg-[var(--surface-hover)] rounded w-2/3 mb-2" />
                     <div className="h-4 bg-[var(--surface-hover)] rounded w-1/2" />
@@ -453,6 +475,8 @@ export default function RoundsCrudPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                 {filteredRounds.map((round) => {
                   const durationStr = calculateDuration(round.start_time, round.end_time);
+                  const scanStartFormatted = formatTime12h(round.scan_start_time || '06:55');
+                  const scanEndFormatted = formatTime12h(round.scan_end_time || '07:20');
 
                   return (
                     <GlassCard
@@ -474,25 +498,37 @@ export default function RoundsCrudPage() {
                           </span>
                         </div>
 
-                        {/* Time Range Display */}
-                        <div className="mt-4">
-                          <div className="text-[11px] uppercase font-bold text-[var(--foreground-subtle)] tracking-wider">
-                            Time Window
+                        {/* Round Operating Time Display */}
+                        <div className="mt-3.5">
+                          <div className="text-[11px] uppercase font-bold text-[var(--foreground-subtle)] tracking-wider flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            Round Timing
                           </div>
-                          <div className="text-base font-bold text-[var(--foreground)] mt-1 font-mono tracking-tight">
+                          <div className="text-base font-bold text-[var(--foreground)] mt-0.5 font-mono tracking-tight">
                             {formatTime12h(round.start_time)} – {formatTime12h(round.end_time)}
                           </div>
-                          <div className="text-xs text-[var(--foreground-muted)] font-mono mt-0.5">
-                            {round.start_time} - {round.end_time} (24h)
+                        </div>
+
+                        {/* Scan Window Opening Timing Display (Guard App Login Window) */}
+                        <div className="mt-3 p-2.5 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/40">
+                          <div className="text-[10.5px] uppercase font-bold text-indigo-600 dark:text-indigo-400 tracking-wider flex items-center gap-1.5">
+                            <Smartphone className="w-3 h-3 text-indigo-500" />
+                            Scan Window (App Login)
+                          </div>
+                          <div className="text-sm font-extrabold text-indigo-900 dark:text-indigo-200 mt-1 font-mono">
+                            {scanStartFormatted} – {scanEndFormatted}
+                          </div>
+                          <div className="text-[10px] text-indigo-500/80 font-mono mt-0.5">
+                            {round.scan_start_time || '06:55'} to {round.scan_end_time || '07:20'} (24h)
                           </div>
                         </div>
                       </div>
 
                       {/* Action Buttons */}
-                      <div className="mt-5 pt-3.5 border-t border-[var(--border)] flex items-center justify-end gap-2">
+                      <div className="mt-4 pt-3 border-t border-[var(--border)] flex items-center justify-end gap-2">
                         <button
                           onClick={() => handleOpenEditModal(round)}
-                          title="Edit Round"
+                          title="Edit Round & Scan Window"
                           className="p-2 rounded-xl bg-[var(--surface)] hover:bg-[var(--surface-hover)] text-[var(--foreground-muted)] hover:text-[var(--primary)] border border-[var(--border)] transition-colors"
                         >
                           <Edit2 className="w-3.5 h-3.5" />
@@ -528,7 +564,7 @@ export default function RoundsCrudPage() {
                   initial={{ opacity: 0, scale: 0.95, y: 10 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                  className="relative w-full max-w-md rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-6 sm:p-7 shadow-2xl z-10"
+                  className="relative w-full max-w-lg rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-6 sm:p-7 shadow-2xl z-10 max-h-[92vh] overflow-y-auto"
                 >
                   <div className="flex items-center justify-between pb-4 border-b border-[var(--border)]">
                     <div className="flex items-center gap-2.5">
@@ -572,42 +608,92 @@ export default function RoundsCrudPage() {
                       </p>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs font-bold text-[var(--foreground-muted)] uppercase tracking-wider mb-2">
-                          Start Time (24h) <span className="text-rose-500">*</span>
-                        </label>
-                        <input
-                          type="time"
-                          required
-                          value={formStartTime}
-                          onChange={(e) => setFormStartTime(e.target.value)}
-                          className="input-modern"
-                        />
-                        <p className="text-[11px] text-[var(--foreground-subtle)] mt-1">
-                          {formatTime12h(formStartTime)}
-                        </p>
+                    {/* Section 1: Round Operating Timing */}
+                    <div className="p-3.5 rounded-xl bg-[var(--surface-muted)] border border-[var(--border)] space-y-3">
+                      <div className="text-xs font-bold text-[var(--foreground)] flex items-center gap-1.5 uppercase tracking-wider">
+                        <Clock className="w-3.5 h-3.5 text-[var(--primary)]" />
+                        1. Round Timing (Operational Window)
                       </div>
-                      <div>
-                        <label className="block text-xs font-bold text-[var(--foreground-muted)] uppercase tracking-wider mb-2">
-                          End Time (24h) <span className="text-rose-500">*</span>
-                        </label>
-                        <input
-                          type="time"
-                          required
-                          value={formEndTime}
-                          onChange={(e) => setFormEndTime(e.target.value)}
-                          className="input-modern"
-                        />
-                        <p className="text-[11px] text-[var(--foreground-subtle)] mt-1">
-                          {formatTime12h(formEndTime)}
-                        </p>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[11px] font-semibold text-[var(--foreground-muted)] mb-1">
+                            Round Start Time <span className="text-rose-500">*</span>
+                          </label>
+                          <input
+                            type="time"
+                            required
+                            value={formStartTime}
+                            onChange={(e) => setFormStartTime(e.target.value)}
+                            className="input-modern"
+                          />
+                          <p className="text-[11px] text-[var(--foreground-subtle)] mt-1">
+                            {formatTime12h(formStartTime)}
+                          </p>
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-semibold text-[var(--foreground-muted)] mb-1">
+                            Round End Time <span className="text-rose-500">*</span>
+                          </label>
+                          <input
+                            type="time"
+                            required
+                            value={formEndTime}
+                            onChange={(e) => setFormEndTime(e.target.value)}
+                            className="input-modern"
+                          />
+                          <p className="text-[11px] text-[var(--foreground-subtle)] mt-1">
+                            {formatTime12h(formEndTime)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Section 2: Scan Window Opening Timing (App Login Window) */}
+                    <div className="p-3.5 rounded-xl bg-indigo-50/60 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-900/50 space-y-3">
+                      <div className="text-xs font-bold text-indigo-700 dark:text-indigo-300 flex items-center gap-1.5 uppercase tracking-wider">
+                        <Smartphone className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                        2. Scan Window Opening (Guard App Login Allowed)
+                      </div>
+                      <p className="text-[11px] text-indigo-600/90 dark:text-indigo-400/90 leading-relaxed">
+                        Security guards can only log into the Android verification app during this exact scan window.
+                      </p>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[11px] font-semibold text-[var(--foreground-muted)] mb-1">
+                            Scan Window Opens <span className="text-rose-500">*</span>
+                          </label>
+                          <input
+                            type="time"
+                            required
+                            value={formScanStartTime}
+                            onChange={(e) => setFormScanStartTime(e.target.value)}
+                            className="input-modern font-semibold text-indigo-600 dark:text-indigo-300"
+                          />
+                          <p className="text-[11px] text-[var(--foreground-subtle)] mt-1 font-mono">
+                            {formatTime12h(formScanStartTime)}
+                          </p>
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-semibold text-[var(--foreground-muted)] mb-1">
+                            Scan Window Closes <span className="text-rose-500">*</span>
+                          </label>
+                          <input
+                            type="time"
+                            required
+                            value={formScanEndTime}
+                            onChange={(e) => setFormScanEndTime(e.target.value)}
+                            className="input-modern font-semibold text-indigo-600 dark:text-indigo-300"
+                          />
+                          <p className="text-[11px] text-[var(--foreground-subtle)] mt-1 font-mono">
+                            {formatTime12h(formScanEndTime)}
+                          </p>
+                        </div>
                       </div>
                     </div>
 
                     {/* Duration Preview */}
                     <div className="p-3 rounded-xl bg-[var(--surface-muted)] border border-[var(--border)] flex items-center justify-between text-xs">
-                      <span className="text-[var(--foreground-muted)]">Computed Duration:</span>
+                      <span className="text-[var(--foreground-muted)]">Total Round Duration:</span>
                       <span className="font-bold text-[var(--primary)] font-mono">
                         {calculateDuration(formStartTime, formEndTime)}
                       </span>
@@ -692,7 +778,7 @@ export default function RoundsCrudPage() {
                       {formatTime12h(deleteConfirmRound.start_time)} –{' '}
                       {formatTime12h(deleteConfirmRound.end_time)})
                     </span>
-                    ? This will remove this scheduled patrol checkpoint slot.
+                    ? This will remove this scheduled patrol checkpoint slot and its guard login scan window.
                   </p>
 
                   <div className="mt-6 flex items-center justify-end gap-3">
@@ -704,7 +790,7 @@ export default function RoundsCrudPage() {
                       Cancel
                     </button>
                     <button
-                      type="button"
+                      type="submit"
                       onClick={handleConfirmDelete}
                       className="btn-primary !bg-rose-600 hover:!bg-rose-700 !shadow-rose-600/20"
                     >

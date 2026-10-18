@@ -25,7 +25,6 @@ export const calculateDuration = (startTime: string, endTime: string): string =>
   let startMinutes = sh * 60 + sm;
   let endMinutes = eh * 60 + em;
 
-  // Handle midnight crossover (e.g. 23:30 to 00:00 or 00:30)
   if (endMinutes <= startMinutes) {
     endMinutes += 24 * 60;
   }
@@ -62,7 +61,7 @@ export const exportRoundsTimetablePDF = async (
   doc.rect(10, 10, pageWidth - 20, pageHeight - 20);
 
   // Top Neon Indigo accent bar
-  doc.setFillColor(99, 102, 241); // #6366F1
+  doc.setFillColor(99, 102, 241);
   doc.rect(10, 10, pageWidth - 20, 4, "F");
 
   let currentY = 22;
@@ -70,16 +69,16 @@ export const exportRoundsTimetablePDF = async (
   // Document Title & Company Header
   doc.setFont("helvetica", "bold");
   doc.setFontSize(16);
-  doc.setTextColor(15, 23, 42); // slate-900
+  doc.setTextColor(15, 23, 42);
   doc.text("PENTAGON GARMENTS PATROL OPERATIONS", 16, currentY);
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
-  doc.setTextColor(100, 116, 139); // slate-500
+  doc.setTextColor(100, 116, 139);
   currentY += 5;
-  doc.text("OFFICIAL VERIFICATION ROUNDS & TIME SLOTS TIMETABLE", 16, currentY);
+  doc.text("OFFICIAL PATROL ROUNDS & SCAN OPENING WINDOW TIMETABLE", 16, currentY);
 
-  // Metadata block (Right side)
+  // Metadata block
   const now = new Date();
   const dateStr = now.toLocaleDateString("en-US", {
     year: "numeric",
@@ -114,7 +113,7 @@ export const exportRoundsTimetablePDF = async (
   doc.setFontSize(9);
   doc.setTextColor(51, 65, 85);
   doc.text(
-    `Total Configured Patrol Rounds: ${rounds.length}   |   Daily Schedule: 24-Hour Active Cycle   |   Status: APPROVED`,
+    `Total Configured Patrol Rounds: ${rounds.length}   |   Daily Schedule: 24-Hour Active Cycle   |   App Login: Scan Window Enforced`,
     20,
     currentY + 9
   );
@@ -125,15 +124,15 @@ export const exportRoundsTimetablePDF = async (
   const sorted = [...rounds].sort((a, b) => a.round_number - b.round_number);
   const tableRows = sorted.map((r) => {
     const roundBadge = `Round ${String(r.round_number).padStart(2, "0")}`;
-    const window = `${formatTime12h(r.start_time)} – ${formatTime12h(r.end_time)}`;
+    const roundWindow = `${formatTime12h(r.start_time)} – ${formatTime12h(r.end_time)}`;
+    const scanWindow = `${formatTime12h(r.scan_start_time || "06:55")} – ${formatTime12h(r.scan_end_time || "07:20")}`;
     const duration = calculateDuration(r.start_time, r.end_time);
     return [
       roundBadge,
-      window,
-      r.start_time,
-      r.end_time,
+      roundWindow,
+      scanWindow,
       duration,
-      "MANDATORY",
+      "APP LOGIN ACTIVE",
     ];
   });
 
@@ -141,10 +140,10 @@ export const exportRoundsTimetablePDF = async (
     startY: currentY,
     margin: { left: 16, right: 16 },
     theme: "striped",
-    head: [["Round Identifier", "Time Window (12h)", "Start (24h)", "End (24h)", "Duration", "Compliance"]],
+    head: [["Round Identifier", "Round Time (Operational)", "Scan Window (App Login)", "Duration", "Guard App Login"]],
     body: tableRows,
     headStyles: {
-      fillColor: [99, 102, 241], // Cyber indigo
+      fillColor: [99, 102, 241],
       textColor: 255,
       fontSize: 8.5,
       fontStyle: "bold",
@@ -160,21 +159,18 @@ export const exportRoundsTimetablePDF = async (
       fillColor: [248, 250, 252],
     },
     columnStyles: {
-      0: { cellWidth: 32, fontStyle: "bold" },
-      1: { cellWidth: 50 },
-      2: { cellWidth: 24, halign: "center" },
+      0: { cellWidth: 30, fontStyle: "bold" },
+      1: { cellWidth: 46 },
+      2: { cellWidth: 48, fontStyle: "bold", textColor: [79, 70, 229] },
       3: { cellWidth: 24, halign: "center" },
-      4: { cellWidth: 24, halign: "center" },
-      5: { cellWidth: "auto", halign: "center" },
+      4: { cellWidth: "auto", halign: "center" },
     },
   });
 
   const finalY = (doc as any).lastAutoTable?.finalY || currentY + 120;
 
-  // Check if signature section needs a new page
   if (finalY > pageHeight - 45) {
     doc.addPage();
-    // Border on new page
     doc.setDrawColor(220, 226, 235);
     doc.setLineWidth(0.4);
     doc.rect(10, 10, pageWidth - 20, pageHeight - 20);
@@ -185,19 +181,16 @@ export const exportRoundsTimetablePDF = async (
   doc.setDrawColor(203, 213, 225);
   doc.setLineWidth(0.5);
 
-  // Line 1: Security Incharge
   doc.line(20, signY, 75, signY);
   doc.setFontSize(8);
   doc.setTextColor(100, 116, 139);
   doc.text("Head of Factory Security", 20, signY + 4);
   doc.text("Authorized Signature & Stamp", 20, signY + 8);
 
-  // Line 2: Operations Director
   doc.line(pageWidth - 75, signY, pageWidth - 20, signY);
   doc.text("Operations Director Approval", pageWidth - 75, signY + 4);
   doc.text("Pentagon Garments Management", pageWidth - 75, signY + 8);
 
-  // Bottom Notice
   doc.setFontSize(7.5);
   doc.setTextColor(148, 163, 184);
   doc.text(
