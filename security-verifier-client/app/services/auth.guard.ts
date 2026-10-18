@@ -10,7 +10,8 @@ import { getUser, isAuthenticated } from "./token.service";
 export type { AuthUser } from "./token.service";
 
 interface GuardOptions {
-  role?: "ADMIN" | "SECURITY";
+  role?: "ADMIN" | "SECURITY" | "SUPERVISOR" | string;
+  roles?: string[];
 }
 
 export const useAuthGuard = (options?: GuardOptions) => {
@@ -28,11 +29,19 @@ export const useAuthGuard = (options?: GuardOptions) => {
     }
 
     // 🔐 2. If role-based access is required
-    if (options?.role) {
+    const allowedRoles: string[] = [];
+    if (options?.roles && options.roles.length > 0) {
+      allowedRoles.push(...options.roles.map(r => r.toUpperCase()));
+    } else if (options?.role) {
+      allowedRoles.push(options.role.toUpperCase());
+    }
+
+    if (allowedRoles.length > 0) {
       const user = getUser();
+      const userRole = user?.role?.toUpperCase();
 
       // If user data missing or role mismatch → redirect to login
-      if (!user || user.role !== options.role) {
+      if (!user || !userRole || !allowedRoles.includes(userRole)) {
         setAuthorized(false);
         router.replace("/login");
         return;
@@ -40,7 +49,7 @@ export const useAuthGuard = (options?: GuardOptions) => {
     }
 
     setAuthorized(true);
-  }, [router, options?.role]);
+  }, [router, options?.role, options?.roles]);
 
   useEffect(() => {
     checkAuth();

@@ -27,6 +27,7 @@ import { dropdownVariants, mobileMenuVariants, containerVariants, itemVariants }
 
 const navItems = [
   { name: 'Dashboard', href: '/dashboard' },
+  { name: 'Shifts',    href: '/shifts' },
   { name: 'Reports',   href: '/report-download' },
   { name: 'Users',     href: '/user-crud' },
   { name: 'QR',        href: '/dashboard/qr-crud' },
