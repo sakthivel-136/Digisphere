@@ -19,7 +19,8 @@ import {
   Hourglass,
   CalendarDays,
   Smartphone,
-  LockKeyhole
+  LockKeyhole,
+  Building2
 } from 'lucide-react';
 
 import { useAuthGuard } from '@/app/services/auth.guard';
@@ -31,6 +32,7 @@ import {
   updateRound,
   deleteRound
 } from '@/app/api/rounds.api';
+import { getFactories } from '@/app/api/factories.api';
 import {
   formatTime12h,
   calculateDuration,
@@ -42,10 +44,19 @@ import { GlassCard } from '@/app/components/ui/GlassCard';
 import { PageLoadingSpinner } from '@/app/components/ui/LoadingSpinner';
 import { containerVariants, itemVariants } from '@/lib/animations';
 
+interface FactoryOption {
+  factory_code: string;
+  factory_name: string;
+}
+
 export default function RoundsCrudPage() {
   // 1. RBAC: Restricted to ADMIN
   const { authorized } = useAuthGuard({ allowedRoles: ['ADMIN'] });
   const router = useRouter();
+
+  // Factory State
+  const [factories, setFactories] = useState<FactoryOption[]>([]);
+  const [selectedFactory, setSelectedFactory] = useState<string>('F001');
 
   // State
   const [rounds, setRounds] = useState<PatrolRound[]>([]);
@@ -79,11 +90,11 @@ export default function RoundsCrudPage() {
     setTimeout(() => setNotification(null), 4000);
   };
 
-  // Load Rounds Data
-  const loadRounds = async () => {
+  // Load Factories & Rounds Data
+  const loadRounds = async (factoryCode = selectedFactory) => {
     try {
       setLoading(true);
-      const data = await getRounds();
+      const data = await getRounds(factoryCode);
       setRounds(data);
     } catch (err) {
       console.error('Failed to load patrol rounds:', err);
@@ -93,11 +104,57 @@ export default function RoundsCrudPage() {
     }
   };
 
+  const loadFactories = async () => {
+    try {
+      const res = await getFactories();
+      const data = res.data || res;
+      if (Array.isArray(data) && data.length > 0) {
+        const list: FactoryOption[] = data.map((f: any) => ({
+          factory_code: f.factory_code,
+          factory_name: f.factory_name || f.name || f.factory_code,
+        }));
+        setFactories(list);
+        if (!list.some((f) => f.factory_code === selectedFactory)) {
+          setSelectedFactory(list[0].factory_code);
+          loadRounds(list[0].factory_code);
+        } else {
+          loadRounds(selectedFactory);
+        }
+      } else {
+        const defaults: FactoryOption[] = [
+          { factory_code: 'F001', factory_name: 'GJ Innovations and Textile Network Pvt. Ltd.' },
+          { factory_code: 'F002', factory_name: 'Pentagon Apparels - I' },
+          { factory_code: 'F003', factory_name: 'Pentagon Apparels - II' },
+          { factory_code: 'F004', factory_name: 'Pentagon Garments' },
+          { factory_code: 'MD001', factory_name: 'MD Sir House' },
+        ];
+        setFactories(defaults);
+        loadRounds('F001');
+      }
+    } catch (err) {
+      console.error('Error loading factories:', err);
+      const defaults: FactoryOption[] = [
+        { factory_code: 'F001', factory_name: 'GJ Innovations and Textile Network Pvt. Ltd.' },
+        { factory_code: 'F002', factory_name: 'Pentagon Apparels - I' },
+        { factory_code: 'F003', factory_name: 'Pentagon Apparels - II' },
+        { factory_code: 'F004', factory_name: 'Pentagon Garments' },
+        { factory_code: 'MD001', factory_name: 'MD Sir House' },
+      ];
+      setFactories(defaults);
+      loadRounds(selectedFactory);
+    }
+  };
+
   useEffect(() => {
     if (authorized) {
-      loadRounds();
+      loadFactories();
     }
   }, [authorized]);
+
+  const handleFactoryChange = (factoryCode: string) => {
+    setSelectedFactory(factoryCode);
+    loadRounds(factoryCode);
+  };
 
   // Compute next available round number for Auto-increment
   const nextRoundNumber = useMemo(() => {
@@ -208,6 +265,7 @@ export default function RoundsCrudPage() {
     try {
       if (editingRound) {
         const updated = await updateRound(editingRound.id, {
+          factory_code: selectedFactory,
           round_number: formRoundNumber,
           start_time: formStartTime,
           end_time: formEndTime,
@@ -220,6 +278,7 @@ export default function RoundsCrudPage() {
         showNotification('success', `Round ${String(updated.round_number).padStart(2, '0')} updated successfully.`);
       } else {
         const created = await createRound({
+          factory_code: selectedFactory,
           round_number: formRoundNumber,
           start_time: formStartTime,
           end_time: formEndTime,
@@ -258,7 +317,11 @@ export default function RoundsCrudPage() {
       setIsExporting(true);
       const user = getUser();
       const author = user?.username || 'Security Administrator';
-      await exportRoundsTimetablePDF(rounds, author);
+      const selectedFactoryObj = factories.find((f) => f.factory_code === selectedFactory);
+      const factoryName = selectedFactoryObj
+        ? `${selectedFactoryObj.factory_code} - ${selectedFactoryObj.factory_name}`
+        : selectedFactory;
+      await exportRoundsTimetablePDF(rounds, author, factoryName);
       showNotification('success', 'Patrol rounds timetable PDF exported successfully.');
     } catch (err) {
       console.error('Failed to export PDF:', err);
@@ -353,6 +416,47 @@ export default function RoundsCrudPage() {
             </div>
           </motion.div>
 
+          {/* Factory Selector Bar */}
+          <motion.div variants={itemVariants} className="mb-6">
+            <GlassCard className="!p-4 border-l-4 !border-l-[var(--primary)]">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-[var(--primary-muted)] text-[var(--primary)] flex items-center justify-center flex-shrink-0">
+                    <Building2 className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <label htmlFor="factory-select" className="text-xs font-bold uppercase tracking-wider text-[var(--foreground-muted)] block cursor-pointer">
+                        Selected Factory
+                      </label>
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-[var(--primary-muted)] text-[var(--primary)] font-mono">
+                        {selectedFactory}
+                      </span>
+                    </div>
+                    <div className="text-sm font-semibold text-[var(--foreground)] mt-0.5">
+                      {factories.find((f) => f.factory_code === selectedFactory)?.factory_name || 'Loading Factory...'}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="w-full sm:w-auto min-w-[280px]">
+                  <select
+                    id="factory-select"
+                    value={selectedFactory}
+                    onChange={(e) => handleFactoryChange(e.target.value)}
+                    className="input-modern font-semibold py-2 text-sm cursor-pointer"
+                  >
+                    {factories.map((f) => (
+                      <option key={f.factory_code} value={f.factory_code}>
+                        {f.factory_code} – {f.factory_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </GlassCard>
+          </motion.div>
+
           {/* KPI Summary Row */}
           <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-6">
             <GlassCard hoverable>
@@ -429,7 +533,7 @@ export default function RoundsCrudPage() {
                   </span>
 
                   <button
-                    onClick={loadRounds}
+                    onClick={() => loadRounds()}
                     title="Refresh Rounds"
                     className="p-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-[var(--foreground-muted)] hover:text-[var(--foreground)] hover:bg-[var(--surface-hover)] transition-colors"
                   >
@@ -571,9 +675,15 @@ export default function RoundsCrudPage() {
                       <div className="p-2 rounded-xl bg-[var(--primary-muted)] text-[var(--primary)]">
                         <RotateCcw className="w-5 h-5" />
                       </div>
-                      <h3 className="text-xl font-bold text-[var(--foreground)]">
-                        {editingRound ? `Edit Round ${editingRound.round_number}` : 'New Patrol Round'}
-                      </h3>
+                      <div>
+                        <h3 className="text-xl font-bold text-[var(--foreground)]">
+                          {editingRound ? `Edit Round ${editingRound.round_number}` : 'New Patrol Round'}
+                        </h3>
+                        <p className="text-xs text-[var(--foreground-muted)] flex items-center gap-1 mt-0.5">
+                          <Building2 className="w-3.5 h-3.5 text-[var(--primary)]" />
+                          Factory: <span className="font-semibold text-[var(--foreground)] font-mono">{selectedFactory}</span>
+                        </p>
+                      </div>
                     </div>
                     <button
                       onClick={() => setIsModalOpen(false)}

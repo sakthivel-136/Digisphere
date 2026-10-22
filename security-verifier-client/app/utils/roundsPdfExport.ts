@@ -44,7 +44,8 @@ export const calculateDuration = (startTime: string, endTime: string): string =>
 // Export Official Rounds Timetable PDF
 export const exportRoundsTimetablePDF = async (
   rounds: PatrolRound[],
-  author: string = "Security Administrator"
+  author: string = "Security Administrator",
+  factoryName?: string
 ) => {
   const doc = new jsPDF({
     orientation: "portrait",
@@ -76,7 +77,10 @@ export const exportRoundsTimetablePDF = async (
   doc.setFontSize(10);
   doc.setTextColor(100, 116, 139);
   currentY += 5;
-  doc.text("OFFICIAL PATROL ROUNDS & SCAN OPENING WINDOW TIMETABLE", 16, currentY);
+  const subtitle = factoryName
+    ? `OFFICIAL PATROL ROUNDS TIMETABLE – ${factoryName.toUpperCase()}`
+    : "OFFICIAL PATROL ROUNDS & SCAN OPENING WINDOW TIMETABLE";
+  doc.text(subtitle, 16, currentY);
 
   // Metadata block
   const now = new Date();

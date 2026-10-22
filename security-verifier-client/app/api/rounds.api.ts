@@ -3,6 +3,7 @@ import { AxiosResponse } from "axios";
 
 export interface PatrolRound {
   id: string;
+  factory_code?: string;
   round_number: number;
   start_time: string;      // "HH:mm" (24h) round operational start
   end_time: string;        // "HH:mm" (24h) round operational end
@@ -11,72 +12,27 @@ export interface PatrolRound {
   created_at?: string;
 }
 
-const ROUNDS_STORAGE_KEY = "pentagon_patrol_rounds";
+const getStorageKey = (factoryCode?: string) =>
+  factoryCode ? `pentagon_patrol_rounds_${factoryCode}` : "pentagon_patrol_rounds";
 
-// Initial standard patrol schedule with both round timing & scan window opening timing
-export const DEFAULT_PATROL_ROUNDS: PatrolRound[] = [
-  { id: "rnd-1",  round_number: 1,  start_time: "06:00", end_time: "07:00", scan_start_time: "06:55", scan_end_time: "07:20" },
-  { id: "rnd-2",  round_number: 2,  start_time: "07:00", end_time: "08:00", scan_start_time: "07:55", scan_end_time: "08:20" },
-  { id: "rnd-3",  round_number: 3,  start_time: "08:00", end_time: "09:00", scan_start_time: "08:55", scan_end_time: "09:20" },
-  { id: "rnd-4",  round_number: 4,  start_time: "09:00", end_time: "10:00", scan_start_time: "09:55", scan_end_time: "10:20" },
-  { id: "rnd-5",  round_number: 5,  start_time: "10:00", end_time: "11:00", scan_start_time: "10:55", scan_end_time: "11:20" },
-  { id: "rnd-6",  round_number: 6,  start_time: "11:00", end_time: "12:00", scan_start_time: "11:55", scan_end_time: "12:20" },
-  { id: "rnd-7",  round_number: 7,  start_time: "12:00", end_time: "13:00", scan_start_time: "12:55", scan_end_time: "13:20" },
-  { id: "rnd-8",  round_number: 8,  start_time: "13:00", end_time: "14:00", scan_start_time: "13:55", scan_end_time: "14:20" },
-  { id: "rnd-9",  round_number: 9,  start_time: "14:00", end_time: "15:00", scan_start_time: "14:55", scan_end_time: "15:20" },
-  { id: "rnd-10", round_number: 10, start_time: "15:00", end_time: "16:00", scan_start_time: "15:55", scan_end_time: "16:20" },
-  { id: "rnd-11", round_number: 11, start_time: "16:00", end_time: "17:00", scan_start_time: "16:55", scan_end_time: "17:20" },
-  { id: "rnd-12", round_number: 12, start_time: "17:00", end_time: "18:00", scan_start_time: "17:55", scan_end_time: "18:20" },
-  { id: "rnd-13", round_number: 13, start_time: "18:00", end_time: "19:00", scan_start_time: "18:55", scan_end_time: "19:20" },
-  { id: "rnd-14", round_number: 14, start_time: "19:00", end_time: "20:00", scan_start_time: "19:55", scan_end_time: "20:20" },
-  { id: "rnd-15", round_number: 15, start_time: "20:00", end_time: "21:00", scan_start_time: "20:55", scan_end_time: "21:20" },
-  { id: "rnd-16", round_number: 16, start_time: "21:00", end_time: "21:30", scan_start_time: "21:25", scan_end_time: "21:45" },
-  { id: "rnd-17", round_number: 17, start_time: "21:30", end_time: "22:00", scan_start_time: "21:55", scan_end_time: "22:15" },
-  { id: "rnd-18", round_number: 18, start_time: "22:00", end_time: "22:30", scan_start_time: "22:25", scan_end_time: "22:45" },
-  { id: "rnd-19", round_number: 19, start_time: "22:30", end_time: "23:00", scan_start_time: "22:55", scan_end_time: "23:15" },
-  { id: "rnd-20", round_number: 20, start_time: "23:00", end_time: "23:30", scan_start_time: "23:25", scan_end_time: "23:45" },
-  { id: "rnd-21", round_number: 21, start_time: "23:30", end_time: "00:00", scan_start_time: "23:55", scan_end_time: "00:15" },
-  { id: "rnd-22", round_number: 22, start_time: "00:00", end_time: "00:30", scan_start_time: "00:25", scan_end_time: "00:45" },
-  { id: "rnd-23", round_number: 23, start_time: "00:30", end_time: "01:00", scan_start_time: "00:55", scan_end_time: "01:15" },
-  { id: "rnd-24", round_number: 24, start_time: "01:00", end_time: "01:30", scan_start_time: "01:25", scan_end_time: "01:45" },
-  { id: "rnd-25", round_number: 25, start_time: "01:30", end_time: "02:00", scan_start_time: "01:55", scan_end_time: "02:15" },
-  { id: "rnd-26", round_number: 26, start_time: "02:00", end_time: "02:30", scan_start_time: "02:25", scan_end_time: "02:45" },
-  { id: "rnd-27", round_number: 27, start_time: "02:30", end_time: "03:00", scan_start_time: "02:55", scan_end_time: "03:15" },
-  { id: "rnd-28", round_number: 28, start_time: "03:00", end_time: "03:30", scan_start_time: "03:25", scan_end_time: "03:45" },
-  { id: "rnd-29", round_number: 29, start_time: "03:30", end_time: "04:00", scan_start_time: "03:55", scan_end_time: "04:15" },
-  { id: "rnd-30", round_number: 30, start_time: "04:00", end_time: "04:30", scan_start_time: "04:25", scan_end_time: "04:45" },
-  { id: "rnd-31", round_number: 31, start_time: "04:30", end_time: "05:00", scan_start_time: "04:55", scan_end_time: "05:15" },
-  { id: "rnd-32", round_number: 32, start_time: "05:00", end_time: "05:30", scan_start_time: "05:25", scan_end_time: "05:45" },
-  { id: "rnd-33", round_number: 33, start_time: "05:30", end_time: "06:00", scan_start_time: "05:55", scan_end_time: "06:15" },
-];
-
-export const getStoredRounds = (): PatrolRound[] => {
-  if (typeof window === "undefined") return DEFAULT_PATROL_ROUNDS;
+export const getStoredRounds = (factoryCode?: string): PatrolRound[] => {
+  if (typeof window === "undefined") return [];
   try {
-    const raw = localStorage.getItem(ROUNDS_STORAGE_KEY);
-    if (!raw) {
-      localStorage.setItem(ROUNDS_STORAGE_KEY, JSON.stringify(DEFAULT_PATROL_ROUNDS));
-      return DEFAULT_PATROL_ROUNDS;
-    }
+    const raw = localStorage.getItem(getStorageKey(factoryCode));
+    if (!raw) return [];
     const parsed: PatrolRound[] = JSON.parse(raw);
-    // Ensure backwards compatibility with scan window fields
-    const normalized = parsed.map((r, i) => ({
-      ...r,
-      scan_start_time: r.scan_start_time || DEFAULT_PATROL_ROUNDS[i]?.scan_start_time || "06:55",
-      scan_end_time: r.scan_end_time || DEFAULT_PATROL_ROUNDS[i]?.scan_end_time || "07:20",
-    }));
-    return normalized.sort((a, b) => a.round_number - b.round_number);
+    return parsed.sort((a, b) => a.round_number - b.round_number);
   } catch (err) {
     console.error("Error reading stored rounds:", err);
-    return DEFAULT_PATROL_ROUNDS;
+    return [];
   }
 };
 
-export const saveStoredRounds = (rounds: PatrolRound[]): void => {
+export const saveStoredRounds = (rounds: PatrolRound[], factoryCode?: string): void => {
   if (typeof window === "undefined") return;
   try {
     const sorted = [...rounds].sort((a, b) => a.round_number - b.round_number);
-    localStorage.setItem(ROUNDS_STORAGE_KEY, JSON.stringify(sorted));
+    localStorage.setItem(getStorageKey(factoryCode), JSON.stringify(sorted));
   } catch (err) {
     console.error("Error saving rounds to storage:", err);
   }
@@ -85,20 +41,21 @@ export const saveStoredRounds = (rounds: PatrolRound[]): void => {
 /* ================= CRUD API ================= */
 
 /**
- * Fetch all patrol rounds (GET /api/rounds) sorted ascending by round_number
+ * Fetch patrol rounds (GET /api/rounds) filtered by factory_code
  */
-export const getRounds = async (): Promise<PatrolRound[]> => {
+export const getRounds = async (factoryCode?: string): Promise<PatrolRound[]> => {
   try {
-    const res: AxiosResponse<PatrolRound[]> = await axiosClient.get("/rounds");
-    if (res.data && Array.isArray(res.data) && res.data.length > 0) {
+    const params = factoryCode ? { factory_code: factoryCode } : {};
+    const res: AxiosResponse<PatrolRound[]> = await axiosClient.get("/rounds", { params });
+    if (res.data && Array.isArray(res.data)) {
       const sorted = res.data.sort((a, b) => a.round_number - b.round_number);
-      saveStoredRounds(sorted);
+      saveStoredRounds(sorted, factoryCode);
       return sorted;
     }
   } catch (err) {
     // Graceful fallback to persistent storage
   }
-  return getStoredRounds();
+  return getStoredRounds(factoryCode);
 };
 
 /**
@@ -107,27 +64,29 @@ export const getRounds = async (): Promise<PatrolRound[]> => {
 export const createRound = async (
   data: Omit<PatrolRound, "id">
 ): Promise<PatrolRound> => {
+  const factory = data.factory_code || "F001";
   const newRound: PatrolRound = {
     ...data,
-    id: `round-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    factory_code: factory,
+    id: `rnd-${factory}-${data.round_number}`,
     created_at: new Date().toISOString(),
   };
 
   try {
     const res: AxiosResponse<PatrolRound> = await axiosClient.post("/rounds", newRound);
     if (res.data) {
-      const all = getStoredRounds();
+      const all = getStoredRounds(factory);
       const updated = [...all, res.data].sort((a, b) => a.round_number - b.round_number);
-      saveStoredRounds(updated);
+      saveStoredRounds(updated, factory);
       return res.data;
     }
   } catch (err) {
     // Client persistent fallback
   }
 
-  const all = getStoredRounds();
+  const all = getStoredRounds(factory);
   const updated = [...all, newRound].sort((a, b) => a.round_number - b.round_number);
-  saveStoredRounds(updated);
+  saveStoredRounds(updated, factory);
   return newRound;
 };
 
@@ -141,16 +100,18 @@ export const updateRound = async (
   try {
     const res: AxiosResponse<PatrolRound> = await axiosClient.put(`/rounds/${id}`, updates);
     if (res.data) {
-      const all = getStoredRounds().map((r) => (r.id === id ? { ...r, ...res.data } : r));
-      saveStoredRounds(all);
+      const factory = res.data.factory_code || updates.factory_code;
+      const all = getStoredRounds(factory).map((r) => (r.id === id ? { ...r, ...res.data } : r));
+      saveStoredRounds(all, factory);
       return res.data;
     }
   } catch (err) {
     // Client persistent fallback
   }
 
-  const all = getStoredRounds().map((r) => (r.id === id ? { ...r, ...updates } : r));
-  saveStoredRounds(all);
+  const factory = updates.factory_code;
+  const all = getStoredRounds(factory).map((r) => (r.id === id ? { ...r, ...updates } : r));
+  saveStoredRounds(all, factory);
   const found = all.find((r) => r.id === id);
   if (!found) throw new Error("Round not found");
   return found;
@@ -159,13 +120,13 @@ export const updateRound = async (
 /**
  * Delete a patrol round (DELETE /api/rounds/:id)
  */
-export const deleteRound = async (id: string): Promise<void> => {
+export const deleteRound = async (id: string, factoryCode?: string): Promise<void> => {
   try {
     await axiosClient.delete(`/rounds/${id}`);
   } catch (err) {
     // Client persistent fallback
   }
 
-  const all = getStoredRounds().filter((r) => r.id !== id);
-  saveStoredRounds(all);
+  const all = getStoredRounds(factoryCode).filter((r) => r.id !== id);
+  saveStoredRounds(all, factoryCode);
 };

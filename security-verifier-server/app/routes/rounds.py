@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Query
 from typing import List, Optional
 from pydantic import BaseModel
 from app.database import execute_d1_query
@@ -9,6 +9,7 @@ router = APIRouter(
 )
 
 class PatrolRoundBase(BaseModel):
+    factory_code: Optional[str] = "F001"
     round_number: int
     start_time: str
     end_time: str
@@ -19,6 +20,7 @@ class PatrolRoundCreate(PatrolRoundBase):
     pass
 
 class PatrolRoundUpdate(BaseModel):
+    factory_code: Optional[str] = None
     round_number: Optional[int] = None
     start_time: Optional[str] = None
     end_time: Optional[str] = None
@@ -30,20 +32,34 @@ class PatrolRoundResponse(PatrolRoundBase):
     created_at: Optional[str] = None
 
 @router.get("", response_model=List[PatrolRoundResponse])
-def get_all_rounds():
+def get_all_rounds(factory_code: Optional[str] = Query(None, description="Filter rounds by factory code")):
     """
-    Get all patrol rounds sorted ascending by round_number
+    Get patrol rounds sorted ascending by round_number.
+    Optionally filter by factory_code.
     """
     try:
-        sql = "SELECT id, round_number, start_time, end_time, scan_start_time, scan_end_time, created_at FROM rounds ORDER BY round_number ASC;"
-        results = execute_d1_query(sql)
+        if factory_code:
+            sql = """
+            SELECT id, factory_code, round_number, start_time, end_time, scan_start_time, scan_end_time, created_at 
+            FROM rounds 
+            WHERE factory_code = ? 
+            ORDER BY round_number ASC;
+            """
+            results = execute_d1_query(sql, [factory_code])
+        else:
+            sql = """
+            SELECT id, factory_code, round_number, start_time, end_time, scan_start_time, scan_end_time, created_at 
+            FROM rounds 
+            ORDER BY factory_code ASC, round_number ASC;
+            """
+            results = execute_d1_query(sql)
         return results or []
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch rounds: {str(e)}")
 
 @router.get("/{round_id}", response_model=PatrolRoundResponse)
 def get_round(round_id: str):
-    sql = "SELECT id, round_number, start_time, end_time, scan_start_time, scan_end_time, created_at FROM rounds WHERE id = ?;"
+    sql = "SELECT id, factory_code, round_number, start_time, end_time, scan_start_time, scan_end_time, created_at FROM rounds WHERE id = ?;"
     results = execute_d1_query(sql, [round_id])
     if not results:
         raise HTTPException(status_code=404, detail="Round not found")
@@ -51,20 +67,26 @@ def get_round(round_id: str):
 
 @router.post("", response_model=PatrolRoundResponse, status_code=status.HTTP_201_CREATED)
 def create_round_endpoint(payload: PatrolRoundCreate):
-    # Check duplicate round_number
-    check_sql = "SELECT id FROM rounds WHERE round_number = ?;"
-    existing = execute_d1_query(check_sql, [payload.round_number])
+    factory = payload.factory_code or "F001"
+    
+    # Check duplicate round_number within the same factory
+    check_sql = "SELECT id FROM rounds WHERE factory_code = ? AND round_number = ?;"
+    existing = execute_d1_query(check_sql, [factory, payload.round_number])
     if existing:
-        raise HTTPException(status_code=400, detail=f"Round {payload.round_number} already exists")
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Round {payload.round_number} already exists for factory {factory}"
+        )
 
-    round_id = f"rnd-{payload.round_number}"
+    round_id = f"rnd-{factory}-{payload.round_number}"
     insert_sql = """
-    INSERT INTO rounds (id, round_number, start_time, end_time, scan_start_time, scan_end_time)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO rounds (id, factory_code, round_number, start_time, end_time, scan_start_time, scan_end_time)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
     RETURNING *;
     """
     res = execute_d1_query(insert_sql, [
         round_id,
+        factory,
         payload.round_number,
         payload.start_time,
         payload.end_time,
