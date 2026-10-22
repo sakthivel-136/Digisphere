@@ -38,6 +38,7 @@ import {
   calculateDuration,
   exportRoundsTimetablePDF
 } from '@/app/utils/roundsPdfExport';
+import { logReportDownload } from '@/app/api/reportAudit.api';
 import { PageTransition } from '@/app/components/layout/PageTransition';
 import { PageContainer } from '@/app/components/layout/PageContainer';
 import { GlassCard } from '@/app/components/ui/GlassCard';
@@ -328,6 +329,12 @@ export default function RoundsCrudPage() {
         ? `${selectedFactoryObj.factory_code} - ${selectedFactoryObj.factory_name}`
         : selectedFactory;
       await exportRoundsTimetablePDF(rounds, author, factoryName);
+      logReportDownload({
+        report_type: 'ROUNDS_TIMETABLE_PDF',
+        factory_code: selectedFactory,
+        report_date: new Date().toISOString().split('T')[0],
+        user_name: author,
+      });
       showNotification('success', 'Patrol rounds timetable PDF exported successfully.');
     } catch (err) {
       console.error('Failed to export PDF:', err);

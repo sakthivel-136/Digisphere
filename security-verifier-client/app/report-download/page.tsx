@@ -9,6 +9,7 @@ import ReportTable from '@/app/components/reports/ReportTable'
 import { getApiUrl } from "@/app/utils/apiUrl"
 import PatrolReportPDF from '@/app/components/reports/PatrolReportPDF'
 import { tokenService } from '@/app/services/token.service'
+import { logReportDownload } from '@/app/api/reportAudit.api'
 import { PageTransition } from '@/app/components/layout/PageTransition'
 import { PageContainer } from '@/app/components/layout/PageContainer'
 import { GlassCard } from '@/app/components/ui/GlassCard'
@@ -152,6 +153,20 @@ export default function ReportDownloadPage() {
   const handleDownloadPdf = () => {
     setPdfLoading(true)
     setPdfTrigger(prev => prev + 1)
+
+    // Audit PDF download into database
+    logReportDownload({
+      report_type: 'PATROL_REPORT_PDF',
+      factory_code: factoryCode || 'ALL',
+      report_date:
+        reportType === 'single'
+          ? reportDate
+          : reportType === 'range'
+          ? `${reportDate} to ${endDate}`
+          : selectedMonth,
+      user_name: adminName,
+    })
+
     setTimeout(() => {
       setPdfLoading(false)
     }, 1500)

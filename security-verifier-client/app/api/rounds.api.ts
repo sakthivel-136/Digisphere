@@ -132,7 +132,7 @@ export const createRound = async (
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           query:
-            "INSERT INTO rounds (id, factory_code, round_number, start_time, end_time, scan_start_time, scan_end_time) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            "INSERT OR REPLACE INTO rounds (id, factory_code, round_number, start_time, end_time, scan_start_time, scan_end_time) VALUES (?, ?, ?, ?, ?, ?, ?)",
           params: [
             newRound.id,
             newRound.factory_code,
