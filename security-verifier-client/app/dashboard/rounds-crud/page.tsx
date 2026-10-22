@@ -620,16 +620,17 @@ export default function RoundsCrudPage() {
                         </div>
 
                         {/* Scan Window Opening Timing Display (Guard App Login Window) */}
-                        <div className="mt-3 p-2.5 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/40">
-                          <div className="text-[10.5px] uppercase font-bold text-indigo-600 dark:text-indigo-400 tracking-wider flex items-center gap-1.5">
-                            <Smartphone className="w-3 h-3 text-indigo-500" />
-                            Scan Window (App Login)
+                        <div className="mt-3 p-3 rounded-xl bg-slate-900 border border-slate-700 shadow-md text-left">
+                          <div className="text-[11px] uppercase font-extrabold text-amber-400 tracking-wider flex items-center gap-1.5">
+                            <Smartphone className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                            <span>Scan Window (App Login)</span>
                           </div>
-                          <div className="text-sm font-extrabold text-indigo-900 dark:text-indigo-200 mt-1 font-mono">
+                          <div className="text-base font-black text-white mt-1 font-mono tracking-wide">
                             {scanStartFormatted} – {scanEndFormatted}
                           </div>
-                          <div className="text-[10px] text-indigo-500/80 font-mono mt-0.5">
-                            {round.scan_start_time || '06:55'} to {round.scan_end_time || '07:20'} (24h)
+                          <div className="text-[11px] text-slate-300 font-mono mt-1 flex items-center gap-1.5 font-semibold">
+                            <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block shrink-0 animate-pulse" />
+                            <span>24h: {round.scan_start_time || '06:55'} to {round.scan_end_time || '07:20'}</span>
                           </div>
                         </div>
                       </div>
@@ -765,42 +766,42 @@ export default function RoundsCrudPage() {
                     </div>
 
                     {/* Section 2: Scan Window Opening Timing (App Login Window) */}
-                    <div className="p-3.5 rounded-xl bg-indigo-50/60 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-900/50 space-y-3">
-                      <div className="text-xs font-bold text-indigo-700 dark:text-indigo-300 flex items-center gap-1.5 uppercase tracking-wider">
-                        <Smartphone className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                    <div className="p-4 rounded-xl bg-slate-900 border border-slate-700 shadow-md space-y-3">
+                      <div className="text-xs font-extrabold text-amber-400 flex items-center gap-1.5 uppercase tracking-wider">
+                        <Smartphone className="w-4 h-4 text-amber-400" />
                         2. Scan Window Opening (Guard App Login Allowed)
                       </div>
-                      <p className="text-[11px] text-indigo-600/90 dark:text-indigo-400/90 leading-relaxed">
+                      <p className="text-[11.5px] text-slate-300 leading-relaxed font-medium">
                         Security guards can only log into the Android verification app during this exact scan window.
                       </p>
                       <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-[11px] font-semibold text-[var(--foreground-muted)] mb-1">
-                            Scan Window Opens <span className="text-rose-500">*</span>
+                          <label className="block text-[11px] font-bold text-slate-200 mb-1 uppercase tracking-wider">
+                            Scan Window Opens <span className="text-rose-400">*</span>
                           </label>
                           <input
                             type="time"
                             required
                             value={formScanStartTime}
                             onChange={(e) => setFormScanStartTime(e.target.value)}
-                            className="input-modern font-semibold text-indigo-600 dark:text-indigo-300"
+                            className="input-modern font-bold text-white bg-slate-800 border-slate-600 focus:border-amber-400"
                           />
-                          <p className="text-[11px] text-[var(--foreground-subtle)] mt-1 font-mono">
+                          <p className="text-[11px] text-amber-300 mt-1 font-mono font-semibold">
                             {formatTime12h(formScanStartTime)}
                           </p>
                         </div>
                         <div>
-                          <label className="block text-[11px] font-semibold text-[var(--foreground-muted)] mb-1">
-                            Scan Window Closes <span className="text-rose-500">*</span>
+                          <label className="block text-[11px] font-bold text-slate-200 mb-1 uppercase tracking-wider">
+                            Scan Window Closes <span className="text-rose-400">*</span>
                           </label>
                           <input
                             type="time"
                             required
                             value={formScanEndTime}
                             onChange={(e) => setFormScanEndTime(e.target.value)}
-                            className="input-modern font-semibold text-indigo-600 dark:text-indigo-300"
+                            className="input-modern font-bold text-white bg-slate-800 border-slate-600 focus:border-amber-400"
                           />
-                          <p className="text-[11px] text-[var(--foreground-subtle)] mt-1 font-mono">
+                          <p className="text-[11px] text-amber-300 mt-1 font-mono font-semibold">
                             {formatTime12h(formScanEndTime)}
                           </p>
                         </div>
