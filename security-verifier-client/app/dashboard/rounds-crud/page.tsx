@@ -156,18 +156,24 @@ export default function RoundsCrudPage() {
     loadRounds(factoryCode);
   };
 
-  // Compute next available round number for Auto-increment
+  // Compute next available round number for Auto-increment in selected factory
   const nextRoundNumber = useMemo(() => {
-    if (rounds.length === 0) return 1;
-    const maxNumber = Math.max(...rounds.map((r) => r.round_number));
+    const factoryRounds = rounds.filter(
+      (r) => !r.factory_code || r.factory_code === selectedFactory
+    );
+    if (factoryRounds.length === 0) return 1;
+    const maxNumber = Math.max(...factoryRounds.map((r) => r.round_number));
     return maxNumber + 1;
-  }, [rounds]);
+  }, [rounds, selectedFactory]);
 
-  // Filtered rounds by search
+  // Strictly filter rounds to ONLY the selected factory and search query
   const filteredRounds = useMemo(() => {
-    if (!searchQuery.trim()) return rounds;
+    const factoryRounds = rounds.filter(
+      (r) => !r.factory_code || r.factory_code === selectedFactory
+    );
+    if (!searchQuery.trim()) return factoryRounds;
     const q = searchQuery.toLowerCase();
-    return rounds.filter(
+    return factoryRounds.filter(
       (r) =>
         `round ${r.round_number}`.includes(q) ||
         r.round_number.toString().includes(q) ||
@@ -176,7 +182,7 @@ export default function RoundsCrudPage() {
         (r.scan_start_time && r.scan_start_time.includes(q)) ||
         (r.scan_end_time && r.scan_end_time.includes(q))
     );
-  }, [rounds, searchQuery]);
+  }, [rounds, selectedFactory, searchQuery]);
 
   // Check for time slot overlap / exact collision
   const findCollidingRound = (start: string, end: string, scanStart: string, scanEnd: string, currentId?: string) => {
@@ -462,17 +468,17 @@ export default function RoundsCrudPage() {
             <GlassCard hoverable>
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-[var(--foreground-muted)] uppercase tracking-wider">
-                  Total Rounds
+                  Factory Rounds ({selectedFactory})
                 </span>
                 <div className="p-2 rounded-xl bg-[var(--primary-muted)]">
                   <RotateCcw className="w-4 h-4 text-[var(--primary)]" />
                 </div>
               </div>
               <div className="mt-2 text-2xl sm:text-3xl font-extrabold text-[var(--foreground)] tracking-tight">
-                {rounds.length}
+                {filteredRounds.length}
               </div>
               <div className="mt-1 text-xs text-[var(--foreground-subtle)]">
-                Scheduled patrol verification checkpoints
+                Patrol slots configured for {selectedFactory}
               </div>
             </GlassCard>
 
@@ -529,7 +535,7 @@ export default function RoundsCrudPage() {
 
                 <div className="flex items-center justify-between w-full sm:w-auto gap-4">
                   <span className="text-xs font-medium text-[var(--foreground-muted)]">
-                    Showing <span className="font-bold text-[var(--foreground)]">{filteredRounds.length}</span> of {rounds.length} rounds
+                    Showing <span className="font-bold text-[var(--foreground)]">{filteredRounds.length}</span> rounds for <span className="font-bold text-[var(--primary)] font-mono">{selectedFactory}</span>
                   </span>
 
                   <button

@@ -12,6 +12,8 @@ export interface PatrolRound {
   created_at?: string;
 }
 
+const D1_WORKER_URL = "https://pentagon-patrol-api.srmdatabase2025.workers.dev";
+
 const getStorageKey = (factoryCode?: string) =>
   factoryCode ? `pentagon_patrol_rounds_${factoryCode}` : "pentagon_patrol_rounds";
 
@@ -21,7 +23,9 @@ export const getStoredRounds = (factoryCode?: string): PatrolRound[] => {
     const raw = localStorage.getItem(getStorageKey(factoryCode));
     if (!raw) return [];
     const parsed: PatrolRound[] = JSON.parse(raw);
-    return parsed.sort((a, b) => a.round_number - b.round_number);
+    return parsed
+      .filter((r) => !factoryCode || !r.factory_code || r.factory_code === factoryCode)
+      .sort((a, b) => a.round_number - b.round_number);
   } catch (err) {
     console.error("Error reading stored rounds:", err);
     return [];
@@ -41,20 +45,60 @@ export const saveStoredRounds = (rounds: PatrolRound[], factoryCode?: string): v
 /* ================= CRUD API ================= */
 
 /**
- * Fetch patrol rounds (GET /api/rounds) filtered by factory_code
+ * Fetch patrol rounds filtered by factory_code.
+ * Queries backend first; falls back to direct Cloudflare D1 query, then local storage.
  */
-export const getRounds = async (factoryCode?: string): Promise<PatrolRound[]> => {
+export const getRounds = async (factoryCode: string = "F001"): Promise<PatrolRound[]> => {
+  // 1. Try backend API
   try {
-    const params = factoryCode ? { factory_code: factoryCode } : {};
-    const res: AxiosResponse<PatrolRound[]> = await axiosClient.get("/rounds", { params });
-    if (res.data && Array.isArray(res.data)) {
-      const sorted = res.data.sort((a, b) => a.round_number - b.round_number);
+    const res: AxiosResponse<PatrolRound[]> = await axiosClient.get("/rounds", {
+      params: { factory_code: factoryCode },
+    });
+    if (res.data && Array.isArray(res.data) && res.data.length > 0) {
+      const filtered = res.data.filter((r) => !r.factory_code || r.factory_code === factoryCode);
+      const sorted = filtered.sort((a, b) => a.round_number - b.round_number);
       saveStoredRounds(sorted, factoryCode);
       return sorted;
     }
   } catch (err) {
-    // Graceful fallback to persistent storage
+    // API not responding or errored, proceed to direct Cloudflare D1 fallback
   }
+
+  // 2. Direct Cloudflare D1 query fallback
+  try {
+    const d1Res = await fetch(D1_WORKER_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query:
+          "SELECT id, factory_code, round_number, start_time, end_time, scan_start_time, scan_end_time FROM rounds WHERE factory_code = ? ORDER BY round_number ASC",
+        params: [factoryCode],
+      }),
+    });
+    if (d1Res.ok) {
+      const d1Json = await d1Res.json();
+      const rows = d1Json.results || d1Json;
+      if (Array.isArray(rows) && rows.length > 0) {
+        const sorted: PatrolRound[] = rows
+          .map((r: any) => ({
+            id: r.id || `rnd-${r.factory_code}-${r.round_number}`,
+            factory_code: r.factory_code || factoryCode,
+            round_number: Number(r.round_number),
+            start_time: r.start_time,
+            end_time: r.end_time,
+            scan_start_time: r.scan_start_time,
+            scan_end_time: r.scan_end_time,
+          }))
+          .sort((a, b) => a.round_number - b.round_number);
+        saveStoredRounds(sorted, factoryCode);
+        return sorted;
+      }
+    }
+  } catch (err) {
+    console.error("Cloudflare D1 direct fetch error:", err);
+  }
+
+  // 3. Persistent LocalStorage fallback
   return getStoredRounds(factoryCode);
 };
 
@@ -81,7 +125,26 @@ export const createRound = async (
       return res.data;
     }
   } catch (err) {
-    // Client persistent fallback
+    // API failed, try direct D1 Worker insert
+    try {
+      await fetch(D1_WORKER_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query:
+            "INSERT INTO rounds (id, factory_code, round_number, start_time, end_time, scan_start_time, scan_end_time) VALUES (?, ?, ?, ?, ?, ?, ?)",
+          params: [
+            newRound.id,
+            newRound.factory_code,
+            newRound.round_number,
+            newRound.start_time,
+            newRound.end_time,
+            newRound.scan_start_time,
+            newRound.scan_end_time,
+          ],
+        }),
+      });
+    } catch (_) {}
   }
 
   const all = getStoredRounds(factory);
@@ -97,19 +160,37 @@ export const updateRound = async (
   id: string,
   updates: Partial<PatrolRound>
 ): Promise<PatrolRound> => {
+  const factory = updates.factory_code || "F001";
+
   try {
     const res: AxiosResponse<PatrolRound> = await axiosClient.put(`/rounds/${id}`, updates);
     if (res.data) {
-      const factory = res.data.factory_code || updates.factory_code;
       const all = getStoredRounds(factory).map((r) => (r.id === id ? { ...r, ...res.data } : r));
       saveStoredRounds(all, factory);
       return res.data;
     }
   } catch (err) {
-    // Client persistent fallback
+    // Fallback direct D1 update
+    try {
+      await fetch(D1_WORKER_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query:
+            "UPDATE rounds SET round_number = ?, start_time = ?, end_time = ?, scan_start_time = ?, scan_end_time = ? WHERE id = ?",
+          params: [
+            updates.round_number,
+            updates.start_time,
+            updates.end_time,
+            updates.scan_start_time,
+            updates.scan_end_time,
+            id,
+          ],
+        }),
+      });
+    } catch (_) {}
   }
 
-  const factory = updates.factory_code;
   const all = getStoredRounds(factory).map((r) => (r.id === id ? { ...r, ...updates } : r));
   saveStoredRounds(all, factory);
   const found = all.find((r) => r.id === id);
@@ -124,7 +205,16 @@ export const deleteRound = async (id: string, factoryCode?: string): Promise<voi
   try {
     await axiosClient.delete(`/rounds/${id}`);
   } catch (err) {
-    // Client persistent fallback
+    try {
+      await fetch(D1_WORKER_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: "DELETE FROM rounds WHERE id = ?",
+          params: [id],
+        }),
+      });
+    } catch (_) {}
   }
 
   const all = getStoredRounds(factoryCode).filter((r) => r.id !== id);
