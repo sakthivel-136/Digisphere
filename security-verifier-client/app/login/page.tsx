@@ -91,6 +91,7 @@ export default function LoginPage() {
       localStorage.setItem('role', data.role)
       localStorage.setItem('name', sanitize(data.name || ''))
       localStorage.setItem('adminName', sanitize(data.name || ''))
+      localStorage.setItem('user_id', sanitize(data.user_id || userId))
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new Event('auth-login-success'))
       }

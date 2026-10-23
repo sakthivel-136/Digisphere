@@ -445,6 +445,7 @@ export default function DashboardPage() {
   // Multi-Factory Overview State
   const [showMultiFactory, setShowMultiFactory] = useState(false)
   const [isMultiFactoryLoading, setIsMultiFactoryLoading] = useState(false)
+  const [overviewDate, setOverviewDate] = useState<string>(today)
   const [multiFactoryOverview, setMultiFactoryOverview] = useState<Array<{
     factory_code: string;
     factory_name: string;
@@ -454,6 +455,32 @@ export default function DashboardPage() {
     rate: number;
     lastScan: string | null;
   }>>([])
+
+  // Executive privilege check: "All Factories at a Glance" is ONLY for MD or CEO logins (NOT standard admins or CV)
+  const isMdOrCeo = useMemo(() => {
+    if (typeof window === 'undefined') return false
+    const role = (localStorage.getItem('role') || '').trim().toUpperCase()
+    const name = (localStorage.getItem('adminName') || localStorage.getItem('name') || adminName || '').trim().toUpperCase()
+    const userId = (localStorage.getItem('user_id') || '').trim().toLowerCase()
+
+    // 1. Role is explicitly MD or CEO
+    if (role === 'MD' || role === 'CEO') return true
+
+    // 2. MD or CEO user identification (e.g. Godwin, MD, CEO)
+    if (
+      name.includes('MD') ||
+      name.includes('CEO') ||
+      name.includes('GODWIN') ||
+      userId === 'godwin' ||
+      userId === 'ceo' ||
+      userId === 'md'
+    ) {
+      return true
+    }
+
+    // Standard factory admins (Suresh, Vidhya, Viji, Murali, Ragul, Subramanian, Gokul, Sakthivel, etc.) -> restricted
+    return false
+  }, [adminName])
 
   /* auth check */
   useEffect(() => {
@@ -472,19 +499,17 @@ export default function DashboardPage() {
       .finally(() => setLoading(false))
   }, [selectedFactory, selectedDate, authorized])
 
-  /* auto-fetch when factory/date changes */
-  useEffect(() => {
-    fetchReport()
-  }, [fetchReport])
-
-  // On-demand load all factories overview
-  const handleLoadAllFactories = async () => {
+  // On-demand load all factories overview for any selected date (today or previous dates)
+  const handleLoadAllFactories = useCallback(async (customDate?: string) => {
+    if (!isMdOrCeo) return
+    const targetDate = customDate || selectedDate
     try {
       setIsMultiFactoryLoading(true)
       setShowMultiFactory(true)
+      setOverviewDate(targetDate)
       const results = await Promise.allSettled(
         factories.map(async (f) => {
-          const data = await getPatrolReport(f.factory_code, selectedDate)
+          const data = await getPatrolReport(f.factory_code, targetDate)
           const completed = data.filter((r) => r.status === 'SUCCESS').length
           const total = data.length
           const missed = data.filter((r) => r.status !== 'SUCCESS').length
@@ -508,8 +533,8 @@ export default function DashboardPage() {
           return res.value
         }
         return {
-          factory_code: factories[idx].factory_code,
-          factory_name: factories[idx].factory_name,
+          factory_code: factories[idx]?.factory_code || `F00${idx + 1}`,
+          factory_name: factories[idx]?.factory_name || 'Factory',
           total: 0,
           completed: 0,
           missed: 0,
@@ -524,7 +549,15 @@ export default function DashboardPage() {
     } finally {
       setIsMultiFactoryLoading(false)
     }
-  }
+  }, [factories, selectedDate, isMdOrCeo])
+
+  /* auto-fetch when factory/date changes, and refresh multi-factory overview if currently opened */
+  useEffect(() => {
+    fetchReport()
+    if (showMultiFactory && isMdOrCeo) {
+      handleLoadAllFactories(selectedDate)
+    }
+  }, [fetchReport, selectedDate, showMultiFactory, isMdOrCeo, handleLoadAllFactories])
 
   /* ================================================================
      COMPUTED STATS (time-aware)
@@ -832,27 +865,29 @@ export default function DashboardPage() {
                 : '📊 Load'}
             </button>
 
-            {/* Multi-Factory Overview Toggle */}
-            <button
-              onClick={() => {
-                if (!showMultiFactory && multiFactoryOverview.length === 0) {
-                  handleLoadAllFactories()
-                } else {
-                  setShowMultiFactory(!showMultiFactory)
-                }
-              }}
-              disabled={isMultiFactoryLoading}
-              className={`border font-semibold px-4 py-2.5 rounded-lg flex items-center gap-2 text-sm transition-all ${
-                showMultiFactory
-                  ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
-                  : 'border-indigo-200 bg-indigo-50/70 hover:bg-indigo-100 text-indigo-700'
-              }`}
-              title="Compare all 5 factory locations side-by-side"
-            >
-              <Building2 className="w-4 h-4" />
-              {isMultiFactoryLoading ? 'Fetching Sites…' : '🏢 All Factories at a Glance'}
-              {showMultiFactory ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}
-            </button>
+            {/* Multi-Factory Overview Toggle (Restricted: MD & CEO Only) */}
+            {isMdOrCeo && (
+              <button
+                onClick={() => {
+                  if (!showMultiFactory) {
+                    handleLoadAllFactories(selectedDate)
+                  } else {
+                    setShowMultiFactory(false)
+                  }
+                }}
+                disabled={isMultiFactoryLoading}
+                className={`border font-semibold px-4 py-2.5 rounded-lg flex items-center gap-2 text-sm transition-all ${
+                  showMultiFactory
+                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                    : 'border-indigo-200 bg-indigo-50/70 hover:bg-indigo-100 text-indigo-700'
+                }`}
+                title="Compare all 5 factory locations side-by-side (MD & CEO only)"
+              >
+                <Building2 className="w-4 h-4" />
+                {isMultiFactoryLoading ? 'Fetching Sites…' : '🏢 All Factories at a Glance'}
+                {showMultiFactory ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}
+              </button>
+            )}
 
             {/* Export Analytics PDF */}
             {report.length > 0 && (
@@ -877,8 +912,8 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* ── MULTI-FACTORY EXECUTIVE OVERVIEW ── */}
-        {showMultiFactory && (
+        {/* ── MULTI-FACTORY EXECUTIVE OVERVIEW (MD & CEO ONLY) ── */}
+        {showMultiFactory && isMdOrCeo && (
           <div className="glass-surface rounded-2xl p-5 sm:p-6 mb-6 border border-indigo-500/20 shadow-lg">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-3 mb-4 border-b border-[var(--border)] gap-2">
               <div className="flex items-center gap-2.5">
@@ -886,18 +921,25 @@ export default function DashboardPage() {
                   <Building2 className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-[var(--foreground)]">Executive Multi-Factory Overview (Date: {selectedDate})</h2>
-                  <p className="text-xs text-[var(--foreground-muted)]">Instant performance comparison across all 5 company locations</p>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h2 className="text-base font-bold text-[var(--foreground)]">Executive Multi-Factory Overview</h2>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-indigo-100 text-indigo-800 border border-indigo-300">
+                      MD &amp; CEO Exclusive
+                    </span>
+                  </div>
+                  <p className="text-xs text-[var(--foreground-muted)]">
+                    Performance comparison across all 5 locations for date: <span className="font-semibold text-indigo-600 dark:text-indigo-400">{overviewDate || selectedDate}</span>
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-2 self-end sm:self-auto">
                 <button
-                  onClick={handleLoadAllFactories}
+                  onClick={() => handleLoadAllFactories(selectedDate)}
                   disabled={isMultiFactoryLoading}
                   className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold py-1.5 px-3 rounded-lg text-xs flex items-center gap-1.5 border border-indigo-200 transition-colors"
                 >
                   <RefreshCw className={`w-3.5 h-3.5 ${isMultiFactoryLoading ? 'animate-spin' : ''}`} />
-                  Refresh All Sites
+                  Refresh All Sites ({selectedDate})
                 </button>
                 <button
                   onClick={() => setShowMultiFactory(false)}
