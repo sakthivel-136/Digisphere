@@ -91,6 +91,9 @@ export default function LoginPage() {
       localStorage.setItem('role', data.role)
       localStorage.setItem('name', sanitize(data.name || ''))
       localStorage.setItem('adminName', sanitize(data.name || ''))
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('auth-login-success'))
+      }
       setSuccess(true)
       setTimeout(() => router.push('/dashboard'), 900)
     } catch (err: any) {

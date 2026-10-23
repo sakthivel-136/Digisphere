@@ -37,12 +37,15 @@ axiosClient.interceptors.response.use(
 
   (error) => {
     if (error.response?.status === 401) {
-      console.warn("Unauthorized - redirecting to login");
-
       localStorage.removeItem("access_token");
 
       if (typeof window !== "undefined") {
-        window.location.href = "/login";
+        const currentPath = window.location.pathname;
+        // Never trigger reload if already on login or root
+        if (currentPath !== "/login" && currentPath !== "/") {
+          console.warn("Unauthorized - redirecting to login");
+          window.location.href = "/login";
+        }
       }
     }
 

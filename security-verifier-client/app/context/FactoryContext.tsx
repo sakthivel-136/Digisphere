@@ -39,6 +39,16 @@ export function FactoryProvider({ children }: { children: ReactNode }) {
 
   // Load factories from API
   const refreshFactories = useCallback(async () => {
+    // If not authenticated or on public auth routes, do not attempt protected API requests
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('access_token');
+      const pathname = window.location.pathname;
+      if (!token || pathname === '/login' || pathname === '/') {
+        setIsLoading(false);
+        return;
+      }
+    }
+
     try {
       setIsLoading(true);
       const res: any = await getFactories();
@@ -82,13 +92,24 @@ export function FactoryProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Initialize on mount
+  // Initialize on mount and listen for login event
   useEffect(() => {
     const stored = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
     if (stored) {
       setSelectedFactoryState(stored);
     }
     refreshFactories();
+
+    const handleLoginSuccess = () => {
+      refreshFactories();
+    };
+
+    window.addEventListener('auth-login-success', handleLoginSuccess);
+    window.addEventListener('storage', handleLoginSuccess);
+    return () => {
+      window.removeEventListener('auth-login-success', handleLoginSuccess);
+      window.removeEventListener('storage', handleLoginSuccess);
+    };
   }, [refreshFactories]);
 
   const setSelectedFactory = useCallback((code: string) => {
