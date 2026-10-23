@@ -13,13 +13,17 @@ import { logReportDownload } from '@/app/api/reportAudit.api'
 import { PageTransition } from '@/app/components/layout/PageTransition'
 import { PageContainer } from '@/app/components/layout/PageContainer'
 import { GlassCard } from '@/app/components/ui/GlassCard'
+import { useFactory } from '@/app/context/FactoryContext'
 
 const IconSpinner = () => <Loader2 className="w-5 h-5 animate-spin" />
 
 export default function ReportDownloadPage() {
   const router = useRouter()
-  const [factories, setFactories] = useState<any[]>([])
-  const [factoryCode, setFactoryCode] = useState("")
+  const {
+    factories,
+    selectedFactory: factoryCode,
+    setSelectedFactory: setFactoryCode,
+  } = useFactory()
   
   const [reportType, setReportType] = useState<"single" | "range" | "month">("single")
   const [reportDate, setReportDate] = useState(() => new Date().toISOString().split("T")[0])
@@ -90,24 +94,7 @@ export default function ReportDownloadPage() {
 
     const storedName = localStorage.getItem('adminName') || localStorage.getItem('name') || "Admin"
     setAdminName(storedName)
-
-    fetchFactories()
   }, [router])
-
-  const fetchFactories = async () => {
-    try {
-      const token = tokenService.get()
-      const res = await fetch(`${getApiUrl()}/factories`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      if (!res.ok) throw new Error("Failed to fetch factories")
-      const data = await res.json()
-      setFactories(data)
-      if (data.length > 0) setFactoryCode(data[0].factory_code)
-    } catch (e: any) {
-      setError(e.message)
-    }
-  }
 
   const fetchReport = useCallback(async () => {
     setLoading(true)

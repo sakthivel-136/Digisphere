@@ -18,6 +18,7 @@ import { getPatrolReport, PatrolReportItem } from '../api/report'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 import { useAuthGuard } from '@/app/services/auth.guard'
+import { useFactory } from '@/app/context/FactoryContext'
 
 /* ================================================================
    TYPES
@@ -353,9 +354,14 @@ export default function DashboardPage() {
   const today  = useMemo(() => new Date().toISOString().slice(0, 10), [])
   const dashboardContentRef = useRef<HTMLDivElement>(null)
 
+  const {
+    factories,
+    selectedFactory,
+    setSelectedFactory,
+    selectedFactoryName,
+  } = useFactory()
+
   const [adminName, setAdminName]             = useState('')
-  const [factories, setFactories]             = useState<Factory[]>([])
-  const [selectedFactory, setSelectedFactory] = useState('')
   const [selectedDate, setSelectedDate]       = useState(today)
   const [report, setReport]                   = useState<PatrolReportItem[]>([])
   const [loading, setLoading]                 = useState(false)
@@ -367,18 +373,6 @@ export default function DashboardPage() {
       const name = localStorage.getItem('adminName') || ''
       setAdminName(name)
     }
-  }, [authorized])
-
-  /* load factories */
-  useEffect(() => {
-    if (!authorized) return
-    getFactories()
-      .then((res: any) => {
-        const list: Factory[] = res?.data || res || []
-        setFactories(list)
-        if (list.length) setSelectedFactory(list[0].factory_code)
-      })
-      .catch(() => {})
   }, [authorized])
 
   const fetchReport = useCallback(() => {
@@ -578,8 +572,6 @@ export default function DashboardPage() {
       isPartialDay, nothingScannedToday,
     }
   }, [report, selectedDate, today])
-
-  const selectedFactoryName = factories.find(f => f.factory_code === selectedFactory)?.factory_name || selectedFactory
 
   if (!authorized) {
     return <PageTransition><PageLoadingSpinner label="Checking access..." /></PageTransition>

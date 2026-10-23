@@ -21,6 +21,7 @@ import { PageLoadingSpinner } from '@/app/components/ui/LoadingSpinner';
 import { motion } from 'framer-motion';
 import { containerVariants, itemVariants } from '@/lib/animations';
 import { QrCode, Plus } from 'lucide-react';
+import { useFactory } from '@/app/context/FactoryContext';
 
 // ----------------- TYPES -----------------
 
@@ -42,8 +43,7 @@ export default function QrCrudPage() {
   const [currentQr, setCurrentQr] = useState<QRCode | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
 
-  const [factories, setFactories] = useState<Factory[]>([]);
-  const [selectedFactory, setSelectedFactory] = useState<string>("");
+  const { factories, selectedFactory, setSelectedFactory } = useFactory();
 
   // ----------------- DATA MAPPING -----------------
 
@@ -66,7 +66,7 @@ export default function QrCrudPage() {
   // ----------------- LOAD DATA -----------------
 
   const loadQRCodes = async (factoryCode: string) => {
-    if (!authorized) return;
+    if (!authorized || !factoryCode) return;
     try {
       const rawData = await fetchQRByFactory(factoryCode);
       const mappedData = rawData.map(normalizeQR);
@@ -77,27 +77,11 @@ export default function QrCrudPage() {
     }
   };
 
-  const loadFactories = async () => {
-    if (!authorized) return;
-    try {
-      const data = await fetchFactories();
-      setFactories(data);
-
-      if (data.length > 0) {
-        const firstFactory = data[0].factory_code;
-        setSelectedFactory(firstFactory);
-        loadQRCodes(firstFactory);
-      }
-    } catch (err) {
-      console.error("Failed to load factories:", err);
-    }
-  };
-
   useEffect(() => {
-    if (authorized) {
-      loadFactories();
+    if (authorized && selectedFactory) {
+      loadQRCodes(selectedFactory);
     }
-  }, [authorized]);
+  }, [authorized, selectedFactory]);
 
   // ----------------- FILTERING -----------------
 

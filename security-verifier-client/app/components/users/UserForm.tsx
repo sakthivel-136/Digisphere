@@ -21,6 +21,7 @@ interface UserFormProps {
   onClose: () => void
   onSave: () => void
   factories: Array<{ factory_code: string; factory_name: string; location?: string | null }>
+  defaultFactory?: string
 }
 
 export default function UserForm({
@@ -28,6 +29,7 @@ export default function UserForm({
   onClose,
   onSave,
   factories,
+  defaultFactory,
 }: UserFormProps) {
 
   /* ================= DERIVED INITIAL DATA ================= */
@@ -36,8 +38,8 @@ export default function UserForm({
     security_id: user?.security_id ?? '',
     security_name: user?.security_name ?? '',
     security_password: user?.security_password ?? '',
-    factory: user?.factory ?? factories?.[0]?.factory_code ?? '',
-  }), [user, factories])
+    factory: user?.factory ?? defaultFactory ?? factories?.[0]?.factory_code ?? '',
+  }), [user, factories, defaultFactory])
 
   const [formData, setFormData] = useState<SecurityUser>(initialData)
   const [submitting, setSubmitting] = useState(false)

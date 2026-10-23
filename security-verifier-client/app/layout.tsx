@@ -7,6 +7,7 @@ import "./globals.css";
 import NavbarClient from "@/app/components/navbar/NavbarClient";
 import NavbarWrapper from "@/app/components/navbar/NavbarWrapper";
 import NextTopLoader from 'nextjs-toploader';
+import { FactoryProvider } from "@/app/context/FactoryContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -48,15 +49,17 @@ export default function RootLayout({
         `}
       >
         <NextTopLoader color="var(--primary)" showSpinner={false} shadow="0 0 10px var(--primary),0 0 5px var(--primary)" />
-        {/* Navbar (hidden on home page via NavbarWrapper logic) */}
-        <NavbarWrapper>
-          <NavbarClient />
-        </NavbarWrapper>
+        <FactoryProvider>
+          {/* Navbar (hidden on home page via NavbarWrapper logic) */}
+          <NavbarWrapper>
+            <NavbarClient />
+          </NavbarWrapper>
 
-        {/* Page Content */}
-        <main className="flex-1 flex flex-col min-h-[calc(100vh-64px)] w-full">
-          {children}
-        </main>
+          {/* Page Content */}
+          <main className="flex-1 flex flex-col min-h-[calc(100vh-64px)] w-full">
+            {children}
+          </main>
+        </FactoryProvider>
       </body>
     </html>
   );

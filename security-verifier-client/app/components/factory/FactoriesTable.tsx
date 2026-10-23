@@ -10,6 +10,7 @@ import {
   updateFactory,
   deleteFactory as deleteFactoryApi,
 } from '@/app/api/factories.api'
+import { useFactory } from '@/app/context/FactoryContext'
 
 interface Factory {
   id: string
@@ -19,6 +20,7 @@ interface Factory {
 }
 
 export const FactoriesTable = () => {
+  const { refreshFactories } = useFactory()
 
   /* ================= STATE ================= */
 
@@ -74,6 +76,7 @@ export const FactoriesTable = () => {
         factory_address: payload.address || '',
       })
       await loadFactories()
+      refreshFactories().catch(() => {})
     } catch (err: any) {
       const errMsg = err.response?.data?.detail || err.message || 'Create failed'
       alert(errMsg)
@@ -92,6 +95,7 @@ export const FactoriesTable = () => {
       })
       setEditingId(null)
       await loadFactories()
+      refreshFactories().catch(() => {})
     } catch (err: any) {
       const errMsg = err.response?.data?.detail || err.message || 'Update failed'
       alert(errMsg)
@@ -106,6 +110,7 @@ export const FactoriesTable = () => {
     try {
       await deleteFactoryApi(id)
       await loadFactories()
+      refreshFactories().catch(() => {})
     } catch (err: any) {
       const errMsg = err.response?.data?.detail || err.message || 'Delete failed'
       alert(errMsg)

@@ -44,6 +44,7 @@ import { PageContainer } from '@/app/components/layout/PageContainer';
 import { GlassCard } from '@/app/components/ui/GlassCard';
 import { PageLoadingSpinner } from '@/app/components/ui/LoadingSpinner';
 import { containerVariants, itemVariants } from '@/lib/animations';
+import { useFactory } from '@/app/context/FactoryContext';
 
 interface FactoryOption {
   factory_code: string;
@@ -55,9 +56,8 @@ export default function RoundsCrudPage() {
   const { authorized } = useAuthGuard({ allowedRoles: ['ADMIN'] });
   const router = useRouter();
 
-  // Factory State
-  const [factories, setFactories] = useState<FactoryOption[]>([]);
-  const [selectedFactory, setSelectedFactory] = useState<string>('F001');
+  // Factory State from Global Context
+  const { factories, selectedFactory, setSelectedFactory } = useFactory();
 
   // State
   const [rounds, setRounds] = useState<PatrolRound[]>([]);
@@ -105,56 +105,14 @@ export default function RoundsCrudPage() {
     }
   };
 
-  const loadFactories = async () => {
-    try {
-      const res = await getFactories();
-      const data = res.data || res;
-      if (Array.isArray(data) && data.length > 0) {
-        const list: FactoryOption[] = data.map((f: any) => ({
-          factory_code: f.factory_code,
-          factory_name: f.factory_name || f.name || f.factory_code,
-        }));
-        setFactories(list);
-        if (!list.some((f) => f.factory_code === selectedFactory)) {
-          setSelectedFactory(list[0].factory_code);
-          loadRounds(list[0].factory_code);
-        } else {
-          loadRounds(selectedFactory);
-        }
-      } else {
-        const defaults: FactoryOption[] = [
-          { factory_code: 'F001', factory_name: 'GJ Innovations and Textile Network Pvt. Ltd.' },
-          { factory_code: 'F002', factory_name: 'Pentagon Apparels - I' },
-          { factory_code: 'F003', factory_name: 'Pentagon Apparels - II' },
-          { factory_code: 'F004', factory_name: 'Pentagon Garments' },
-          { factory_code: 'MD001', factory_name: 'MD Sir House' },
-        ];
-        setFactories(defaults);
-        loadRounds('F001');
-      }
-    } catch (err) {
-      console.error('Error loading factories:', err);
-      const defaults: FactoryOption[] = [
-        { factory_code: 'F001', factory_name: 'GJ Innovations and Textile Network Pvt. Ltd.' },
-        { factory_code: 'F002', factory_name: 'Pentagon Apparels - I' },
-        { factory_code: 'F003', factory_name: 'Pentagon Apparels - II' },
-        { factory_code: 'F004', factory_name: 'Pentagon Garments' },
-        { factory_code: 'MD001', factory_name: 'MD Sir House' },
-      ];
-      setFactories(defaults);
+  useEffect(() => {
+    if (authorized && selectedFactory) {
       loadRounds(selectedFactory);
     }
-  };
-
-  useEffect(() => {
-    if (authorized) {
-      loadFactories();
-    }
-  }, [authorized]);
+  }, [authorized, selectedFactory]);
 
   const handleFactoryChange = (factoryCode: string) => {
     setSelectedFactory(factoryCode);
-    loadRounds(factoryCode);
   };
 
   // Compute next available round number for Auto-increment in selected factory

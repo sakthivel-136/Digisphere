@@ -16,9 +16,12 @@ import {
   BookOpen,
   Smartphone,
   User,
+  Building2,
+  Check,
 } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { clearAuth, getUser, type AuthUser } from '@/app/services/token.service'
+import { useFactory } from '@/app/context/FactoryContext'
 import AppDownloadModal from '../ui/AppDownloadModal'
 import { cn } from '@/lib/cn'
 import { dropdownVariants, mobileMenuVariants, containerVariants, itemVariants } from '@/lib/animations'
@@ -44,14 +47,23 @@ const Navbar = () => {
   const router   = useRouter()
   const pathname = usePathname()
 
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [isUserMenuOpen,   setIsUserMenuOpen]   = useState(false)
-  const [showAppModal,     setShowAppModal]     = useState(false)
-  const [isDarkMode,       setIsDarkMode]       = useState(false)
-  const [user,             setUser]             = useState<AuthUser | null>(null)
-  const [mounted,          setMounted]          = useState(false)
+  const {
+    factories,
+    selectedFactory,
+    selectedFactoryName,
+    setSelectedFactory,
+  } = useFactory()
 
-  const userMenuRef = useRef<HTMLDivElement>(null)
+  const [isMobileMenuOpen,  setIsMobileMenuOpen]  = useState(false)
+  const [isUserMenuOpen,    setIsUserMenuOpen]    = useState(false)
+  const [isFactoryMenuOpen, setIsFactoryMenuOpen] = useState(false)
+  const [showAppModal,      setShowAppModal]      = useState(false)
+  const [isDarkMode,        setIsDarkMode]        = useState(false)
+  const [user,              setUser]              = useState<AuthUser | null>(null)
+  const [mounted,           setMounted]           = useState(false)
+
+  const userMenuRef    = useRef<HTMLDivElement>(null)
+  const factoryMenuRef = useRef<HTMLDivElement>(null)
 
   // ── Mount & theme init ──
   useEffect(() => {
@@ -70,10 +82,14 @@ const Navbar = () => {
       if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
         setIsUserMenuOpen(false)
       }
+      if (factoryMenuRef.current && !factoryMenuRef.current.contains(e.target as Node)) {
+        setIsFactoryMenuOpen(false)
+      }
     }
     const keyHandler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setIsUserMenuOpen(false)
+        setIsFactoryMenuOpen(false)
         setIsMobileMenuOpen(false)
       }
     }
@@ -177,6 +193,143 @@ const Navbar = () => {
 
           {/* ── Right Side ── */}
           <div className="flex items-center gap-2">
+
+            {/* ── GLOBAL FACTORY SELECTOR DROPDOWN (Left side of user profile) ── */}
+            <div className="relative" ref={factoryMenuRef}>
+              <button
+                type="button"
+                aria-label="Select factory location"
+                aria-expanded={isFactoryMenuOpen}
+                aria-haspopup="listbox"
+                onClick={() => {
+                  setIsFactoryMenuOpen(prev => !prev)
+                  setIsUserMenuOpen(false)
+                }}
+                className={cn(
+                  'flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-xl',
+                  'bg-[var(--surface)] border border-[var(--border)]',
+                  'hover:border-[var(--primary)]/50 hover:bg-[var(--surface-muted)]',
+                  'transition-all duration-150 shadow-xs',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] focus-visible:ring-offset-2',
+                  'active:scale-95'
+                )}
+                title={`Active Factory: ${selectedFactory} – ${selectedFactoryName}`}
+              >
+                {/* Factory Icon */}
+                <div className="h-7 w-7 sm:h-8 sm:w-8 flex-shrink-0 rounded-lg bg-[var(--primary-muted)] flex items-center justify-center text-[var(--primary)] pointer-events-none shadow-xs">
+                  <Building2 size={16} className="text-[var(--primary)]" />
+                </div>
+
+                {/* Factory Code & Name */}
+                <div className="flex flex-col text-left pointer-events-none">
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-mono text-xs font-bold text-[var(--primary)] bg-[var(--primary-muted)] px-1.5 py-0.5 rounded">
+                      {mounted ? selectedFactory : '…'}
+                    </span>
+                    <span className="hidden md:inline-block text-xs font-semibold text-[var(--foreground)] max-w-[120px] lg:max-w-[180px] truncate">
+                      {mounted ? selectedFactoryName : 'Loading…'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Chevron */}
+                <ChevronDown
+                  size={14}
+                  className={cn(
+                    'text-[var(--foreground-subtle)] pointer-events-none transition-transform duration-200 ml-0.5',
+                    isFactoryMenuOpen && 'rotate-180'
+                  )}
+                />
+              </button>
+
+              {/* Dropdown Menu */}
+              <AnimatePresence>
+                {isFactoryMenuOpen && (
+                  <motion.div
+                    role="listbox"
+                    aria-label="Factory list"
+                    variants={dropdownVariants}
+                    initial="initial"
+                    animate="animate"
+                    exit="exit"
+                    className={cn(
+                      'absolute right-0 sm:right-auto sm:left-0 top-full mt-2 w-72 sm:w-84',
+                      'bg-[var(--surface)] rounded-2xl',
+                      'border border-[var(--border)]',
+                      'shadow-xl shadow-black/10',
+                      'p-2 z-[var(--z-dropdown)]',
+                      'origin-top-left'
+                    )}
+                  >
+                    {/* Header */}
+                    <div className="px-3 py-2.5 mb-1.5 rounded-xl bg-[var(--surface-muted)] border border-[var(--border)] flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-wider text-[var(--foreground-muted)]">Active Factory</p>
+                        <p className="text-xs text-[var(--foreground-subtle)] mt-0.5">Global factory context across all pages</p>
+                      </div>
+                      <span className="text-[10px] font-bold font-mono px-2 py-0.5 rounded-full bg-[var(--primary-muted)] text-[var(--primary)]">
+                        {factories.length} sites
+                      </span>
+                    </div>
+
+                    {/* Factory list items */}
+                    <div className="max-h-64 overflow-y-auto space-y-1 pr-1 custom-scrollbar">
+                      {factories.map((f) => {
+                        const isSelected = f.factory_code === selectedFactory
+                        return (
+                          <button
+                            key={f.factory_code}
+                            type="button"
+                            role="option"
+                            aria-selected={isSelected}
+                            onClick={() => {
+                              setSelectedFactory(f.factory_code)
+                              setIsFactoryMenuOpen(false)
+                            }}
+                            className={cn(
+                              'w-full text-left px-3 py-2 rounded-xl transition-all duration-150',
+                              'flex items-center justify-between gap-2 text-sm',
+                              isSelected
+                                ? 'bg-[var(--primary-muted)] text-[var(--primary)] font-semibold border border-[var(--primary)]/20'
+                                : 'text-[var(--foreground)] hover:bg-[var(--surface-muted)]'
+                            )}
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <span className={cn(
+                                'font-mono text-xs font-bold px-2 py-0.5 rounded shrink-0',
+                                isSelected ? 'bg-[var(--primary)] text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                              )}>
+                                {f.factory_code}
+                              </span>
+                              <div className="min-w-0 truncate">
+                                <p className="text-xs sm:text-sm truncate font-medium">{f.factory_name}</p>
+                                {f.location && (
+                                  <p className="text-[10px] text-[var(--foreground-muted)] truncate">{f.location}</p>
+                                )}
+                              </div>
+                            </div>
+                            {isSelected && (
+                              <Check size={16} className="text-[var(--primary)] shrink-0 ml-1" />
+                            )}
+                          </button>
+                        )
+                      })}
+                    </div>
+
+                    {/* Footer link to manage factories */}
+                    <div className="mt-2 pt-2 border-t border-[var(--border)] flex justify-between items-center px-2">
+                      <Link
+                        href="/factory"
+                        onClick={() => setIsFactoryMenuOpen(false)}
+                        className="text-xs text-[var(--primary)] hover:underline font-semibold flex items-center gap-1 py-1"
+                      >
+                        <Building2 size={13} /> Master Factory Directory →
+                      </Link>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
 
             {/* USER AVATAR DROPDOWN */}
             <div className="relative" ref={userMenuRef}>
@@ -356,6 +509,31 @@ const Navbar = () => {
                 animate="animate"
                 className="px-4 py-4 space-y-1"
               >
+                {/* Mobile Factory Selector */}
+                <motion.div variants={itemVariants} className="pt-1 pb-2">
+                  <div className="p-3 rounded-xl bg-[var(--surface-muted)] border border-[var(--border)]">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-bold uppercase tracking-wider text-[var(--foreground-muted)] flex items-center gap-1.5">
+                        <Building2 size={14} className="text-[var(--primary)]" /> Active Factory
+                      </span>
+                      <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-[var(--primary)] text-white">
+                        {selectedFactory}
+                      </span>
+                    </div>
+                    <select
+                      value={selectedFactory}
+                      onChange={(e) => setSelectedFactory(e.target.value)}
+                      className="w-full text-xs font-semibold py-2 px-2.5 rounded-lg border border-[var(--border)] bg-[var(--surface)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+                    >
+                      {factories.map((f) => (
+                        <option key={f.factory_code} value={f.factory_code}>
+                          {f.factory_code} - {f.factory_name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </motion.div>
+
                 {/* Nav links */}
                 {navItems.map((item) => (
                   <motion.div key={item.name} variants={itemVariants}>

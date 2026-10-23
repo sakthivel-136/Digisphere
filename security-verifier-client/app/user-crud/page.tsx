@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef, useCallback } from 'react'
+import { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import { getSecurityUsers } from '@/app/api/securityUsers.api'
 import { getFactories } from '@/app/api/factories.api'
 import { getAdminUsers, AdminUser } from '@/app/api/admins.api'
@@ -16,7 +16,8 @@ import { GlassCard } from '@/app/components/ui/GlassCard'
 import { PageLoadingSpinner } from '@/app/components/ui/LoadingSpinner'
 import { motion, AnimatePresence } from 'framer-motion'
 import { containerVariants, itemVariants } from '@/lib/animations'
-import { Plus, Users, ShieldCheck, Clock, UserCheck } from 'lucide-react'
+import { Plus, Users, ShieldCheck, Clock, UserCheck, Building2, Filter } from 'lucide-react'
+import { useFactory } from '@/app/context/FactoryContext'
 
 interface Factory {
   factory_code: string
@@ -26,7 +27,10 @@ interface Factory {
 
 export default function UserCrudPage() {
   const { authorized } = useAuthGuard()
+  const { selectedFactory, selectedFactoryName } = useFactory()
+
   const [viewMode, setViewMode] = useState<'SECURITY' | 'ADMIN'>('SECURITY')
+  const [filterByFactory, setFilterByFactory] = useState(true)
 
   const [users, setUsers] = useState<SecurityUser[]>([])
   const [admins, setAdmins] = useState<AdminUser[]>([])
@@ -36,6 +40,21 @@ export default function UserCrudPage() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [isAdminFormOpen, setIsAdminFormOpen] = useState(false)
   const [editingUser, setEditingUser] = useState<SecurityUser | null>(null)
+
+  // Filter security users by the active factory selected in the navbar
+  const filteredUsers = useMemo(() => {
+    if (!filterByFactory || !selectedFactory) return users
+
+    const activeFactoryObj = factories.find((f) => f.factory_code === selectedFactory)
+    const activeCode = selectedFactory.trim().toLowerCase()
+    const activeName = activeFactoryObj?.factory_name?.trim().toLowerCase() || ''
+
+    return users.filter((u) => {
+      if (!u.factory) return false
+      const uf = u.factory.trim().toLowerCase()
+      return uf === activeCode || (activeName && uf === activeName)
+    })
+  }, [users, selectedFactory, factories, filterByFactory])
 
   // 2-Minute Auto-Revert Timer for Admin View
   const [adminTimerSeconds, setAdminTimerSeconds] = useState(120)
@@ -241,6 +260,51 @@ export default function UserCrudPage() {
             )}
           </AnimatePresence>
 
+          {/* Active Factory Filter Notice for Security Users */}
+          <AnimatePresence>
+            {viewMode === 'SECURITY' && (
+              <motion.div
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                className="mb-4 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 flex flex-wrap items-center justify-between gap-3 shadow-2xs"
+              >
+                <div className="flex items-center gap-2.5 text-xs text-slate-700">
+                  <div className="p-1.5 rounded-lg bg-blue-100 text-blue-700 flex-shrink-0">
+                    <Building2 className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-1.5 font-medium">
+                      <span>Assigned to Factory:</span>
+                      <span className="font-mono font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                        {filterByFactory ? selectedFactory : 'ALL FACTORIES'}
+                      </span>
+                      {filterByFactory && selectedFactoryName && (
+                        <span className="font-semibold text-slate-900 hidden sm:inline">
+                          ({selectedFactoryName})
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      {filterByFactory
+                        ? `Showing ${filteredUsers.length} assigned guard${filteredUsers.length === 1 ? '' : 's'} (switch factory in navbar to see other sites)`
+                        : `Showing all ${users.length} security guards across all locations`}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setFilterByFactory((prev) => !prev)}
+                  className="px-2.5 py-1.5 rounded-lg text-xs font-semibold border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 transition-colors flex items-center gap-1.5"
+                >
+                  <Filter className="w-3.5 h-3.5 text-slate-500" />
+                  {filterByFactory ? 'Show All Sites' : `Filter to ${selectedFactory}`}
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           {/* Table Content */}
           <motion.div variants={itemVariants}>
             {loading && users.length === 0 ? (
@@ -254,7 +318,7 @@ export default function UserCrudPage() {
               />
             ) : (
               <UsersTable
-                users={users}
+                users={filteredUsers}
                 onAddUser={handleAddUser}
                 onEditUser={handleEditUser}
                 onRefresh={loadData}
@@ -268,6 +332,7 @@ export default function UserCrudPage() {
           <UserForm
             user={editingUser}
             factories={factories}
+            defaultFactory={selectedFactory}
             onClose={() => setIsFormOpen(false)}
             onSave={loadData}
           />
