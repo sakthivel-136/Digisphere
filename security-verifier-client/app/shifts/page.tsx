@@ -312,14 +312,14 @@ export default function ShiftsPage() {
             className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6"
           >
             <div className="flex items-center gap-3">
-              <div className="h-11 w-11 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/50 flex items-center justify-center flex-shrink-0 text-indigo-600 dark:text-indigo-400 shadow-sm">
+              <div className="h-11 w-11 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center flex-shrink-0 text-indigo-600 shadow-sm">
                 <Sun className="h-5 w-5" />
               </div>
               <div>
-                <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
                   Shift Operations & Authorization
                 </h1>
-                <p className="text-sm text-slate-600 dark:text-slate-400 mt-0.5">
+                <p className="text-sm font-medium text-slate-600 mt-0.5">
                   Configure shift timings, scan windows, and enforce guard mobile login permissions
                 </p>
               </div>
@@ -333,9 +333,9 @@ export default function ShiftsPage() {
                 transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                 onClick={() => loadShifts(selectedFactory)}
                 disabled={loading}
-                className="btn-secondary"
+                className="btn-secondary !text-slate-700 hover:!text-slate-900 font-semibold"
               >
-                <RefreshCw className={`h-4 w-4 text-indigo-600 dark:text-indigo-400 ${loading ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`h-4 w-4 text-indigo-600 ${loading ? 'animate-spin' : ''}`} />
                 Refresh
               </motion.button>
 
@@ -344,7 +344,7 @@ export default function ShiftsPage() {
                 whileTap={{ scale: 0.97 }}
                 transition={{ type: 'spring', stiffness: 400, damping: 25 }}
                 onClick={handleOpenCreateModal}
-                className="btn-primary"
+                className="btn-primary font-bold shadow-sm"
               >
                 <Plus className="h-4 w-4" />
                 Add Shift
@@ -355,13 +355,13 @@ export default function ShiftsPage() {
           {/* Quick Informational Notice */}
           <motion.div
             variants={itemVariants}
-            className="mb-6 rounded-2xl border border-indigo-200/90 dark:border-indigo-800/70 bg-indigo-50/90 dark:bg-indigo-950/40 p-4.5 flex items-start gap-3.5 shadow-xs"
+            className="mb-6 rounded-2xl border border-blue-200 bg-blue-50/90 p-4.5 flex items-start gap-3.5 shadow-xs"
           >
-            <div className="p-2 rounded-xl bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 shrink-0">
+            <div className="p-2 rounded-xl bg-blue-100 text-blue-700 shrink-0">
               <ShieldCheck className="w-5 h-5" />
             </div>
-            <div className="text-xs sm:text-sm text-slate-800 dark:text-slate-200 leading-relaxed">
-              <strong className="font-bold text-indigo-950 dark:text-indigo-200">
+            <div className="text-xs sm:text-sm text-slate-800 leading-relaxed font-medium">
+              <strong className="font-bold text-slate-950">
                 Shift Authorization Enforcement:
               </strong>{' '}
               Security guards are verified against their assigned shift upon logging into the mobile app. Guards attempting to log in outside their allocated shift will be denied access. By default, all factory guards are permitted in both shifts until custom allocations are saved.
@@ -377,7 +377,7 @@ export default function ShiftsPage() {
                 placeholder="Search shift by name, code or timing..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm transition-all"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm font-medium transition-all"
               />
             </div>
           </motion.div>
@@ -387,13 +387,13 @@ export default function ShiftsPage() {
             {loading ? (
               <div className="py-16 flex flex-col items-center justify-center gap-3">
                 <RefreshCw className="w-6 h-6 animate-spin text-indigo-600" />
-                <p className="text-sm text-slate-600 dark:text-slate-400">Loading factory shifts...</p>
+                <p className="text-sm font-semibold text-slate-600">Loading factory shifts...</p>
               </div>
             ) : filteredShifts.length === 0 ? (
               <GlassCard className="text-center py-12">
                 <Clock className="w-10 h-10 text-slate-400 mx-auto mb-3 opacity-50" />
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">No Shifts Configured</h3>
-                <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 max-w-sm mx-auto">
+                <h3 className="text-base font-bold text-slate-900">No Shifts Configured</h3>
+                <p className="text-xs text-slate-600 mt-1 max-w-sm mx-auto">
                   No shifts found matching your search. Click &quot;Add Shift&quot; above to create a shift schedule.
                 </p>
               </GlassCard>
@@ -410,45 +410,38 @@ export default function ShiftsPage() {
                   return (
                     <div
                       key={shift.id}
-                      className="relative rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden"
+                      className="relative rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden"
                     >
-                      {/* Background Ambient Glow */}
-                      <div
-                        className={`absolute -top-12 -right-12 w-36 h-36 rounded-full blur-3xl pointer-events-none ${
-                          isNight ? 'bg-indigo-600/10' : 'bg-amber-500/10'
-                        }`}
-                      />
-
                       {/* Header */}
-                      <div className="flex items-start justify-between relative z-10 pb-4 border-b border-slate-100 dark:border-slate-800">
+                      <div className="flex items-start justify-between relative z-10 pb-4 border-b border-slate-100">
                         <div className="flex items-center gap-3.5">
                           <div
                             className={`p-3 rounded-xl shadow-xs ${
                               isNight
-                                ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200/80 dark:border-indigo-800'
-                                : 'bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-200/80 dark:border-amber-800'
+                                ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                                : 'bg-amber-50 text-amber-700 border border-amber-200'
                             }`}
                           >
                             {isNight ? <Moon className="w-6 h-6" /> : <Sun className="w-6 h-6" />}
                           </div>
                           <div>
                             <div className="flex items-center gap-2">
-                              <h3 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
+                              <h3 className="text-xl font-bold text-slate-900 tracking-tight">
                                 {shift.shift_name}
                               </h3>
                               <span
                                 className={`text-[11px] font-mono font-bold px-2.5 py-0.5 rounded-full ${
                                   isNight
-                                    ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/60 dark:text-indigo-200 border border-indigo-200 dark:border-indigo-800'
-                                    : 'bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-200 border border-amber-200 dark:border-amber-800'
+                                    ? 'bg-indigo-100 text-indigo-900 border border-indigo-300'
+                                    : 'bg-amber-100 text-amber-900 border border-amber-300'
                                 }`}
                               >
                                 {shift.shift_code}
                               </span>
                             </div>
-                            <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1.5">
-                              <Building2 className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
-                              Factory: <span className="font-mono font-bold text-slate-700 dark:text-slate-300">{shift.factory_code}</span>
+                            <p className="text-xs font-semibold text-slate-500 mt-1 flex items-center gap-1.5">
+                              <Building2 className="w-3.5 h-3.5 text-slate-400" />
+                              Factory: <span className="font-mono font-bold text-slate-800">{shift.factory_code}</span>
                             </p>
                           </div>
                         </div>
@@ -457,14 +450,14 @@ export default function ShiftsPage() {
                         <div className="flex items-center gap-1">
                           <button
                             onClick={() => handleOpenEditModal(shift)}
-                            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                            className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
                             title="Edit shift details"
                           >
                             <Edit2 className="w-4 h-4" />
                           </button>
                           <button
                             onClick={() => setDeletingShift(shift)}
-                            className="p-2 rounded-xl text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
+                            className="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
                             title="Delete shift"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -474,45 +467,45 @@ export default function ShiftsPage() {
 
                       {/* Operational Timings Box */}
                       <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 relative z-10">
-                        <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80">
-                          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                        <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-600">
                             Operating Window
                           </span>
-                          <p className="text-lg font-black font-mono text-slate-900 dark:text-white mt-1">
+                          <p className="text-lg font-black font-mono text-slate-900 mt-1">
                             {format12h(shift.start_time)} – {format12h(shift.end_time)}
                           </p>
-                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                          <p className="text-xs font-medium text-slate-500 mt-0.5">
                             24h: {shift.start_time} to {shift.end_time}
                           </p>
                         </div>
 
-                        <div className="p-4 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/80 dark:border-emerald-800/60">
-                          <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-400">
+                        <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200">
+                          <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-800">
                             App Scan Window
                           </span>
-                          <p className="text-lg font-black font-mono text-emerald-700 dark:text-emerald-400 mt-1">
+                          <p className="text-lg font-black font-mono text-emerald-700 mt-1">
                             {shift.scan_window_mins || 25} mins
                           </p>
-                          <p className="text-xs text-emerald-700/80 dark:text-emerald-400/80 mt-0.5">
+                          <p className="text-xs font-medium text-emerald-700 mt-0.5">
                             Interval: {shift.scan_interval_mins || 45} mins
                           </p>
                         </div>
                       </div>
 
                       {/* Guard Allocation Status */}
-                      <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 relative z-10">
+                      <div className="mt-4 pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 relative z-10">
                         <div className="flex items-center gap-2">
-                          <Users className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                          <Users className="w-4 h-4 text-indigo-600" />
                           <div className="text-xs">
                             {hasAlloc ? (
-                              <span className="text-slate-700 dark:text-slate-300">
+                              <span className="text-slate-700 font-medium">
                                 Assigned Guards:{' '}
-                                <strong className="font-bold font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 px-2 py-0.5 rounded-md">
+                                <strong className="font-bold font-mono text-emerald-700 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-md">
                                   {shift.allocated_guards_count} Guards
                                 </strong>
                               </span>
                             ) : (
-                              <span className="text-slate-600 dark:text-slate-400 font-medium">
+                              <span className="text-slate-600 font-medium italic">
                                 All factory guards permitted (Default)
                               </span>
                             )}

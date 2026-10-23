@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* ================================================================ */
 /*  DESIGN TOKENS — Single source of truth for all visual values    */
 /* ================================================================ */
