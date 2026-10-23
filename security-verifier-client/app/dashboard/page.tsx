@@ -456,29 +456,35 @@ export default function DashboardPage() {
     lastScan: string | null;
   }>>([])
 
-  // Executive privilege check: "All Factories at a Glance" is ONLY for MD or CEO logins (NOT standard admins or CV)
+  // Executive privilege check: "All Factories at a Glance" is ONLY for MD or CEO logins (NOT standard admins like Godwin, Sakthivel, Suresh, etc.)
   const isMdOrCeo = useMemo(() => {
     if (typeof window === 'undefined') return false
     const role = (localStorage.getItem('role') || '').trim().toUpperCase()
     const name = (localStorage.getItem('adminName') || localStorage.getItem('name') || adminName || '').trim().toUpperCase()
     const userId = (localStorage.getItem('user_id') || '').trim().toLowerCase()
 
+    // Explicitly exclude standard admins even if their name contains substrings
+    if (userId === 'godwin' || name === 'GODWIN') return false
+    if (userId === 'sakthi' || name === 'SAKTHIVEL') return false
+
     // 1. Role is explicitly MD or CEO
     if (role === 'MD' || role === 'CEO') return true
 
-    // 2. MD or CEO user identification (e.g. Godwin, MD, CEO)
+    // 2. MD or CEO user identifier / credentials
     if (
-      name.includes('MD') ||
-      name.includes('CEO') ||
-      name.includes('GODWIN') ||
-      userId === 'godwin' ||
       userId === 'ceo' ||
-      userId === 'md'
+      userId === 'md' ||
+      name === 'MD' ||
+      name === 'CEO' ||
+      name.startsWith('MD ') ||
+      name.startsWith('CEO ') ||
+      name.endsWith(' MD') ||
+      name.endsWith(' CEO')
     ) {
       return true
     }
 
-    // Standard factory admins (Suresh, Vidhya, Viji, Murali, Ragul, Subramanian, Gokul, Sakthivel, etc.) -> restricted
+    // Standard factory admins (Godwin, Sakthivel, Suresh, Vidhya, Viji, Murali, Ragul, Subramanian, Gokul, etc.) -> restricted
     return false
   }, [adminName])
 
