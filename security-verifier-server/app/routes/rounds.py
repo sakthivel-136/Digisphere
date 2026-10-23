@@ -31,6 +31,16 @@ class PatrolRoundResponse(PatrolRoundBase):
     id: str
     created_at: Optional[str] = None
 
+class BatchRoundsCreate(BaseModel):
+    factory_code: str
+    rounds: List[PatrolRoundBase]
+    overwrite: Optional[bool] = False
+
+class CopyRoundsRequest(BaseModel):
+    source_factory_code: str
+    target_factory_code: str
+    overwrite: Optional[bool] = False
+
 @router.get("", response_model=List[PatrolRoundResponse])
 def get_all_rounds(factory_code: Optional[str] = Query(None, description="Filter rounds by factory code")):
     """
@@ -56,6 +66,115 @@ def get_all_rounds(factory_code: Optional[str] = Query(None, description="Filter
         return results or []
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to fetch rounds: {str(e)}")
+
+@router.post("/batch", status_code=status.HTTP_201_CREATED)
+def create_batch_rounds(payload: BatchRoundsCreate):
+    """
+    Create or replace multiple rounds for a factory in a single batch operation.
+    """
+    factory = payload.factory_code
+    if not factory:
+        raise HTTPException(status_code=400, detail="factory_code is required")
+    if not payload.rounds:
+        raise HTTPException(status_code=400, detail="rounds array cannot be empty")
+
+    try:
+        if payload.overwrite:
+            execute_d1_query("DELETE FROM rounds WHERE factory_code = ?;", [factory])
+
+        inserted_count = 0
+        for r in payload.rounds:
+            round_id = f"rnd-{factory}-{r.round_number}"
+            upsert_sql = """
+            INSERT INTO rounds (id, factory_code, round_number, start_time, end_time, scan_start_time, scan_end_time)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+                start_time = excluded.start_time,
+                end_time = excluded.end_time,
+                scan_start_time = excluded.scan_start_time,
+                scan_end_time = excluded.scan_end_time;
+            """
+            execute_d1_query(upsert_sql, [
+                round_id,
+                factory,
+                r.round_number,
+                r.start_time,
+                r.end_time,
+                r.scan_start_time,
+                r.scan_end_time
+            ])
+            inserted_count += 1
+
+        return {
+            "success": True,
+            "message": f"Successfully created/updated {inserted_count} rounds for factory {factory}",
+            "factory_code": factory,
+            "count": inserted_count
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to batch create rounds: {str(e)}")
+
+@router.post("/copy", status_code=status.HTTP_201_CREATED)
+def copy_rounds_from_factory(payload: CopyRoundsRequest):
+    """
+    Copy all round timetables from one factory to another.
+    """
+    source = payload.source_factory_code
+    target = payload.target_factory_code
+
+    if not source or not target:
+        raise HTTPException(status_code=400, detail="Both source_factory_code and target_factory_code are required")
+    if source == target:
+        raise HTTPException(status_code=400, detail="Source and target factories cannot be the same")
+
+    try:
+        source_sql = """
+        SELECT round_number, start_time, end_time, scan_start_time, scan_end_time 
+        FROM rounds 
+        WHERE factory_code = ? 
+        ORDER BY round_number ASC;
+        """
+        source_rounds = execute_d1_query(source_sql, [source])
+        if not source_rounds:
+            raise HTTPException(status_code=404, detail=f"No rounds found configured for source factory {source}")
+
+        if payload.overwrite:
+            execute_d1_query("DELETE FROM rounds WHERE factory_code = ?;", [target])
+
+        copied_count = 0
+        for r in source_rounds:
+            round_id = f"rnd-{target}-{r['round_number']}"
+            upsert_sql = """
+            INSERT INTO rounds (id, factory_code, round_number, start_time, end_time, scan_start_time, scan_end_time)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+                start_time = excluded.start_time,
+                end_time = excluded.end_time,
+                scan_start_time = excluded.scan_start_time,
+                scan_end_time = excluded.scan_end_time;
+            """
+            execute_d1_query(upsert_sql, [
+                round_id,
+                target,
+                r['round_number'],
+                r['start_time'],
+                r['end_time'],
+                r.get('scan_start_time'),
+                r.get('scan_end_time')
+            ])
+            copied_count += 1
+
+        return {
+            "success": True,
+            "message": f"Successfully cloned {copied_count} rounds from {source} to {target}",
+            "source_factory": source,
+            "target_factory": target,
+            "count": copied_count
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to copy rounds: {str(e)}")
 
 @router.get("/{round_id}", response_model=PatrolRoundResponse)
 def get_round(round_id: str):

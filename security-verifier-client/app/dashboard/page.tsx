@@ -7,7 +7,24 @@ import { GlassCard } from '@/app/components/ui/GlassCard'
 import { PageLoadingSpinner } from '@/app/components/ui/LoadingSpinner'
 import { motion } from 'framer-motion'
 import { containerVariants, itemVariants } from '@/lib/animations'
-import { LayoutDashboard } from 'lucide-react'
+import {
+  LayoutDashboard,
+  Sun,
+  Moon,
+  Zap,
+  ShieldAlert,
+  ShieldCheck,
+  CheckCircle2,
+  AlertTriangle,
+  Building2,
+  ArrowRight,
+  Clock,
+  Users,
+  RefreshCw,
+  Flame,
+  ChevronDown,
+  ChevronUp
+} from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import {
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend,
@@ -25,13 +42,41 @@ import { useFactory } from '@/app/context/FactoryContext'
 ================================================================ */
 type Factory = { factory_code: string; factory_name: string }
 
+export interface SpeedAnomalyItem {
+  round: number;
+  guard: string;
+  scansCount: number;
+  durationSec: number;
+  avgSecPerScan: number;
+  minGapSec: number;
+  scanDetails: string[];
+}
+
+export interface ShiftStats {
+  completed: number;
+  missed: number;
+  total: number;
+  rate: number;
+  guards: string[];
+  missedRounds: number[];
+}
+
 type DashboardStats = {
   total: number; completed: number; missed: number; pending: number; rate: number
   lastScan: string | null
+  pie: { name: string; value: number; color: string }[]
   roundSummary: { round: string; completed: number; missed: number }[]
   guardLeaderboard: { name: string; scanned: number; missed: number; total: number }[]
   coverageByPoint: { name: string; done: number; total: number }[]
+  hourlyActivity: { hour: string; scans: number }[]
   recentActivity: PatrolReportItem[]
+  isPartialDay: boolean
+  nothingScannedToday: boolean
+  speedAnomalies: SpeedAnomalyItem[]
+  shifts: {
+    day: ShiftStats;
+    night: ShiftStats;
+  }
 }
 
 /* ================================================================
@@ -84,38 +129,68 @@ function exportDashboardPDF(
 
     let y = 68
 
-    // ========== SUMMARY STATS ==========
+    // ========== SUMMARY STATS & SHIFT BREAKDOWN ==========
     doc.setFont('times', 'bold')
     doc.setFontSize(13)
     doc.setTextColor(0, 0, 150)
-    doc.text('Summary Statistics', 14, y)
+    doc.text('Patrol Summary & Shift Accountability', 14, y)
     y += 6
+
+    const dayShift = statsData.shifts?.day
+    const nightShift = statsData.shifts?.night
 
     autoTable(doc, {
       startY: y,
-      head: [['Metric', 'Value']],
+      head: [['Metric', 'Overall Day', 'Day Shift (06:00 - 18:00)', 'Night Shift (18:00 - 06:00)']],
       body: [
-        ['Total Effective Scans', String(statsData.total)],
-        ['Completed', `${statsData.completed} (${statsData.rate}%)`],
-        ['Missed', String(statsData.missed)],
-        ['Pending (Not Due)', String(statsData.pending)],
-        ['Last Scan Time', statsData.lastScan ? new Date(statsData.lastScan).toLocaleTimeString('en-IN') : '—'],
+        ['Effective Scans', String(statsData.total), String(dayShift?.total || 0), String(nightShift?.total || 0)],
+        ['Completed Scans', `${statsData.completed} (${statsData.rate}%)`, `${dayShift?.completed || 0} (${dayShift?.rate || 0}%)`, `${nightShift?.completed || 0} (${nightShift?.rate || 0}%)`],
+        ['Missed Scans', String(statsData.missed), String(dayShift?.missed || 0), String(nightShift?.missed || 0)],
+        ['On-Duty Guards', '—', dayShift?.guards?.length ? dayShift.guards.join(', ') : 'None', nightShift?.guards?.length ? nightShift.guards.join(', ') : 'None'],
+        ['Missed Rounds', '—', dayShift?.missedRounds?.length ? `Rounds: ${dayShift.missedRounds.join(', ')}` : 'None', nightShift?.missedRounds?.length ? `Rounds: ${nightShift.missedRounds.join(', ')}` : 'None'],
       ],
       theme: 'grid',
-      styles: { font: 'times', fontSize: 10, cellPadding: 3 },
+      styles: { font: 'times', fontSize: 9, cellPadding: 2.5 },
       headStyles: { fillColor: [0, 70, 160], textColor: 255, fontStyle: 'bold' },
       alternateRowStyles: { fillColor: [245, 248, 255] },
-      columnStyles: { 0: { fontStyle: 'bold', cellWidth: 80 } },
+      columnStyles: { 0: { fontStyle: 'bold', cellWidth: 42 } },
       didParseCell: (data) => {
-        if (data.section === 'body' && data.column.index === 1) {
-          if (data.row.index === 1) data.cell.styles.textColor = [0, 150, 0]
-          if (data.row.index === 2) data.cell.styles.textColor = [200, 0, 0]
-          if (data.row.index === 3) data.cell.styles.textColor = [150, 120, 0]
+        if (data.section === 'body') {
+          if (data.row.index === 1 && data.column.index > 0) data.cell.styles.textColor = [0, 130, 0]
+          if (data.row.index === 2 && Number(data.cell.raw) > 0) data.cell.styles.textColor = [200, 0, 0]
         }
       },
       didDrawPage: () => drawBorder(),
     })
-    y = (doc as any).lastAutoTable.finalY + 12
+    y = (doc as any).lastAutoTable.finalY + 10
+
+    // ========== SPEED ANOMALIES (INTEGRITY CHECK) ==========
+    if (statsData.speedAnomalies && statsData.speedAnomalies.length > 0) {
+      if (y > h - 45) { doc.addPage(); drawBorder(); y = 20 }
+      doc.setFont('times', 'bold')
+      doc.setFontSize(11)
+      doc.setTextColor(200, 0, 0)
+      doc.text(`[WARNING] ${statsData.speedAnomalies.length} Rapid Pacing / Potential Paper QR Scan Anomalies Detected`, 14, y)
+      y += 5
+
+      autoTable(doc, {
+        startY: y,
+        head: [['Round', 'Guard', 'Checkpoints', 'Elapsed Time', 'Pacing Rate', 'Flag']],
+        body: statsData.speedAnomalies.map(a => [
+          `Round ${a.round}`,
+          a.guard,
+          `${a.scansCount} checkpoints`,
+          `${a.durationSec}s total`,
+          `${a.avgSecPerScan}s/checkpoint`,
+          'Speed Anomaly (Impossible Walking Pace)',
+        ]),
+        theme: 'grid',
+        styles: { font: 'times', fontSize: 8, cellPadding: 2, halign: 'center' },
+        headStyles: { fillColor: [180, 20, 20], textColor: 255, fontStyle: 'bold' },
+        didDrawPage: () => drawBorder(),
+      })
+      y = (doc as any).lastAutoTable.finalY + 10
+    }
 
     // ========== ROUND-BY-ROUND ==========
     if (statsData.roundSummary.length > 0) {
@@ -367,6 +442,19 @@ export default function DashboardPage() {
   const [loading, setLoading]                 = useState(false)
   const [lastUpdated, setLastUpdated]         = useState('')
 
+  // Multi-Factory Overview State
+  const [showMultiFactory, setShowMultiFactory] = useState(false)
+  const [isMultiFactoryLoading, setIsMultiFactoryLoading] = useState(false)
+  const [multiFactoryOverview, setMultiFactoryOverview] = useState<Array<{
+    factory_code: string;
+    factory_name: string;
+    total: number;
+    completed: number;
+    missed: number;
+    rate: number;
+    lastScan: string | null;
+  }>>([])
+
   /* auth check */
   useEffect(() => {
     if (authorized) {
@@ -384,36 +472,73 @@ export default function DashboardPage() {
       .finally(() => setLoading(false))
   }, [selectedFactory, selectedDate, authorized])
 
-  const pollReport = useCallback(() => {
-    if (!authorized || !selectedFactory || !selectedDate) return
-    getPatrolReport(selectedFactory, selectedDate)
-      .then(data => { setReport(data); setLastUpdated(new Date().toLocaleTimeString()) })
-      .catch(() => {})
-  }, [selectedFactory, selectedDate, authorized])
-
   /* auto-fetch when factory/date changes */
   useEffect(() => {
     fetchReport()
   }, [fetchReport])
 
-  /* auto-poll every 30 seconds for live updates only when window/tab is visible */
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
-        pollReport()
-      }
-    }, 30000)
-    return () => clearInterval(interval)
-  }, [pollReport])
+  // On-demand load all factories overview
+  const handleLoadAllFactories = async () => {
+    try {
+      setIsMultiFactoryLoading(true)
+      setShowMultiFactory(true)
+      const results = await Promise.allSettled(
+        factories.map(async (f) => {
+          const data = await getPatrolReport(f.factory_code, selectedDate)
+          const completed = data.filter((r) => r.status === 'SUCCESS').length
+          const total = data.length
+          const missed = data.filter((r) => r.status !== 'SUCCESS').length
+          const rate = total ? Math.round((completed / total) * 100) : 0
+          const scanTimes = data.filter((r) => r.scan_time).map((r) => r.scan_time as string).sort()
+          const lastScan = scanTimes.length ? scanTimes[scanTimes.length - 1] : null
+          return {
+            factory_code: f.factory_code,
+            factory_name: f.factory_name,
+            total,
+            completed,
+            missed,
+            rate,
+            lastScan,
+          }
+        })
+      )
+
+      const overviewList = results.map((res, idx) => {
+        if (res.status === 'fulfilled') {
+          return res.value
+        }
+        return {
+          factory_code: factories[idx].factory_code,
+          factory_name: factories[idx].factory_name,
+          total: 0,
+          completed: 0,
+          missed: 0,
+          rate: 0,
+          lastScan: null,
+        }
+      })
+
+      setMultiFactoryOverview(overviewList)
+    } catch (err) {
+      console.error('Failed to load multi-factory overview:', err)
+    } finally {
+      setIsMultiFactoryLoading(false)
+    }
+  }
 
   /* ================================================================
      COMPUTED STATS (time-aware)
   ================================================================ */
   const stats = useMemo(() => {
-    const empty = {
+    const empty: DashboardStats = {
       total: 0, completed: 0, missed: 0, pending: 0, rate: 0, lastScan: null as string | null,
       pie: [], roundSummary: [], guardLeaderboard: [], coverageByPoint: [],
-      hourlyActivity: [], recentActivity: [], isPartialDay: false, nothingScannedToday: false
+      hourlyActivity: [], recentActivity: [], isPartialDay: false, nothingScannedToday: false,
+      speedAnomalies: [],
+      shifts: {
+        day: { completed: 0, missed: 0, total: 0, rate: 0, guards: [], missedRounds: [] },
+        night: { completed: 0, missed: 0, total: 0, rate: 0, guards: [], missedRounds: [] },
+      },
     }
     if (!report.length) return empty
 
@@ -566,10 +691,92 @@ export default function DashboardPage() {
       .sort((a, b) => (b.scan_time || '').localeCompare(a.scan_time || ''))
       .slice(0, 10)
 
+    /* ── SHIFT BREAKDOWN (Day Shift: 06:00 - 18:00 | Night Shift: 18:00 - 06:00) ── */
+    // Rounds 1-16 are Day Shift (06:00 to 18:00); Rounds 17+ are Night Shift
+    const isDayRound = (rnd: number) => rnd <= 16
+
+    const dayItems = effective.filter(r => isDayRound(r.round))
+    const nightItems = effective.filter(r => !isDayRound(r.round))
+
+    const dayCompleted = dayItems.filter(r => r.status === 'SUCCESS').length
+    const dayMissed = dayItems.filter(r => r.status !== 'SUCCESS').length
+    const dayTotal = dayCompleted + dayMissed
+    const dayRate = dayTotal ? Math.round((dayCompleted / dayTotal) * 100) : 0
+    const dayGuards = [...new Set(dayItems.filter(r => r.status === 'SUCCESS' && r.guard_name).map(r => r.guard_name as string))]
+    const dayMissedRounds = [...new Set(dayItems.filter(r => r.status !== 'SUCCESS').map(r => r.round))].sort((a, b) => a - b)
+
+    const nightCompleted = nightItems.filter(r => r.status === 'SUCCESS').length
+    const nightMissed = nightItems.filter(r => r.status !== 'SUCCESS').length
+    const nightTotal = nightCompleted + nightMissed
+    const nightRate = nightTotal ? Math.round((nightCompleted / nightTotal) * 100) : 0
+    const nightGuards = [...new Set(nightItems.filter(r => r.status === 'SUCCESS' && r.guard_name).map(r => r.guard_name as string))]
+    const nightMissedRounds = [...new Set(nightItems.filter(r => r.status !== 'SUCCESS').map(r => r.round))].sort((a, b) => a - b)
+
+    const shifts = {
+      day: {
+        completed: dayCompleted,
+        missed: dayMissed,
+        total: dayTotal,
+        rate: dayRate,
+        guards: dayGuards,
+        missedRounds: dayMissedRounds,
+      },
+      night: {
+        completed: nightCompleted,
+        missed: nightMissed,
+        total: nightTotal,
+        rate: nightRate,
+        guards: nightGuards,
+        missedRounds: nightMissedRounds,
+      },
+    }
+
+    /* ── SPEED & ANOMALY DETECTION (Paper QR Rapid Scanning) ── */
+    const speedAnomalies: SpeedAnomalyItem[] = []
+
+    roundNums.forEach(rnd => {
+      const successfulScans = effective
+        .filter(r => r.round === rnd && r.status === 'SUCCESS' && r.scan_time)
+        .sort((a, b) => new Date(a.scan_time!).getTime() - new Date(b.scan_time!).getTime())
+
+      if (successfulScans.length >= 2) {
+        const firstTime = new Date(successfulScans[0].scan_time!).getTime()
+        const lastTime = new Date(successfulScans[successfulScans.length - 1].scan_time!).getTime()
+        const totalDurationSec = Math.max(1, Math.round((lastTime - firstTime) / 1000))
+
+        let minGap = 999999
+        for (let i = 1; i < successfulScans.length; i++) {
+          const tPrev = new Date(successfulScans[i - 1].scan_time!).getTime()
+          const tCurr = new Date(successfulScans[i].scan_time!).getTime()
+          const gap = Math.round((tCurr - tPrev) / 1000)
+          if (gap < minGap) minGap = gap
+        }
+
+        // Flag criteria:
+        // 1. Any consecutive scans <= 10 seconds between checkpoints
+        // 2. 5 or more checkpoints scanned in <= 60 seconds (physically impossible walking pace)
+        const isAnomaly = (minGap <= 10 && successfulScans.length >= 3) || 
+                          (successfulScans.length >= 5 && totalDurationSec <= 60)
+
+        if (isAnomaly) {
+          speedAnomalies.push({
+            round: rnd,
+            guard: successfulScans[0].guard_name || 'Assigned Guard',
+            scansCount: successfulScans.length,
+            durationSec: totalDurationSec,
+            avgSecPerScan: Math.round(totalDurationSec / (successfulScans.length - 1)),
+            minGapSec: minGap,
+            scanDetails: successfulScans.map(s => `${s.qr_name} (${s.scan_time?.slice(11, 19)})`),
+          })
+        }
+      }
+    })
+
     return {
       total, completed, missed, pending, rate, lastScan, pie, roundSummary,
       guardLeaderboard, coverageByPoint, hourlyActivity, recentActivity,
       isPartialDay, nothingScannedToday,
+      speedAnomalies, shifts,
     }
   }, [report, selectedDate, today])
 
@@ -625,7 +832,27 @@ export default function DashboardPage() {
                 : '📊 Load'}
             </button>
 
-
+            {/* Multi-Factory Overview Toggle */}
+            <button
+              onClick={() => {
+                if (!showMultiFactory && multiFactoryOverview.length === 0) {
+                  handleLoadAllFactories()
+                } else {
+                  setShowMultiFactory(!showMultiFactory)
+                }
+              }}
+              disabled={isMultiFactoryLoading}
+              className={`border font-semibold px-4 py-2.5 rounded-lg flex items-center gap-2 text-sm transition-all ${
+                showMultiFactory
+                  ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
+                  : 'border-indigo-200 bg-indigo-50/70 hover:bg-indigo-100 text-indigo-700'
+              }`}
+              title="Compare all 5 factory locations side-by-side"
+            >
+              <Building2 className="w-4 h-4" />
+              {isMultiFactoryLoading ? 'Fetching Sites…' : '🏢 All Factories at a Glance'}
+              {showMultiFactory ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1" />}
+            </button>
 
             {/* Export Analytics PDF */}
             {report.length > 0 && (
@@ -649,6 +876,107 @@ export default function DashboardPage() {
             )}
           </div>
         </div>
+
+        {/* ── MULTI-FACTORY EXECUTIVE OVERVIEW ── */}
+        {showMultiFactory && (
+          <div className="glass-surface rounded-2xl p-5 sm:p-6 mb-6 border border-indigo-500/20 shadow-lg">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-3 mb-4 border-b border-[var(--border)] gap-2">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-600">
+                  <Building2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-[var(--foreground)]">Executive Multi-Factory Overview (Date: {selectedDate})</h2>
+                  <p className="text-xs text-[var(--foreground-muted)]">Instant performance comparison across all 5 company locations</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 self-end sm:self-auto">
+                <button
+                  onClick={handleLoadAllFactories}
+                  disabled={isMultiFactoryLoading}
+                  className="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold py-1.5 px-3 rounded-lg text-xs flex items-center gap-1.5 border border-indigo-200 transition-colors"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isMultiFactoryLoading ? 'animate-spin' : ''}`} />
+                  Refresh All Sites
+                </button>
+                <button
+                  onClick={() => setShowMultiFactory(false)}
+                  className="p-1.5 rounded-lg text-[var(--foreground-subtle)] hover:text-[var(--foreground)] hover:bg-[var(--surface-muted)] transition-colors"
+                  title="Close overview"
+                >
+                  <ChevronUp className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {isMultiFactoryLoading && multiFactoryOverview.length === 0 ? (
+              <div className="py-8 flex items-center justify-center gap-2 text-sm text-[var(--foreground-muted)]">
+                <RefreshCw className="w-4 h-4 animate-spin text-[var(--primary)]" />
+                Fetching status for all factories...
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3.5">
+                {multiFactoryOverview.map((item) => {
+                  const isCurrent = item.factory_code === selectedFactory
+                  const statusColor = item.rate >= 90 ? 'text-emerald-600' : item.rate >= 60 ? 'text-amber-500' : 'text-rose-600'
+                  const barColor = item.rate >= 90 ? 'bg-emerald-500' : item.rate >= 60 ? 'bg-amber-400' : 'bg-rose-500'
+
+                  return (
+                    <div
+                      key={item.factory_code}
+                      className={`p-4 rounded-xl border transition-all ${
+                        isCurrent
+                          ? 'bg-indigo-50/50 dark:bg-indigo-950/20 border-indigo-500/50 shadow-sm ring-1 ring-indigo-500/30'
+                          : 'bg-[var(--surface)] border-[var(--border)] hover:border-slate-300'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-1">
+                        <div>
+                          <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300">
+                            {item.factory_code}
+                          </span>
+                          <p className="text-xs font-semibold text-[var(--foreground)] mt-1.5 truncate max-w-[140px]" title={item.factory_name}>
+                            {item.factory_name}
+                          </p>
+                        </div>
+                        <span className={`text-lg font-extrabold ${statusColor}`}>
+                          {item.rate}%
+                        </span>
+                      </div>
+
+                      {/* Progress Bar */}
+                      <div className="mt-3 h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                        <div className={`h-full ${barColor} rounded-full transition-all`} style={{ width: `${item.rate}%` }} />
+                      </div>
+
+                      {/* Metrics */}
+                      <div className="mt-2.5 flex items-center justify-between text-[11px] text-[var(--foreground-muted)] font-mono">
+                        <span>Done: <strong className="text-[var(--foreground)]">{item.completed}</strong></span>
+                        <span>Missed: <strong className={item.missed > 0 ? 'text-rose-600' : 'text-slate-400'}>{item.missed}</strong></span>
+                      </div>
+
+                      {/* Switch button */}
+                      <button
+                        onClick={() => {
+                          setSelectedFactory(item.factory_code)
+                          window.scrollTo({ top: 0, behavior: 'smooth' })
+                        }}
+                        disabled={isCurrent}
+                        className={`mt-3 w-full py-1.5 px-2.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1 transition-all ${
+                          isCurrent
+                            ? 'bg-indigo-600 text-white font-bold cursor-default shadow-xs'
+                            : 'bg-[var(--surface-muted)] text-[var(--foreground)] hover:bg-indigo-50 hover:text-indigo-600 border border-[var(--border)]'
+                        }`}
+                      >
+                        {isCurrent ? 'Active Location' : <>Switch Site <ArrowRight className="w-3 h-3" /></>}
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* ── DASHBOARD CONTENT (captured for PDF) ── */}
         <div ref={dashboardContentRef}>
@@ -727,6 +1055,179 @@ export default function DashboardPage() {
                 Showing only rounds due so far. <strong>{stats.pending ?? 0}</strong> future rounds excluded from missed count.
               </p>
             </div>
+          </div>
+        )}
+
+        {/* ── SHIFT ACCOUNTABILITY CARDS (DAY VS NIGHT) ── */}
+        {report.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+            {/* Day Shift */}
+            <div className="glass-surface rounded-2xl p-5 border border-amber-500/20 shadow-xs relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/5 rounded-full blur-2xl pointer-events-none" />
+              <div className="flex items-center justify-between pb-3 border-b border-[var(--border)]">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
+                    <Sun className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-[var(--foreground)]">Day Shift Patrol</h3>
+                    <p className="text-xs text-[var(--foreground-muted)]">06:00 AM – 06:00 PM · Rounds 01 to 16</p>
+                  </div>
+                </div>
+                <span className={`text-xl font-extrabold ${stats.shifts.day.rate >= 90 ? 'text-emerald-600' : stats.shifts.day.rate >= 60 ? 'text-amber-500' : 'text-rose-600'}`}>
+                  {stats.shifts.day.rate}%
+                </span>
+              </div>
+
+              {/* Progress */}
+              <div className="mt-3.5 h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-700 ${stats.shifts.day.rate >= 90 ? 'bg-emerald-500' : stats.shifts.day.rate >= 60 ? 'bg-amber-400' : 'bg-rose-500'}`}
+                  style={{ width: `${stats.shifts.day.rate}%` }}
+                />
+              </div>
+
+              {/* Counts */}
+              <div className="mt-3 flex items-center justify-between text-xs text-[var(--foreground-muted)]">
+                <span>Completed: <strong className="text-emerald-600 font-bold">{stats.shifts.day.completed}</strong> / {stats.shifts.day.total}</span>
+                <span>Missed: <strong className={stats.shifts.day.missed > 0 ? 'text-rose-600 font-bold' : 'text-slate-400'}>{stats.shifts.day.missed}</strong></span>
+              </div>
+
+              {/* Guard on duty */}
+              <div className="mt-3 pt-2.5 border-t border-[var(--border)] text-xs">
+                <p className="text-[11px] font-semibold text-[var(--foreground-subtle)] uppercase tracking-wider mb-1">Guards on Duty:</p>
+                {stats.shifts.day.guards.length > 0 ? (
+                  <div className="flex flex-wrap gap-1.5">
+                    {stats.shifts.day.guards.map((g) => (
+                      <span key={g} className="px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-800 dark:text-amber-200 font-medium text-[11px]">
+                        {g}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <span className="text-[var(--foreground-subtle)] italic">No scans recorded for Day Shift yet</span>
+                )}
+
+                {/* Missed Rounds if any */}
+                {stats.shifts.day.missedRounds.length > 0 && (
+                  <div className="mt-2 text-[11px] text-rose-600 dark:text-rose-400 font-medium">
+                    ⚠️ Missed Rounds: {stats.shifts.day.missedRounds.map((r) => `R${String(r).padStart(2, '0')}`).join(', ')}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Night Shift */}
+            <div className="glass-surface rounded-2xl p-5 border border-indigo-500/20 shadow-xs relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-indigo-500/5 rounded-full blur-2xl pointer-events-none" />
+              <div className="flex items-center justify-between pb-3 border-b border-[var(--border)]">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+                    <Moon className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-[var(--foreground)]">Night Shift Patrol</h3>
+                    <p className="text-xs text-[var(--foreground-muted)]">06:00 PM – 06:00 AM · Rounds 17 onwards</p>
+                  </div>
+                </div>
+                <span className={`text-xl font-extrabold ${stats.shifts.night.rate >= 90 ? 'text-emerald-600' : stats.shifts.night.rate >= 60 ? 'text-amber-500' : 'text-rose-600'}`}>
+                  {stats.shifts.night.rate}%
+                </span>
+              </div>
+
+              {/* Progress */}
+              <div className="mt-3.5 h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-700 ${stats.shifts.night.rate >= 90 ? 'bg-emerald-500' : stats.shifts.night.rate >= 60 ? 'bg-amber-400' : 'bg-rose-500'}`}
+                  style={{ width: `${stats.shifts.night.rate}%` }}
+                />
+              </div>
+
+              {/* Counts */}
+              <div className="mt-3 flex items-center justify-between text-xs text-[var(--foreground-muted)]">
+                <span>Completed: <strong className="text-emerald-600 font-bold">{stats.shifts.night.completed}</strong> / {stats.shifts.night.total}</span>
+                <span>Missed: <strong className={stats.shifts.night.missed > 0 ? 'text-rose-600 font-bold' : 'text-slate-400'}>{stats.shifts.night.missed}</strong></span>
+              </div>
+
+              {/* Guard on duty */}
+              <div className="mt-3 pt-2.5 border-t border-[var(--border)] text-xs">
+                <p className="text-[11px] font-semibold text-[var(--foreground-subtle)] uppercase tracking-wider mb-1">Guards on Duty:</p>
+                {stats.shifts.night.guards.length > 0 ? (
+                  <div className="flex flex-wrap gap-1.5">
+                    {stats.shifts.night.guards.map((g) => (
+                      <span key={g} className="px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 text-indigo-800 dark:text-indigo-200 font-medium text-[11px]">
+                        {g}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <span className="text-[var(--foreground-subtle)] italic">No scans recorded for Night Shift yet</span>
+                )}
+
+                {/* Missed Rounds if any */}
+                {stats.shifts.night.missedRounds.length > 0 && (
+                  <div className="mt-2 text-[11px] text-rose-600 dark:text-rose-400 font-medium">
+                    ⚠️ Missed Rounds: {stats.shifts.night.missedRounds.map((r) => `R${String(r).padStart(2, '0')}`).join(', ')}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── PATROL INTEGRITY & SPEED ANOMALY MONITOR ── */}
+        {report.length > 0 && stats.speedAnomalies.length > 0 && (
+          <div className="mb-6 rounded-2xl border border-rose-300 dark:border-rose-900 bg-rose-50/70 dark:bg-rose-950/30 p-5 shadow-sm">
+            <div className="flex items-start gap-3">
+              <div className="p-2 rounded-xl bg-rose-100 dark:bg-rose-900/50 text-rose-600 shrink-0 mt-0.5">
+                <ShieldAlert className="w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="text-sm font-bold text-rose-900 dark:text-rose-200">
+                    ⚡ Rapid Scan / Paper QR Anomalies Detected ({stats.speedAnomalies.length} round{stats.speedAnomalies.length > 1 ? 's' : ''})
+                  </h3>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-200 dark:bg-rose-800 text-rose-900 dark:text-rose-100 uppercase tracking-wider">
+                    Integrity Warning
+                  </span>
+                </div>
+                <p className="text-xs text-rose-700 dark:text-rose-300 mt-0.5">
+                  Checkpoints were scanned at an impossible walking speed (&le; 10s gap). Possible fraud: scanning printed paper QR stickers from one position.
+                </p>
+
+                <div className="mt-3 space-y-2">
+                  {stats.speedAnomalies.map((item) => (
+                    <div
+                      key={item.round}
+                      className="p-3 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-rose-200 dark:border-rose-900/60 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 font-mono"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="px-2 py-0.5 rounded bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300 font-bold">
+                          Round {String(item.round).padStart(2, '0')}
+                        </span>
+                        <span className="text-[var(--foreground)] font-sans font-semibold">{item.guard}</span>
+                      </div>
+
+                      <div className="flex items-center gap-3 text-[11px] text-[var(--foreground-muted)]">
+                        <span>{item.scansCount} checkpoints in <strong className="text-rose-600 font-bold">{item.durationSec}s</strong></span>
+                        <span>Avg: <strong className="text-rose-600">{item.avgSecPerScan}s</strong>/point</span>
+                        <span>Min gap: <strong className="text-rose-600">{item.minGapSec}s</strong></span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {report.length > 0 && stats.speedAnomalies.length === 0 && (
+          <div className="mb-6 flex items-center justify-between gap-2 px-4 py-2.5 rounded-xl border border-emerald-200 dark:border-emerald-900/50 bg-emerald-50/50 dark:bg-emerald-950/20 text-xs text-emerald-800 dark:text-emerald-300">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span><strong>Patrol Pacing Verified:</strong> All checkpoints scanned at standard physical walking intervals. Zero paper QR speed anomalies detected.</span>
+            </div>
+            <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-200 shrink-0">100% Validated</span>
           </div>
         )}
 

@@ -20,7 +20,9 @@ import {
   CalendarDays,
   Smartphone,
   LockKeyhole,
-  Building2
+  Building2,
+  Zap,
+  Copy
 } from 'lucide-react';
 
 import { useAuthGuard } from '@/app/services/auth.guard';
@@ -30,7 +32,9 @@ import {
   getRounds,
   createRound,
   updateRound,
-  deleteRound
+  deleteRound,
+  createBatchRounds,
+  copyRoundsFromFactory,
 } from '@/app/api/rounds.api';
 import { getFactories } from '@/app/api/factories.api';
 import {
@@ -79,6 +83,21 @@ export default function RoundsCrudPage() {
 
   // Delete Confirmation state
   const [deleteConfirmRound, setDeleteConfirmRound] = useState<PatrolRound | null>(null);
+
+  // 1-Click Generator state
+  const [isGeneratorModalOpen, setIsGeneratorModalOpen] = useState(false);
+  const [genStartHour, setGenStartHour] = useState('06:00');
+  const [genIntervalMinutes, setGenIntervalMinutes] = useState(45);
+  const [genDurationMinutes, setGenDurationMinutes] = useState(25);
+  const [genTotalRounds, setGenTotalRounds] = useState(32);
+  const [genOverwrite, setGenOverwrite] = useState(true);
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  // Copy from Factory state
+  const [isCopyModalOpen, setIsCopyModalOpen] = useState(false);
+  const [copySourceFactory, setCopySourceFactory] = useState('');
+  const [copyOverwrite, setCopyOverwrite] = useState(true);
+  const [isCopying, setIsCopying] = useState(false);
 
   // Notification state
   const [notification, setNotification] = useState<{
@@ -298,6 +317,87 @@ export default function RoundsCrudPage() {
     }
   };
 
+  // 1-Click Generator Preview Calculation
+  const generatedSchedulePreview = useMemo(() => {
+    const list: Array<{
+      round_number: number;
+      start_time: string;
+      end_time: string;
+      scan_start_time: string;
+      scan_end_time: string;
+    }> = [];
+
+    const [startH, startM] = (genStartHour || '06:00').split(':').map(Number);
+    const baseDate = new Date();
+    baseDate.setHours(isNaN(startH) ? 6 : startH, isNaN(startM) ? 0 : startM, 0, 0);
+
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const toHHmm = (d: Date) => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+
+    const total = Math.min(Math.max(1, genTotalRounds || 24), 48);
+    const interval = Math.max(10, genIntervalMinutes || 45);
+    const duration = Math.max(5, genDurationMinutes || 25);
+
+    for (let i = 0; i < total; i++) {
+      const roundStart = new Date(baseDate.getTime() + i * interval * 60000);
+      const roundEnd = new Date(roundStart.getTime() + interval * 60000);
+      
+      // Default scan window: opens 5 mins before round ends, duration configured
+      const scanStart = new Date(roundEnd.getTime() - 5 * 60000);
+      const scanEnd = new Date(scanStart.getTime() + duration * 60000);
+
+      list.push({
+        round_number: i + 1,
+        start_time: toHHmm(roundStart),
+        end_time: toHHmm(roundEnd),
+        scan_start_time: toHHmm(scanStart),
+        scan_end_time: toHHmm(scanEnd),
+      });
+    }
+
+    return list;
+  }, [genStartHour, genIntervalMinutes, genDurationMinutes, genTotalRounds]);
+
+  // Execute 1-Click Schedule Generation
+  const handleExecuteGenerator = async () => {
+    try {
+      setIsGenerating(true);
+      const payload = generatedSchedulePreview.map((r) => ({
+        factory_code: selectedFactory,
+        ...r,
+      }));
+      const result = await createBatchRounds(selectedFactory, payload, genOverwrite);
+      showNotification('success', result.message || `Successfully generated ${payload.length} rounds.`);
+      setIsGeneratorModalOpen(false);
+      await loadRounds(selectedFactory);
+    } catch (err: any) {
+      console.error('Error generating schedule:', err);
+      showNotification('error', err.message || 'Failed to auto-generate rounds schedule.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  // Execute Copy from Factory
+  const handleExecuteCopy = async () => {
+    if (!copySourceFactory) {
+      showNotification('error', 'Please choose a source factory to copy from.');
+      return;
+    }
+    try {
+      setIsCopying(true);
+      const result = await copyRoundsFromFactory(copySourceFactory, selectedFactory, copyOverwrite);
+      showNotification('success', result.message || `Copied ${result.count} rounds to ${selectedFactory}.`);
+      setIsCopyModalOpen(false);
+      await loadRounds(selectedFactory);
+    } catch (err: any) {
+      console.error('Error copying rounds:', err);
+      showNotification('error', err.message || 'Failed to copy rounds between factories.');
+    } finally {
+      setIsCopying(false);
+    }
+  };
+
   if (!authorized) {
     return (
       <PageTransition>
@@ -368,6 +468,36 @@ export default function RoundsCrudPage() {
                   <FileDown className="h-4 w-4 text-[var(--primary)]" />
                 )}
                 Export PDF
+              </motion.button>
+
+              {/* ⚡ 1-Click Generator */}
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                onClick={() => setIsGeneratorModalOpen(true)}
+                className="btn-secondary text-[var(--primary)] font-semibold border-[var(--primary)]/30 hover:border-[var(--primary)]"
+                title="Automatically generate a 24-hour round timetable with customizable intervals"
+              >
+                <Zap className="h-4 w-4 text-amber-500 fill-amber-500/20" />
+                Auto-Generate Schedule
+              </motion.button>
+
+              {/* 📋 Copy From Factory */}
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                onClick={() => {
+                  const otherFactory = factories.find((f) => f.factory_code !== selectedFactory);
+                  setCopySourceFactory(otherFactory ? otherFactory.factory_code : '');
+                  setIsCopyModalOpen(true);
+                }}
+                className="btn-secondary"
+                title="Clone round schedule from another factory"
+              >
+                <Copy className="h-4 w-4 text-[var(--foreground-muted)]" />
+                Copy from Factory
               </motion.button>
 
               <motion.button
@@ -832,6 +962,356 @@ export default function RoundsCrudPage() {
                       className="btn-primary !bg-rose-600 hover:!bg-rose-700 !shadow-rose-600/20"
                     >
                       Confirm Delete
+                    </button>
+                  </div>
+                </motion.div>
+              </div>
+            )}
+          </AnimatePresence>
+
+          {/* ──────────────── MODAL: 1-Click Schedule Generator ──────────────── */}
+          <AnimatePresence>
+            {isGeneratorModalOpen && (
+              <div className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center p-4">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setIsGeneratorModalOpen(false)}
+                  className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                />
+
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                  className="relative w-full max-w-2xl rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-6 sm:p-7 shadow-2xl z-10 max-h-[92vh] overflow-y-auto"
+                >
+                  <div className="flex items-center justify-between pb-4 border-b border-[var(--border)]">
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-2 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                        <Zap className="w-5 h-5 fill-amber-500/20" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold text-[var(--foreground)]">
+                          1-Click Schedule Generator
+                        </h3>
+                        <p className="text-xs text-[var(--foreground-muted)] flex items-center gap-1 mt-0.5">
+                          <Building2 className="w-3.5 h-3.5 text-[var(--primary)]" />
+                          Target Factory: <span className="font-semibold text-[var(--foreground)] font-mono">{selectedFactory}</span>
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setIsGeneratorModalOpen(false)}
+                      className="p-2 rounded-xl text-[var(--foreground-subtle)] hover:text-[var(--foreground)] hover:bg-[var(--surface-hover)] transition-colors"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  {/* Quick Presets */}
+                  <div className="mt-4">
+                    <label className="text-xs font-bold uppercase tracking-wider text-[var(--foreground-muted)]">
+                      Quick Standard Presets
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setGenStartHour('06:00');
+                          setGenIntervalMinutes(45);
+                          setGenDurationMinutes(25);
+                          setGenTotalRounds(32);
+                        }}
+                        className={`px-3 py-2 text-left rounded-xl border text-xs font-semibold transition-all ${
+                          genIntervalMinutes === 45 && genTotalRounds === 32
+                            ? 'border-[var(--primary)] bg-[var(--primary-muted)] text-[var(--primary)]'
+                            : 'border-[var(--border)] bg-[var(--surface-muted)] text-[var(--foreground)] hover:border-[var(--border-strong)]'
+                        }`}
+                      >
+                        <p className="font-bold">Pentagon 45-min</p>
+                        <p className="text-[10px] text-[var(--foreground-subtle)] mt-0.5">32 rounds / 24 hrs</p>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setGenStartHour('06:00');
+                          setGenIntervalMinutes(60);
+                          setGenDurationMinutes(30);
+                          setGenTotalRounds(24);
+                        }}
+                        className={`px-3 py-2 text-left rounded-xl border text-xs font-semibold transition-all ${
+                          genIntervalMinutes === 60 && genTotalRounds === 24
+                            ? 'border-[var(--primary)] bg-[var(--primary-muted)] text-[var(--primary)]'
+                            : 'border-[var(--border)] bg-[var(--surface-muted)] text-[var(--foreground)] hover:border-[var(--border-strong)]'
+                        }`}
+                      >
+                        <p className="font-bold">Hourly (60-min)</p>
+                        <p className="text-[10px] text-[var(--foreground-subtle)] mt-0.5">24 rounds / 24 hrs</p>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setGenStartHour('06:00');
+                          setGenIntervalMinutes(30);
+                          setGenDurationMinutes(20);
+                          setGenTotalRounds(48);
+                        }}
+                        className={`px-3 py-2 text-left rounded-xl border text-xs font-semibold transition-all ${
+                          genIntervalMinutes === 30 && genTotalRounds === 48
+                            ? 'border-[var(--primary)] bg-[var(--primary-muted)] text-[var(--primary)]'
+                            : 'border-[var(--border)] bg-[var(--surface-muted)] text-[var(--foreground)] hover:border-[var(--border-strong)]'
+                        }`}
+                      >
+                        <p className="font-bold">High Security (30-min)</p>
+                        <p className="text-[10px] text-[var(--foreground-subtle)] mt-0.5">48 rounds / 24 hrs</p>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Form Parameters */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4">
+                    <div>
+                      <label className="text-xs font-semibold text-[var(--foreground)]">Shift Start</label>
+                      <input
+                        type="time"
+                        value={genStartHour}
+                        onChange={(e) => setGenStartHour(e.target.value)}
+                        className="mt-1 w-full px-3 py-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-[var(--foreground)]">Interval (min)</label>
+                      <input
+                        type="number"
+                        min={10}
+                        max={180}
+                        value={genIntervalMinutes}
+                        onChange={(e) => setGenIntervalMinutes(Number(e.target.value))}
+                        className="mt-1 w-full px-3 py-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-[var(--foreground)]">Window (min)</label>
+                      <input
+                        type="number"
+                        min={5}
+                        max={90}
+                        value={genDurationMinutes}
+                        onChange={(e) => setGenDurationMinutes(Number(e.target.value))}
+                        className="mt-1 w-full px-3 py-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-[var(--foreground)]">Total Rounds</label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={48}
+                        value={genTotalRounds}
+                        onChange={(e) => setGenTotalRounds(Number(e.target.value))}
+                        className="mt-1 w-full px-3 py-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Interactive Schedule Preview */}
+                  <div className="mt-4">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-xs font-bold uppercase tracking-wider text-[var(--foreground-muted)]">
+                        Generated Timetable Preview ({generatedSchedulePreview.length} slots)
+                      </span>
+                      <span className="text-[10px] text-[var(--foreground-subtle)] font-mono">
+                        Cycle ends:{' '}
+                        {generatedSchedulePreview[generatedSchedulePreview.length - 1]?.end_time || ''}
+                      </span>
+                    </div>
+
+                    <div className="border border-[var(--border)] rounded-xl overflow-hidden max-h-48 overflow-y-auto bg-[var(--surface-muted)] text-xs">
+                      <table className="w-full text-left">
+                        <thead className="bg-[var(--surface)] border-b border-[var(--border)] sticky top-0 text-[10px] uppercase font-bold text-[var(--foreground-muted)]">
+                          <tr>
+                            <th className="py-2 px-3">Round</th>
+                            <th className="py-2 px-3">Operational Slot</th>
+                            <th className="py-2 px-3">App Scan Window</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-[var(--border)] font-mono">
+                          {generatedSchedulePreview.map((item) => (
+                            <tr key={item.round_number} className="hover:bg-[var(--surface)]">
+                              <td className="py-1.5 px-3 font-bold text-[var(--primary)]">
+                                Round {String(item.round_number).padStart(2, '0')}
+                              </td>
+                              <td className="py-1.5 px-3 text-[var(--foreground)]">
+                                {formatTime12h(item.start_time)} – {formatTime12h(item.end_time)}
+                              </td>
+                              <td className="py-1.5 px-3 text-emerald-600 dark:text-emerald-400 font-semibold">
+                                {formatTime12h(item.scan_start_time)} – {formatTime12h(item.scan_end_time)}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Overwrite Toggle */}
+                  <label className="mt-4 flex items-center gap-2 cursor-pointer text-xs font-medium text-[var(--foreground)] select-none">
+                    <input
+                      type="checkbox"
+                      checked={genOverwrite}
+                      onChange={(e) => setGenOverwrite(e.target.checked)}
+                      className="rounded border-[var(--border)] text-[var(--primary)] focus:ring-[var(--primary)] h-4 w-4"
+                    />
+                    <span>Replace all existing rounds in <strong className="font-mono">{selectedFactory}</strong></span>
+                  </label>
+
+                  {/* Actions */}
+                  <div className="mt-6 flex items-center justify-end gap-3 pt-3 border-t border-[var(--border)]">
+                    <button
+                      type="button"
+                      onClick={() => setIsGeneratorModalOpen(false)}
+                      className="btn-secondary"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isGenerating || generatedSchedulePreview.length === 0}
+                      onClick={handleExecuteGenerator}
+                      className="btn-primary !bg-amber-600 hover:!bg-amber-700 !shadow-amber-600/20"
+                    >
+                      {isGenerating ? (
+                        <>
+                          <RefreshCw className="h-4 w-4 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Zap className="h-4 w-4" />
+                          Save & Apply Schedule ({generatedSchedulePreview.length} Rounds)
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </motion.div>
+              </div>
+            )}
+          </AnimatePresence>
+
+          {/* ──────────────── MODAL: Copy Rounds from Factory ──────────────── */}
+          <AnimatePresence>
+            {isCopyModalOpen && (
+              <div className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center p-4">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setIsCopyModalOpen(false)}
+                  className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+                />
+
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                  className="relative w-full max-w-md rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-6 shadow-2xl z-10"
+                >
+                  <div className="flex items-center justify-between pb-4 border-b border-[var(--border)]">
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-2 rounded-xl bg-[var(--primary-muted)] text-[var(--primary)]">
+                        <Copy className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold text-[var(--foreground)]">
+                          Clone Rounds From Factory
+                        </h3>
+                        <p className="text-xs text-[var(--foreground-muted)] mt-0.5">
+                          Duplicate an existing timetable
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setIsCopyModalOpen(false)}
+                      className="p-2 rounded-xl text-[var(--foreground-subtle)] hover:text-[var(--foreground)] hover:bg-[var(--surface-hover)] transition-colors"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  <div className="mt-4 space-y-4">
+                    {/* Source Factory */}
+                    <div>
+                      <label className="text-xs font-bold text-[var(--foreground)]">
+                        Copy FROM (Source Factory)
+                      </label>
+                      <select
+                        value={copySourceFactory}
+                        onChange={(e) => setCopySourceFactory(e.target.value)}
+                        className="mt-1 w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-sm font-medium"
+                      >
+                        <option value="">-- Choose source factory --</option>
+                        {factories
+                          .filter((f) => f.factory_code !== selectedFactory)
+                          .map((f) => (
+                            <option key={f.factory_code} value={f.factory_code}>
+                              {f.factory_code} – {f.factory_name}
+                            </option>
+                          ))}
+                      </select>
+                    </div>
+
+                    {/* Target Factory */}
+                    <div>
+                      <label className="text-xs font-bold text-[var(--foreground)]">
+                        Copy TO (Target Factory)
+                      </label>
+                      <div className="mt-1 px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--surface-muted)] text-sm font-mono font-bold text-[var(--primary)] flex items-center justify-between">
+                        <span>{selectedFactory}</span>
+                        <span className="text-xs font-normal text-[var(--foreground-muted)]">Current Active Factory</span>
+                      </div>
+                    </div>
+
+                    {/* Overwrite Toggle */}
+                    <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-[var(--foreground)] select-none">
+                      <input
+                        type="checkbox"
+                        checked={copyOverwrite}
+                        onChange={(e) => setCopyOverwrite(e.target.checked)}
+                        className="rounded border-[var(--border)] text-[var(--primary)] focus:ring-[var(--primary)] h-4 w-4"
+                      />
+                      <span>Replace existing rounds in <strong className="font-mono">{selectedFactory}</strong></span>
+                    </label>
+                  </div>
+
+                  <div className="mt-6 flex items-center justify-end gap-3 pt-3 border-t border-[var(--border)]">
+                    <button
+                      type="button"
+                      onClick={() => setIsCopyModalOpen(false)}
+                      className="btn-secondary"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      disabled={isCopying || !copySourceFactory}
+                      onClick={handleExecuteCopy}
+                      className="btn-primary"
+                    >
+                      {isCopying ? (
+                        <>
+                          <RefreshCw className="h-4 w-4 animate-spin" />
+                          Copying...
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="h-4 w-4" />
+                          Clone Timetable Now
+                        </>
+                      )}
                     </button>
                   </div>
                 </motion.div>

@@ -220,3 +220,43 @@ export const deleteRound = async (id: string, factoryCode?: string): Promise<voi
   const all = getStoredRounds(factoryCode).filter((r) => r.id !== id);
   saveStoredRounds(all, factoryCode);
 };
+
+/**
+ * Batch create/update patrol rounds for a factory (POST /rounds/batch)
+ */
+export const createBatchRounds = async (
+  factoryCode: string,
+  rounds: Array<Omit<PatrolRound, 'id'>>,
+  overwrite: boolean = false
+): Promise<{ success: boolean; count: number; message: string }> => {
+  try {
+    const res = await axiosClient.post('/rounds/batch', {
+      factory_code: factoryCode,
+      rounds,
+      overwrite,
+    });
+    return res.data;
+  } catch (err: any) {
+    throw new Error(err.response?.data?.detail || err.message || 'Failed to create batch rounds');
+  }
+};
+
+/**
+ * Copy all rounds from source factory to target factory (POST /rounds/copy)
+ */
+export const copyRoundsFromFactory = async (
+  sourceFactoryCode: string,
+  targetFactoryCode: string,
+  overwrite: boolean = true
+): Promise<{ success: boolean; count: number; message: string }> => {
+  try {
+    const res = await axiosClient.post('/rounds/copy', {
+      source_factory_code: sourceFactoryCode,
+      target_factory_code: targetFactoryCode,
+      overwrite,
+    });
+    return res.data;
+  } catch (err: any) {
+    throw new Error(err.response?.data?.detail || err.message || 'Failed to copy rounds between factories');
+  }
+};
