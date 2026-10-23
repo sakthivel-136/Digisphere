@@ -112,7 +112,7 @@ export default function UserForm({
           excludeSecurityId: user?.security_id,
         })
         if (!pinCheck.isUnique) {
-          setPinError(pinCheck.message || 'This 4-digit PIN is already taken. Please try another unique PIN.')
+          setPinError(pinCheck.message || 'This PIN is already assigned. Please try another unique 4-digit PIN.')
           setSubmitting(false)
           return
         }

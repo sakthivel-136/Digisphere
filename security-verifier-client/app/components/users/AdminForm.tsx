@@ -74,7 +74,7 @@ export default function AdminForm({ onClose, onSave }: AdminFormProps) {
       // 1. Verify 4-digit PIN uniqueness
       const pinCheck = await checkPinUnique(pin)
       if (!pinCheck.isUnique) {
-        setPinError(pinCheck.message || 'This 4-digit PIN is already assigned. Please try another unique PIN.')
+        setPinError(pinCheck.message || 'This PIN is already assigned. Please try another unique 4-digit PIN.')
         setSubmitting(false)
         return
       }

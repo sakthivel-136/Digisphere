@@ -57,7 +57,7 @@ export async function checkPinUnique(
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        query: 'SELECT id, user_id, name FROM login_info WHERE user_pin = ? AND is_active = 1',
+        query: 'SELECT id, user_id FROM login_info WHERE user_pin = ? AND is_active = 1',
         params: [cleanPin],
       }),
     });
@@ -69,7 +69,7 @@ export async function checkPinUnique(
     if (conflictingAdmin) {
       return {
         isUnique: false,
-        message: `This PIN is already assigned to Admin "${conflictingAdmin.name}". Please try another unique 4-digit PIN.`,
+        message: 'This PIN is already assigned. Please try another unique 4-digit PIN.',
       };
     }
 
@@ -78,7 +78,7 @@ export async function checkPinUnique(
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        query: 'SELECT security_id, security_name FROM security_users WHERE security_password = ?',
+        query: 'SELECT security_id FROM security_users WHERE security_password = ?',
         params: [cleanPin],
       }),
     });
@@ -90,7 +90,7 @@ export async function checkPinUnique(
     if (conflictingSec) {
       return {
         isUnique: false,
-        message: `This PIN is already assigned to Security Guard "${conflictingSec.security_name}". Please try another unique 4-digit PIN.`,
+        message: 'This PIN is already assigned. Please try another unique 4-digit PIN.',
       };
     }
 
