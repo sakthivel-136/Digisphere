@@ -1,0 +1,9 @@
+name = "pentagon-api"
+main = "src/index.js"
+compatibility_date = "2024-03-20"
+
+# Bind your D1 database to the `env.DB` variable
+[[d1_databases]]
+binding = "DB"
+database_name = "pentagon_db"
+database_id = "3f245e3f-5069-433f-b497-533f72802f8c"

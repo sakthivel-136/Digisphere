@@ -32,6 +32,7 @@ const navItems = [
   { name: 'Dashboard', href: '/dashboard' },
   { name: 'Rounds',    href: '/dashboard/rounds-crud' },
   { name: 'Reports',   href: '/report-download' },
+  { name: 'Shifts',    href: '/shifts' },
   { name: 'Users',     href: '/user-crud' },
   { name: 'QR',        href: '/dashboard/qr-crud' },
   { name: 'Factories', href: '/factory' },

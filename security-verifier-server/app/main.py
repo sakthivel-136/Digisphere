@@ -16,7 +16,8 @@ from app.routes import (
     qr,
     scanning_details,
     report_download,
-    rounds
+    rounds,
+    shifts
 )
 
 # Dependency for JWT authentication
@@ -91,6 +92,9 @@ app.include_router(report_download.router)
 
 # 🕒 Patrol Rounds & Windows
 app.include_router(rounds.router)
+
+# ☀️🌙 Shifts Management
+app.include_router(shifts.router)
 
 
 # -----------------------------
