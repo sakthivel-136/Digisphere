@@ -9,6 +9,7 @@ import React, {
   useMemo,
   ReactNode,
 } from 'react';
+import { usePathname } from 'next/navigation';
 import { getFactories } from '@/app/api/factories.api';
 
 export interface Factory {
@@ -30,74 +31,80 @@ interface FactoryContextType {
 
 const STORAGE_KEY = 'pentagon_selected_factory_code';
 
+export const DEFAULT_FACTORIES: Factory[] = [
+  { factory_code: 'F001', factory_name: 'GJ Innovations and Textile Network Pvt. Ltd.', location: 'Sulakkarai' },
+  { factory_code: 'F002', factory_name: 'Pentagon Apparels - I', location: 'Virudhunagar' },
+  { factory_code: 'F003', factory_name: 'Pentagon Apparels - II', location: 'Pavali' },
+  { factory_code: 'F004', factory_name: 'Pentagon Garments', location: 'Rajapalayam' },
+  { factory_code: 'MD001', factory_name: 'MD Sir House', location: 'Virudhunagar' },
+];
+
 const FactoryContext = createContext<FactoryContextType | undefined>(undefined);
 
 export function FactoryProvider({ children }: { children: ReactNode }) {
-  const [factories, setFactories] = useState<Factory[]>([]);
+  const pathname = usePathname();
+  const [factories, setFactories] = useState<Factory[]>(DEFAULT_FACTORIES);
   const [selectedFactory, setSelectedFactoryState] = useState<string>('F001');
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   // Load factories from API
   const refreshFactories = useCallback(async () => {
-    // If not authenticated or on public auth routes, do not attempt protected API requests
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('access_token');
-      const pathname = window.location.pathname;
-      if (!token || pathname === '/login' || pathname === '/') {
-        setIsLoading(false);
-        return;
-      }
+    if (typeof window === 'undefined') return;
+
+    const token = localStorage.getItem('access_token');
+    // If not authenticated, do not fire protected API requests
+    if (!token) {
+      setIsLoading(false);
+      return;
     }
 
     try {
       setIsLoading(true);
       const res: any = await getFactories();
-      const list: Factory[] = Array.isArray(res) ? res : res?.data || [];
+      let list: Factory[] = [];
+      if (Array.isArray(res)) {
+        list = res;
+      } else if (Array.isArray(res?.data)) {
+        list = res.data;
+      } else if (Array.isArray(res?.data?.data)) {
+        list = res.data.data;
+      }
 
-      if (list.length > 0) {
+      if (list && list.length > 0) {
         setFactories(list);
 
         // Check if there is an existing stored selection
-        const stored = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
+        const stored = localStorage.getItem(STORAGE_KEY);
         if (stored && list.some((f) => f.factory_code === stored)) {
           setSelectedFactoryState(stored);
         } else {
           // If F001 exists in list, prefer F001; otherwise first item
           const defaultFactory = list.find((f) => f.factory_code === 'F001') || list[0];
           setSelectedFactoryState(defaultFactory.factory_code);
-          if (typeof window !== 'undefined') {
-            localStorage.setItem(STORAGE_KEY, defaultFactory.factory_code);
-          }
+          localStorage.setItem(STORAGE_KEY, defaultFactory.factory_code);
         }
+      } else {
+        // Fallback to defaults if response was empty
+        setFactories((prev) => (prev && prev.length > 0 ? prev : DEFAULT_FACTORIES));
       }
     } catch (err) {
       console.warn('Failed to load factories in FactoryProvider:', err);
-      // Fallback defaults if offline
-      const defaults: Factory[] = [
-        { factory_code: 'F001', factory_name: 'GJ Innovations and Textile Network Pvt. Ltd.' },
-        { factory_code: 'F002', factory_name: 'Pentagon Apparels - I' },
-        { factory_code: 'F003', factory_name: 'Pentagon Apparels - II' },
-        { factory_code: 'F004', factory_name: 'Pentagon Garments' },
-        { factory_code: 'MD001', factory_name: 'MD Sir House' },
-      ];
-      setFactories(defaults);
-      const stored = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
-      if (stored && defaults.some((f) => f.factory_code === stored)) {
-        setSelectedFactoryState(stored);
-      } else {
-        setSelectedFactoryState('F001');
-      }
+      // Fallback defaults if offline or error
+      setFactories((prev) => (prev && prev.length > 0 ? prev : DEFAULT_FACTORIES));
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  // Initialize on mount and listen for login event
+  // Initialize on mount, path change, or login events
   useEffect(() => {
-    const stored = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
+    if (typeof window === 'undefined') return;
+
+    const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       setSelectedFactoryState(stored);
     }
+
     refreshFactories();
 
     const handleLoginSuccess = () => {
@@ -110,7 +117,7 @@ export function FactoryProvider({ children }: { children: ReactNode }) {
       window.removeEventListener('auth-login-success', handleLoginSuccess);
       window.removeEventListener('storage', handleLoginSuccess);
     };
-  }, [refreshFactories]);
+  }, [refreshFactories, pathname]);
 
   const setSelectedFactory = useCallback((code: string) => {
     if (!code) return;
