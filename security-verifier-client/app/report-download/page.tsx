@@ -223,27 +223,9 @@ export default function ReportDownloadPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-end">
             
-            {/* FACTORY */}
-            <div className={reportType === "range" ? "md:col-span-3" : "md:col-span-4"}>
-              <label className="flex items-center gap-2 text-xs font-semibold text-[var(--foreground-muted)] uppercase tracking-wider mb-2">
-                <Building2 className="w-4 h-4" /> Location
-              </label>
-              <select
-                className="input-modern"
-                value={factoryCode}
-                onChange={(e) => setFactoryCode(e.target.value)}
-              >
-                {factories.map((f) => (
-                  <option key={f.factory_code} value={f.factory_code}>
-                    {f.factory_name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
             {/* DATE SELECTORS */}
             {reportType === "single" && (
-              <div className="md:col-span-4">
+              <div className="md:col-span-8">
                 <label className="flex items-center gap-2 text-xs font-semibold text-[var(--foreground-muted)] uppercase tracking-wider mb-2">
                   <Calendar className="w-4 h-4" /> Patrol Date
                 </label>
@@ -258,7 +240,7 @@ export default function ReportDownloadPage() {
 
             {reportType === "range" && (
               <>
-                <div className="md:col-span-3">
+                <div className="md:col-span-4">
                   <label className="text-xs font-semibold text-[var(--foreground-muted)] uppercase tracking-wider mb-2">From Date</label>
                   <input
                     type="date"
@@ -267,7 +249,7 @@ export default function ReportDownloadPage() {
                     onChange={(e) => setReportDate(e.target.value)}
                   />
                 </div>
-                <div className="md:col-span-3">
+                <div className="md:col-span-4">
                   <label className="text-xs font-semibold text-[var(--foreground-muted)] uppercase tracking-wider mb-2">To Date</label>
                   <input
                     type="date"
@@ -280,7 +262,7 @@ export default function ReportDownloadPage() {
             )}
 
             {reportType === "month" && (
-              <div className="md:col-span-4">
+              <div className="md:col-span-8">
                 <label className="text-xs font-semibold text-[var(--foreground-muted)] uppercase tracking-wider mb-2">Select Month</label>
                 <input
                   type="month"

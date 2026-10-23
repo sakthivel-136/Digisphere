@@ -13,6 +13,7 @@ import { PageLoadingSpinner } from '@/app/components/ui/LoadingSpinner'
 import { motion } from 'framer-motion'
 import { containerVariants, itemVariants } from '@/lib/animations'
 import { Plus, ScanLine } from 'lucide-react'
+import { useFactory } from '@/app/context/FactoryContext'
 
 /* ─── Types (preserved) ───────────────────────────────────────────────────── */
 
@@ -28,49 +29,16 @@ type PriorityFilter = 'All' | 'Low' | 'Medium' | 'High'
 
 export default function ScanPointsPage() {
   const { authorized } = useAuthGuard()
+  const { selectedFactory, factories } = useFactory()
 
-  // ── All state preserved exactly ──
+  // ── All state preserved ──
   const [scanPoints,        setScanPoints]        = useState<ScanPoint[]>([])
-  const [factories,         setFactories]         = useState<Factory[]>([])
-  const [selectedFactory,   setSelectedFactory]   = useState<string>('')
   const [isFormOpen,        setIsFormOpen]        = useState<boolean>(false)
   const [editingScanPoint,  setEditingScanPoint]  = useState<ScanPoint | null>(null)
   const [statusFilter,      setStatusFilter]      = useState<StatusFilter>('All')
   const [priorityFilter,    setPriorityFilter]    = useState<PriorityFilter>('All')
 
-  /* ── Load Factories (preserved) ── */
-  useEffect(() => {
-    if (!authorized) return
-    const API_BASE_URL = getApiUrl()
-    const FACTORY_ENDPOINT = `${API_BASE_URL}/factories/minimal`
-
-    console.log(`🔍 Fetching from: ${FACTORY_ENDPOINT}`)
-
-    fetch(FACTORY_ENDPOINT)
-      .then(res => {
-        if (!res.ok) {
-          console.error(`❌ Backend Error: ${res.status} at ${FACTORY_ENDPOINT}`)
-          throw new Error(`HTTP error! status: ${res.status}`)
-        }
-        return res.json()
-      })
-      .then((data) => {
-        const factoryArray = Array.isArray(data) ? data : []
-        console.log('✅ Factories loaded:', factoryArray)
-        setFactories(factoryArray)
-        if (factoryArray.length > 0) {
-          setSelectedFactory(factoryArray[0].id)
-        } else {
-          setSelectedFactory('')
-        }
-      })
-      .catch((err: unknown) => {
-        console.error('⚠️ Network or Parsing Error:', err)
-        setFactories([])
-      })
-  }, [authorized])
-
-  /* ── Load Scan Points (preserved) ── */
+  /* ── Load Scan Points ── */
   useEffect(() => {
     if (!authorized || !selectedFactory) return
     getScanPointsByFactory(selectedFactory)
@@ -140,26 +108,6 @@ export default function ScanPointsPage() {
           <motion.div variants={itemVariants}>
             <GlassCard className="mb-6">
               <div className="flex flex-wrap gap-6 items-end">
-
-                {/* Factory */}
-                <div className="flex flex-col gap-1.5 min-w-[200px] flex-1">
-                  <label className="text-[11px] font-bold text-[var(--foreground-muted)] uppercase tracking-widest">
-                    Factory Location
-                  </label>
-                  <select
-                    value={selectedFactory}
-                    onChange={e => setSelectedFactory(e.target.value)}
-                    disabled={factories.length === 0}
-                    className="input-modern disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {factories.map(f => (
-                      <option key={f.id} value={f.id}>{f.name}</option>
-                    ))}
-                    {factories.length === 0 && (
-                      <option value="" disabled>No factories available</option>
-                    )}
-                  </select>
-                </div>
 
                 {/* Status */}
                 <div className="flex flex-col gap-1.5 min-w-[140px]">

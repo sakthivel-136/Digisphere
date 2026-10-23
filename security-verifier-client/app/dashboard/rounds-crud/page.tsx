@@ -111,10 +111,6 @@ export default function RoundsCrudPage() {
     }
   }, [authorized, selectedFactory]);
 
-  const handleFactoryChange = (factoryCode: string) => {
-    setSelectedFactory(factoryCode);
-  };
-
   // Compute next available round number for Auto-increment in selected factory
   const nextRoundNumber = useMemo(() => {
     const factoryRounds = rounds.filter(
@@ -385,47 +381,6 @@ export default function RoundsCrudPage() {
                 Add Patrol Round
               </motion.button>
             </div>
-          </motion.div>
-
-          {/* Factory Selector Bar */}
-          <motion.div variants={itemVariants} className="mb-6">
-            <GlassCard className="!p-4 border-l-4 !border-l-[var(--primary)]">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-[var(--primary-muted)] text-[var(--primary)] flex items-center justify-center flex-shrink-0">
-                    <Building2 className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <label htmlFor="factory-select" className="text-xs font-bold uppercase tracking-wider text-[var(--foreground-muted)] block cursor-pointer">
-                        Selected Factory
-                      </label>
-                      <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-[var(--primary-muted)] text-[var(--primary)] font-mono">
-                        {selectedFactory}
-                      </span>
-                    </div>
-                    <div className="text-sm font-semibold text-[var(--foreground)] mt-0.5">
-                      {factories.find((f) => f.factory_code === selectedFactory)?.factory_name || 'Loading Factory...'}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="w-full sm:w-auto min-w-[280px]">
-                  <select
-                    id="factory-select"
-                    value={selectedFactory}
-                    onChange={(e) => handleFactoryChange(e.target.value)}
-                    className="input-modern font-semibold py-2 text-sm cursor-pointer"
-                  >
-                    {factories.map((f) => (
-                      <option key={f.factory_code} value={f.factory_code}>
-                        {f.factory_code} – {f.factory_name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            </GlassCard>
           </motion.div>
 
           {/* KPI Summary Row */}

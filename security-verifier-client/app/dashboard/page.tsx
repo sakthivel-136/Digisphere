@@ -608,19 +608,6 @@ export default function DashboardPage() {
           <div className="flex flex-wrap items-end gap-4">
 
             <div className="flex-1 min-w-[160px]">
-              <label className="text-xs font-semibold text-[var(--foreground-muted)] uppercase tracking-wider">Factory</label>
-              <select
-                value={selectedFactory}
-                onChange={e => setSelectedFactory(e.target.value)}
-                className="w-full mt-2 pl-3 pr-4 py-2.5 bg-[var(--surface-muted)] border border-slate-200 rounded-lg text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                {factories.map(f => (
-                  <option key={f.factory_code} value={f.factory_code}>{f.factory_name}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="flex-1 min-w-[140px]">
               <label className="text-xs font-semibold text-[var(--foreground-muted)] uppercase tracking-wider">Date</label>
               <input
                 type="date" value={selectedDate}

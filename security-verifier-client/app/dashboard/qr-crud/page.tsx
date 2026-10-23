@@ -208,19 +208,6 @@ export default function QrCrudPage() {
             </motion.button>
           </motion.div>
 
-          <motion.div variants={itemVariants} className="mb-6">
-            <GlassCard>
-              <QrFilters
-                value={selectedFactory}
-                onChange={(code) => {
-                  setSelectedFactory(code);
-                  loadQRCodes(code);
-                }}
-                factories={factories}
-              />
-            </GlassCard>
-          </motion.div>
-
           <motion.div variants={itemVariants}>
             <GlassCard noPadding className="overflow-hidden">
               <QrTable
