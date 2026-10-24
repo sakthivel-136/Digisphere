@@ -83,7 +83,7 @@ export default function Hero() {
       <AppDownloadModal 
         isOpen={showAppModal} 
         onClose={() => setShowAppModal(false)} 
-        appLink="https://docs.google.com/uc?export=download&id=14R6VexC8HZ02_GyVLZO97AdmWgOmFAFv"
+        appLink="https://drive.usercontent.google.com/download?id=14R6VexC8HZ02_GyVLZO97AdmWgOmFAFv&export=download&confirm=t"
       />
       
 

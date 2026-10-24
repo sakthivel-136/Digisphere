@@ -55,7 +55,11 @@ function MagneticButton({ children, onClick, className }: { children: React.Reac
   )
 }
 
-export default function AppDownloadModal({ isOpen, onClose, appLink = "https://pentagongarments.com/app" }: AppDownloadModalProps) {
+export default function AppDownloadModal({ 
+  isOpen, 
+  onClose, 
+  appLink = "https://drive.usercontent.google.com/download?id=14R6VexC8HZ02_GyVLZO97AdmWgOmFAFv&export=download&confirm=t" 
+}: AppDownloadModalProps) {
   return (
     <AnimatePresence>
       {isOpen && (
